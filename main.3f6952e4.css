@@ -4530,9 +4530,11 @@ tbody.collapse.in {
         margin-right: 0
     }
 }
-
+/* Barra grande*/
 .navbar-default {
-    background-color: #fff;
+    backdrop-filter: blur(3px);
+    background-color: rgb(240, 240, 240);
+    background-color: rgba(250, 250, 250, 0.6);
     border-color: transparent
 }
 
@@ -6121,8 +6123,11 @@ textarea {
         background-color: transparent
     }
 
+    /* Barra pequena*/
     .navbar-default .navbar-collapse {
-        background-color: #fff
+        backdrop-filter: blur(3px);
+        background-color: rgb(240, 240, 240);
+        background-color: rgba(250, 250, 250, 0.6);
     }
 }
 
