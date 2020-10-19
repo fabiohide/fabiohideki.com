@@ -5948,8 +5948,8 @@ textarea {
 }
 
 .black-image-project-hover img {
-    -webkit-filter: contrast(200%) grayscale(100%);
-    filter: contrast(200%) grayscale(100%);
+    -webkit-filter: contrast(120%) grayscale(100%);
+    filter: contrast(120%) grayscale(100%);
     -webkit-transition: all .1s linear;
     -o-transition: all .1s linear;
     transition: all .1s linear
