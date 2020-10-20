@@ -23,7 +23,16 @@ aside,
 details,
 figcaption,
 figure,
-footer,
+footer {
+    padding:6px;
+    position: static;
+    bottom: 5px;
+
+    backdrop-filter: blur(3px);
+    background-color: rgb(240, 240, 240);
+    background-color: rgba(245, 245, 245, 0.6);
+    border-color: transparent
+}
 header,
 hgroup,
 main,
@@ -5339,6 +5348,12 @@ button.close {
     margin-right: auto
 }
 
+/* texto landing page*/
+
+.title-landing {
+    text-align: right;
+    float: right !important
+}
 .pull-right {
     float: right !important
 }
@@ -5695,7 +5710,7 @@ body.minimal {
 }
 
 .hero-full-container .hero-full-wrapper .text-content {
-    vertical-align: middle;
+    vertical-align: bottom;
     display: table-cell
 }
 
@@ -5705,8 +5720,8 @@ body.minimal {
 .white-text-container h4,
 .white-text-container h5,
 .white-text-container p {
-    text-shadow: 0 1px 1px #000;
-    color: #222
+    text-shadow: 0px 1px 1px #222;
+    color: #fff
 }
 
 .white-text-container a {
@@ -5724,12 +5739,12 @@ body.minimal {
 }
 
 .section-container {
-    padding: 60px 0
+    padding: 70px 10px
 }
 
 @media (min-width:1200px) {
     .section-container {
-        padding: 80px 0
+        padding: 70px 10px 10px 10px
     }
 }
 
@@ -5800,7 +5815,7 @@ body.minimal {
 body,
 p {
     font-weight: 300;
-    letter-spacing: .8px;
+    letter-spacing: .4px;
     line-height: 25px
 }
 
