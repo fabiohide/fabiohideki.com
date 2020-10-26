@@ -5066,6 +5066,19 @@ button.close {
     -webkit-appearance: none
 }
 
+#carroceu {
+    width: 100%;
+
+    
+    overflow: visible;
+    white-space:nowrap;
+}
+
+#carroceu .slide {
+    display: inline-block;
+   
+}
+
 .carousel,
 .carousel-inner {
     position: relative
