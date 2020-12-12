@@ -1,7 +1,7 @@
 var cnv;
 
 function centerCanvas() {
-  var x = (windowWidth - width) / 2;
+  var x = (windowWidth-width)/5;
   var y = 100;
   cnv.position(x, y);
 }
