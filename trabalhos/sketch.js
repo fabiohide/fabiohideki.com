@@ -1,19 +1,30 @@
-function windowResized() {
-  canvas.position(windowWidth/2-200, 100);
+var cnv;
+
+function centerCanvas() {
+  var x = (windowWidth - width) / 2;
+  var y = 100;
+  cnv.position(x, y);
 }
 
+
+function windowResized() {
+  centerCanvas();
+}
+
+
+
 function setup() {
-  canvas = createCanvas(400, 540);
+  cnv = createCanvas(400, 540);
+  centerCanvas();
   //frameRate(60);
-  canvas.position(windowWidth/2-200, 100);
 
   
 
-  cenario_1 = new Cenario(imagemCena_1, 0.1,);
+  cenario_1 = new Cenario(imagemCena_1, imagemCena_2, 0.1,);
   //cenario_2 = new Cenario(imagemCena_2, 1.5);
-  cenario_3 = new Cenario(imagemCena_3, 0.2,);
+  cenario_3 = new Cenario(imagemCena_3, imagemCena_4, 0.2,);
   //cenario_4 = new Cenario(imagemCena_4, 2.5);
-  cenario_5 = new Cenario(imagemCena_5, 0.4,);
+  cenario_5 = new Cenario(imagemCena_5, imagemCena_5, 0.25,);
   //cenario_6 = new Cenario(imagemCena_6, 3);
 
 

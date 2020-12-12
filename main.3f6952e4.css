@@ -24,13 +24,14 @@ details,
 figcaption,
 figure,
 footer {
+    width: 100%;
     padding:6px;
-    position: static;
+    position: fixed;
     bottom: 5px;
 
     backdrop-filter: blur(3px);
     background-color: rgb(240, 240, 240);
-    background-color: rgba(245, 245, 245, 0.6);
+    background-color: rgba(245, 245, 245, 0.4);
     border-color: transparent
 }
 header,
