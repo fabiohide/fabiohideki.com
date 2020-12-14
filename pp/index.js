@@ -109,7 +109,7 @@
 
   // Set up autorotate, if enabled.
   var autorotate = Marzipano.autorotate({
-    yawSpeed: 0.03,
+    yawSpeed: 0.008,
     targetPitch: 0,
     targetFov: Math.PI/2
   });
@@ -166,7 +166,7 @@
   var viewOutElement = document.querySelector('#viewOut');
 
   // Dynamic parameters for controls.
-  var velocity = 0.7;
+  var velocity = 0.4;
   var friction = 3;
 
   // Associate view controls with elements.
@@ -192,7 +192,7 @@
   }
 
   function updateSceneName(scene) {
-    sceneNameElement.innerHTML = sanitize(scene.data.name);
+    sceneNameElement.innerHTML = 'Panoramas Prováveis';
   }
 
   function updateSceneList(scene) {

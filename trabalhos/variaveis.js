@@ -1,4 +1,3 @@
-var cnv;
 var canvas;
 
 let imagemCena_1;
