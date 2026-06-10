@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chegou Agorinha - Torneio Spherular</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Configurações de Cores Customizadas no Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            gold: '#EAB308',
+                            lightgold: '#FEF08A',
+                            dark: '#0C0A09'
+                        },
+                        group: {
+                            noxious: '#93C5FD',
+                            voltash: '#4ADE80'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        @font-face {
+            font-family: 'KH-Dot-Hibiya-24';
+            src: url('./assets/fonts/KH-Dot-Hibiya-24.ttf') format('truetype');
+        }
+        @font-face {
+            font-family: 'KH-Dot-Kabutochou-16';
+            src: url('./assets/fonts/KH-Dot-Kabutochou-16.ttf') format('truetype');
+        }
+
+        body {
+            font-family: 'KH-Dot-Kabutochou-16', monospace;
+            padding-top: 70px;
+            background-color: #000000;
+            background-image: radial-gradient(circle at 50% 50%, #020402 0%, #000000 100%);
+            min-height: 100vh;
+        }
+
+        .font-retro-title {
+            font-family: 'KH-Dot-Hibiya-24', monospace;
+        }
+        .font-retro-body {
+            font-family: 'KH-Dot-Kabutochou-16', monospace;
+        }
+
+        /* Animações e Efeitos */
+        .glass-panel {
+            background: rgba(5, 10, 6, 0.85);
+            backdrop-filter: blur(12px);
+            border: 2px solid rgba(234, 179, 8, 0.4);
+        }
+        .glass-panel:hover {
+            border-color: rgba(234, 179, 8, 0.7);
+            box-shadow: 0 10px 30px -10px rgba(234, 179, 8, 0.1);
+        }
+        .header-panel {
+            background: rgba(5, 10, 6, 0.85);
+            backdrop-filter: blur(12px);
+            border: 2px solid rgba(234, 179, 8, 0.4);
+        }
+        .glow-gold {
+            box-shadow: 0 0 15px rgba(234, 179, 8, 0.2);
+        }
+        .glow-gold:hover {
+            box-shadow: 0 0 25px rgba(234, 179, 8, 0.4);
+        }
+        
+        /* Ícones das Casas Recoloridos */
+        .house-icon {
+            background-color: rgb(254, 240, 138);
+            -webkit-mask-size: contain;
+            mask-size: contain;
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+            -webkit-mask-position: center;
+            mask-position: center;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="text-stone-200 antialiased relative overflow-x-hidden">
+
+    <!-- Decorações de Fundo -->
+    <div class="fixed top-20 left-4 -z-10 w-48 opacity-10 pointer-events-none transition-all duration-1000 hidden md:block">
+        <img src="./assets/arte/c1.png" alt="" class="w-full h-auto">
+    </div>
+
+    <!-- Barra Superior -->
+    <div class="fixed top-0 z-40 w-full backdrop-blur-md flex-none bg-stone-950/80 border-b-2 border-brand-gold/35 transition-colors duration-500">
+        <div class="container mx-auto px-4">
+            <div class="py-3 flex justify-between items-center">
+                <a href="../spherular.html" class="flex items-center gap-2 text-brand-gold hover:text-brand-lightgold font-bold transition-colors font-retro-title tracking-wider">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" /></svg>
+                    <span>Spherular</span>
+                </a>
+                
+                <div class="flex items-center gap-3">
+                    <div id="last-update-container" class="flex items-center gap-1.5 text-xs text-stone-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-brand-gold" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.414-1.415L11 9.586V6z" clip-rule="evenodd" /></svg>
+                        <span id="last-update-text">Atualizado em 09/06/2026</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
+        
+        <!-- Header / Banner do Torneio -->
+        <header class="text-center mb-8 py-10 rounded-none header-panel flex flex-col items-center justify-center relative overflow-hidden">
+            <div class="absolute inset-0 bg-[#050A06]/40 -z-10"></div>
+            <img src="./assets/arte/Logo Chegou Agorinha.png" alt="Torneio Chegou Agorinha" class="h-36 object-contain mb-4 drop-shadow-md">
+            <p class="text-sm tracking-widest text-brand-gold uppercase font-semibold mt-2">Torneio &bull; Selado Simples &bull; Draconian Measures</p>
+        </header>
+
+        <!-- Abas -->
+        <div id="tabs-container" class="flex flex-wrap justify-center border-b-2 border-stone-800 mb-8 gap-2"></div>
+
+        <main>
+            <!-- ABA 1: JOGADORES -->
+            <div id="players-tab-content" class="hidden">
+                <section class="glass-panel p-6 rounded-none shadow-lg border-2 border-brand-gold/25">
+                    <h2 class="text-2xl font-semibold mb-6 font-retro-title text-brand-lightgold tracking-wide">Jogadores Registrados</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left min-w-[700px] border-collapse">
+                            <thead>
+                                <tr class="border-b border-stone-800 text-brand-gold text-base font-semibold">
+                                    <th class="p-3">Nome</th>
+                                    <th class="p-3">Nick TCO</th>
+                                    <th class="p-3">Grupo</th>
+                                    <th class="p-3">Carta Rara</th>
+                                    <th class="p-3 text-center">Casas</th>
+                                </tr>
+                            </thead>
+                            <tbody id="players-table-body" class="text-stone-300 text-base">
+                                <!-- Preenchido dinamicamente via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- ABA 2: CLASSIFICAÇÃO -->
+            <div id="groups-tab-content" class="hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Standings Grupo 1 -->
+                    <section class="glass-panel p-6 rounded-none shadow-lg border-2 border-blue-500/35">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="w-4 h-4 rounded-full bg-blue-400"></span>
+                            <h2 class="text-2xl font-semibold font-retro-title text-blue-300 tracking-wide">Grupo 1 - Noxious</h2>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left min-w-[450px]">
+                                <thead class="border-b border-stone-800 text-blue-300 text-sm font-semibold uppercase">
+                                    <tr>
+                                        <th class="p-3">#</th>
+                                        <th class="p-3">Participante</th>
+                                        <th class="p-3 text-center">V</th>
+                                        <th class="p-3 text-center">D</th>
+                                        <th class="p-3 text-center">J</th>
+                                        <th class="p-3 text-center" title="Chaves Forjadas">CF</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="g1-standings-body" class="text-stone-300 text-base"></tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <!-- Standings Grupo 2 -->
+                    <section class="glass-panel p-6 rounded-none shadow-lg border-2 border-emerald-500/35">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="w-4 h-4 rounded-full bg-emerald-400"></span>
+                            <h2 class="text-2xl font-semibold font-retro-title text-emerald-300 tracking-wide">Grupo 2 - Voltash</h2>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left min-w-[450px]">
+                                <thead class="border-b border-stone-800 text-emerald-300 text-sm font-semibold uppercase">
+                                    <tr>
+                                        <th class="p-3">#</th>
+                                        <th class="p-3">Participante</th>
+                                        <th class="p-3 text-center">V</th>
+                                        <th class="p-3 text-center">D</th>
+                                        <th class="p-3 text-center">J</th>
+                                        <th class="p-3 text-center" title="Chaves Forjadas">CF</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="g2-standings-body" class="text-stone-300 text-base"></tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+                <div class="mt-6 text-center text-xs text-stone-500 max-w-2xl mx-auto">
+                    <b>Critérios de Desempate:</b> 1º Vitórias (V) &bull; 2º Confronto Direto &bull; 3º Quantidade de Chaves Forjadas (CF) &bull; 4º Partida de desempate.
+                </div>
+            </div>
+
+            <!-- ABA 3: CONFRONTOS -->
+            <div id="matches-tab-content" class="hidden">
+                <!-- Sub-abas de Grupos para Confrontos -->
+                <div id="match-groups-tabs" class="flex justify-center border-b-2 border-stone-850 mb-6 gap-2"></div>
+                
+                <section class="glass-panel p-6 rounded-none mb-6 border-2 border-brand-gold/25">
+                    <h2 class="text-2xl font-semibold mb-4 font-retro-title text-brand-lightgold tracking-wide">Filtros</h2>
+                    <div class="flex flex-wrap gap-2 items-center" id="match-filters-container">
+                        <!-- Gerado via JS -->
+                    </div>
+                </section>
+
+                <section>
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-semibold font-retro-title text-brand-lightgold tracking-wide">Partidas da Fase de Grupos</h2>
+                        <div class="text-stone-400 text-sm font-semibold">
+                            <span id="completed-count">0</span>/<span id="total-count">0</span> concluídas
+                        </div>
+                    </div>
+                    <div id="matches-container" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <!-- Gerado via JS -->
+                    </div>
+                </section>
+            </div>
+
+            <!-- playoffs tab removed -->
+        </main>
+
+    </div>
+
+    <!-- Rodapé Substack -->
+    <footer class="mt-16 border-t-2 border-brand-gold/35 bg-[#050A06] text-stone-300 font-retro-body text-xs">
+        <div class="container mx-auto px-4 py-6 max-w-7xl">
+            <!-- Bottom Row: Copyright & Termos -->
+            <div class="flex flex-col sm:flex-row justify-between items-center text-stone-500 text-[10px] gap-4">
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <span>© 2026 fabit</span>
+                    <span>·</span>
+                    <a href="https://substack.com/privacy" target="_blank" rel="noopener" class="hover:text-brand-gold underline decoration-dotted transition-colors">Privacidade</a>
+                    <span>∙</span>
+                    <a href="https://substack.com/tos" target="_blank" rel="noopener" class="hover:text-brand-gold underline decoration-dotted transition-colors">Termos</a>
+                    <span>∙</span>
+                    <a href="https://substack.com/ccpa#personal-data-collected" target="_blank" rel="noopener" class="hover:text-brand-gold underline decoration-dotted transition-colors">Aviso de coleta</a>
+                </div>
+                <div class="text-stone-600 font-mono text-[9px]">
+                    KeyForge is copyright of Ghost Galaxy, Inc.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Elementos de Visualização das Cartas Raras -->
+    <!-- Hover no Desktop -->
+    <div id="card-preview-container" class="fixed z-50 pointer-events-none hidden opacity-0 transition-opacity duration-200">
+        <img id="card-preview-image" src="" alt="Previsão da Carta" class="w-56 h-auto border-2 border-brand-gold bg-stone-950 shadow-2xl rounded-none">
+    </div>
+
+    <!-- Modal no Mobile -->
+    <div id="card-mobile-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+        <div class="relative max-w-xs w-full border-2 border-brand-gold bg-stone-950 p-2 rounded-none shadow-2xl">
+            <button id="close-card-modal-btn" class="absolute -top-3 -right-3 w-8 h-8 bg-brand-gold text-black font-bold flex items-center justify-center text-xl rounded-none border border-black shadow-lg hover:bg-brand-lightgold transition-colors">&times;</button>
+            <img id="card-mobile-image" src="" alt="Carta em Detalhe" class="w-full h-auto rounded-none">
+        </div>
+    </div>
+
+    <!-- Modal de Importação/Exportação -->
+    <div id="csv-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-[#050A06] rounded-none shadow-2xl p-6 w-full max-w-md border-2 border-brand-gold/50">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold text-brand-gold font-retro-title tracking-wider">Importar/Exportar Dados</h3>
+                <button id="close-modal-btn" class="text-stone-400 hover:text-stone-200 text-2xl leading-none">&times;</button>
+            </div>
+            <div class="space-y-6">
+                <div>
+                    <h4 class="font-semibold mb-1 text-brand-lightgold text-sm">Salvar Progresso (Backup)</h4>
+                    <p class="text-xs text-stone-400 mb-3">Baixe o estado atual do torneio em arquivo JSON.</p>
+                    <button id="export-json-btn" class="w-full bg-brand-gold hover:bg-brand-lightgold text-black font-bold py-2 rounded-none transition-colors font-retro-body text-xs shadow-md">Exportar Arquivo</button>
+                </div>
+                <div class="border-t border-stone-850 pt-4">
+                    <h4 class="font-semibold mb-1 text-brand-lightgold text-sm">Carregar Progresso</h4>
+                    <p class="text-xs text-stone-400 mb-3">Carregue um arquivo JSON exportado anteriormente.</p>
+                    <input type="file" id="import-json-input" accept=".json" class="w-full text-xs text-stone-400 file:mr-4 file:py-1.5 file:px-4 file:rounded-none file:border-0 file:text-xs file:font-semibold file:bg-brand-gold file:text-black hover:file:bg-brand-lightgold file:cursor-pointer"/>
+                </div>
+                <div class="border-t border-stone-850 pt-4">
+                    <h4 class="font-semibold mb-1 text-red-400 text-sm">Reiniciar Torneio</h4>
+                    <p class="text-xs text-stone-400 mb-3">Apaga os resultados salvos no navegador para começar do zero.</p>
+                    <button id="clear-cache-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-none transition-colors font-retro-body text-xs shadow-md">Zerar Banco de Dados</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script de lógica interativa -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const STORAGE_KEY = 'chegou_agorinha_tournament_matches';
+
+            // Dados estáticos dos 16 jogadores fornecidos pelo CSV
+            const players = [
+                { name: "Chamon", nick: "dchamon_BR", rare: "Sand in Your Eye", houses: ["shw", "unf", "gst"], group: 1 },
+                { name: "David Pereira Neto", nick: "matougolias", rare: "Flash Freeze", houses: ["shw", "unf", "gst"], group: 1 },
+                { name: "Estêvão Balsalobre", nick: "EstevaotetoBR", rare: "Emphatic Malice", houses: ["shw", "gst", "mrs"], group: 1 },
+                { name: "Fábio Hideki", nick: "fabit", rare: "Aviatrix Virtuosa", houses: ["ekw", "gst", "mrs"], group: 1 },
+                { name: "Flávio Ciampone", nick: "Ciampone", rare: "Spherular Gem", houses: ["oub", "skb", "shw"], group: 2 },
+                { name: "Gabriel Guessi", nick: "gguessi", rare: "Star Path", houses: ["unf", "gst", "mrs"], group: 2 },
+                { name: "Gustavo Oliveira", nick: "Dreadsgu", rare: "Jahneerie", houses: ["gst", "oub", "ekw"], group: 1 },
+                { name: "João Pedro Rodriguez Pinto", nick: "JPRodriguez", rare: "Plunder", houses: ["skb", "unf", "ekw"], group: 2 },
+                { name: "Marcos Pereira", nick: "dhrago", rare: "Selwyn the Fence", houses: ["shw", "oub", "gst"], group: 2 },
+                { name: "Mateus Barbosa", nick: "mtsbarbosa", rare: "Three Sheets to The Wind", houses: ["shw", "unf", "gst"], group: 2 },
+                { name: "Nicholas", nick: "Sukorski", rare: "Ransom", houses: ["ekw", "gst", "shw"], group: 2 },
+                { name: "Pedro Vinícius Barbosa da Conceição Pires", nick: "Aderbal", rare: "Ghost Town", houses: ["shw", "gst", "unf"], group: 1 },
+                { name: "Piter Machado", nick: "pitersm", rare: "Agorim", houses: ["gst", "oub", "unf"], group: 2 },
+                { name: "Rigel Duarte", nick: "Tatuira", rare: "Kulsha", houses: ["ekw", "oub", "unf"], group: 1 },
+                { name: "Vagner Di Gennaro", nick: "Genn21-FDG", rare: "Psyquic Haze", houses: ["ekw", "mrs", "skb"], group: 2 },
+                { name: "Victor lemos", nick: "Drake12345", rare: "Ashwing Protocol", houses: ["shw", "oub", "gst"], group: 1 }
+            ];
+
+            let tournamentMatches = [];
+            let activeTab = 'players';
+            let selectedFilterPlayer = null;
+            let activeMatchesGroup = 1;
+
+            const elements = {
+                modal: document.getElementById('csv-modal'),
+                openModalBtn: document.getElementById('open-import-export-modal'),
+                closeModalBtn: document.getElementById('close-modal-btn'),
+                exportJsonBtn: document.getElementById('export-json-btn'),
+                importJsonInput: document.getElementById('import-json-input'),
+                clearCacheBtn: document.getElementById('clear-cache-btn'),
+                tabsContainer: document.getElementById('tabs-container'),
+                playersTableBody: document.getElementById('players-table-body'),
+                g1StandingsBody: document.getElementById('g1-standings-body'),
+                g2StandingsBody: document.getElementById('g2-standings-body'),
+                matchesContainer: document.getElementById('matches-container'),
+                completedCountEl: document.getElementById('completed-count'),
+                totalCountEl: document.getElementById('total-count'),
+                matchFiltersContainer: document.getElementById('match-filters-container'),
+                lastUpdateText: document.getElementById('last-update-text'),
+                playersTabContent: document.getElementById('players-tab-content'),
+                groupsTabContent: document.getElementById('groups-tab-content'),
+                matchesTabContent: document.getElementById('matches-tab-content')
+            };
+
+            // Abre e fecha Modal
+            elements.openModalBtn?.addEventListener('click', () => {
+                elements.modal.classList.remove('hidden');
+                setTimeout(() => elements.modal.classList.remove('opacity-0'), 10);
+            });
+            const closeModal = () => {
+                elements.modal.classList.add('opacity-0');
+                setTimeout(() => elements.modal.classList.add('hidden'), 300);
+            };
+            elements.closeModalBtn.addEventListener('click', closeModal);
+            elements.modal.addEventListener('click', (e) => { if (e.target === elements.modal) closeModal(); });
+
+            // Gera e inicia as partidas no formato todos contra todos (round-robin)
+            function generateInitialMatches() {
+                const list = [];
+                const g1 = players.filter(p => p.group === 1).map(p => p.name);
+                const g2 = players.filter(p => p.group === 2).map(p => p.name);
+
+                // Grupo 1 Noxious Matches
+                for (let i = 0; i < g1.length; i++) {
+                    for (let j = i + 1; j < g1.length; j++) {
+                        list.push({
+                            id: `g1-${i}-${j}`,
+                            group: 1,
+                            player1: g1[i],
+                            player2: g1[j],
+                            player1Score: null,
+                            player2Score: null,
+                            completed: false
+                        });
+                    }
+                }
+
+                // Grupo 2 Voltash Matches
+                for (let i = 0; i < g2.length; i++) {
+                    for (let j = i + 1; j < g2.length; j++) {
+                        list.push({
+                            id: `g2-${i}-${j}`,
+                            group: 2,
+                            player1: g2[i],
+                            player2: g2[j],
+                            player1Score: null,
+                            player2Score: null,
+                            completed: false
+                        });
+                    }
+                }
+                return list;
+            }
+
+            function loadTournamentData() {
+                const savedMatches = localStorage.getItem(STORAGE_KEY);
+
+                if (savedMatches) {
+                    try {
+                        tournamentMatches = JSON.parse(savedMatches);
+                    } catch (e) {
+                        console.error(e);
+                        tournamentMatches = generateInitialMatches();
+                    }
+                } else {
+                    tournamentMatches = generateInitialMatches();
+                }
+
+                // Pre-popula os resultados solicitados caso não estejam definidos
+                let updated = false;
+                const setMatchResult = (p1Name, p1Score, p2Name, p2Score) => {
+                    const match = tournamentMatches.find(m => 
+                        (m.player1 === p1Name && m.player2 === p2Name) || 
+                        (m.player1 === p2Name && m.player2 === p1Name)
+                    );
+                    if (match && match.player1Score === null && match.player2Score === null) {
+                        if (match.player1 === p1Name) {
+                            match.player1Score = p1Score;
+                            match.player2Score = p2Score;
+                        } else {
+                            match.player1Score = p2Score;
+                            match.player2Score = p1Score;
+                        }
+                        match.completed = true;
+                        return true;
+                    }
+                    return false;
+                };
+
+                if (setMatchResult("Chamon", 3, "David Pereira Neto", 1)) updated = true;
+                if (setMatchResult("David Pereira Neto", 3, "Estêvão Balsalobre", 1)) updated = true;
+                if (setMatchResult("Marcos Pereira", 3, "Vagner Di Gennaro", 0)) updated = true;
+                if (setMatchResult("Marcos Pereira", 3, "Flávio Ciampone", 1)) updated = true;
+                if (setMatchResult("Fábio Hideki", 2, "Gustavo Oliveira", 3)) updated = true;
+                if (setMatchResult("Gustavo Oliveira", 3, "Pedro Vinícius Barbosa da Conceição Pires", 1)) updated = true;
+
+                if (updated) {
+                    saveTournamentData();
+                }
+            }
+
+            function saveTournamentData() {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(tournamentMatches));
+                const now = new Date();
+                elements.lastUpdateText.textContent = `Salvo em ${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+            }
+
+            // Ações de backup/importação JSON
+            elements.exportJsonBtn.addEventListener('click', () => {
+                const dataStr = JSON.stringify({ matches: tournamentMatches });
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                const downloadAnchor = document.createElement('a');
+                downloadAnchor.setAttribute("href", dataUri);
+                downloadAnchor.setAttribute("download", `chegou_agorinha_dados.json`);
+                document.body.appendChild(downloadAnchor);
+                downloadAnchor.click();
+                document.body.removeChild(downloadAnchor);
+            });
+
+            elements.importJsonInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const parsed = JSON.parse(event.target.result);
+                        if (parsed.matches) tournamentMatches = parsed.matches;
+                        saveTournamentData();
+                        renderAll();
+                        closeModal();
+                        alert('Dados carregados com sucesso!');
+                    } catch (err) {
+                        alert('Erro ao processar arquivo JSON de backup.');
+                    }
+                };
+                reader.readAsText(file);
+            });
+
+            elements.clearCacheBtn.addEventListener('click', () => {
+                if (confirm('Tem certeza que deseja apagar TODOS os dados das partidas e reiniciar o torneio?')) {
+                    localStorage.removeItem(STORAGE_KEY);
+                    loadTournamentData();
+                    renderAll();
+                    closeModal();
+                }
+            });
+
+            // Navegação por abas
+            function switchTab(tabId) {
+                activeTab = tabId;
+                renderAll();
+            }
+
+            function renderTabs() {
+                elements.tabsContainer.innerHTML = '';
+                const tabs = [
+                    { id: 'players', name: 'Jogadores' },
+                    { id: 'groups', name: 'Tabela de Grupos' },
+                    { id: 'matches', name: 'Confrontos' }
+                ];
+                tabs.forEach(tab => {
+                    const btn = document.createElement('button');
+                    const isActive = activeTab === tab.id;
+                    btn.className = `font-retro-body text-sm py-2.5 px-6 border-b-2 transition-all duration-300 outline-none rounded-none -mb-px ${isActive ? 'text-brand-gold border-brand-gold bg-stone-900/40' : 'text-stone-400 border-transparent hover:text-stone-200'}`;
+                    btn.textContent = tab.name;
+                    btn.addEventListener('click', () => switchTab(tab.id));
+                    elements.tabsContainer.appendChild(btn);
+                });
+            }
+
+            // Exibição dos Jogadores
+            function renderPlayers() {
+                elements.playersTableBody.innerHTML = '';
+                players.forEach(p => {
+                    const groupName = p.group === 1 ? 'Grupo 1 - Noxious' : 'Grupo 2 - Voltash';
+                    const groupColor = p.group === 1 ? 'text-blue-400 font-semibold' : 'text-emerald-400 font-semibold';
+                    
+                    const houseIconsHTML = p.houses.map(h => 
+                        `<span class="w-6 h-6 inline-block house-icon" style="-webkit-mask-image: url('./assets/kf_icons/House=${h}.svg'); mask-image: url('./assets/kf_icons/House=${h}.svg');" title="${h.toUpperCase()}"></span>`
+                    ).join(' ');
+
+                    const safeName = p.rare.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    const rareCardHTML = `<span class="rare-card-trigger cursor-pointer text-brand-lightgold hover:text-brand-gold underline decoration-dotted transition-colors font-semibold" data-card-img="./assets/cards/${safeName}.png">${p.rare}</span>`;
+
+                    elements.playersTableBody.innerHTML += `
+                        <tr class="border-b border-stone-900 hover:bg-stone-900/40 transition-colors">
+                            <td class="p-3 font-semibold text-stone-100">${p.name}</td>
+                            <td class="p-3 text-stone-400 font-mono">${p.nick}</td>
+                            <td class="p-3 ${groupColor}">${groupName}</td>
+                            <td class="p-3 italic text-stone-300">${rareCardHTML}</td>
+                            <td class="p-3 text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    ${houseIconsHTML}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            // Cálculo do ranking dos grupos com tiebreaker customizado
+            function calculateStandings(groupNumber) {
+                const groupPlayers = players.filter(p => p.group === groupNumber);
+                const groupMatches = tournamentMatches.filter(m => m.group === groupNumber);
+                
+                const stats = groupPlayers.map(p => ({
+                    name: p.name,
+                    wins: 0,
+                    losses: 0,
+                    played: 0,
+                    keysForged: 0 // Quantidade total de chaves forjadas
+                }));
+
+                groupMatches.forEach(m => {
+                    if (!m.completed) return;
+                    const p1 = stats.find(p => p.name === m.player1);
+                    const p2 = stats.find(p => p.name === m.player2);
+                    if (!p1 || !p2) return;
+
+                    p1.played++;
+                    p2.played++;
+                    
+                    p1.keysForged += (m.player1Score || 0);
+                    p2.keysForged += (m.player2Score || 0);
+
+                    if (m.player1Score > m.player2Score) {
+                        p1.wins++;
+                        p2.losses++;
+                    } else if (m.player2Score > m.player1Score) {
+                        p2.wins++;
+                        p1.losses++;
+                    }
+                });
+
+                // Ordenação com os critérios:
+                // 1º Vitórias
+                // 2º Confronto Direto
+                // 3º Chaves Forjadas
+                // 4º Alfabético (placeholder para partida de desempate)
+                stats.sort((a, b) => {
+                    if (b.wins !== a.wins) return b.wins - a.wins;
+
+                    // Confronto direto
+                    const directMatch = groupMatches.find(m => m.completed &&
+                        ((m.player1 === a.name && m.player2 === b.name) || (m.player1 === b.name && m.player2 === a.name))
+                    );
+                    if (directMatch) {
+                        const aScore = directMatch.player1 === a.name ? directMatch.player1Score : directMatch.player2Score;
+                        const bScore = directMatch.player1 === b.name ? directMatch.player1Score : directMatch.player2Score;
+                        if (aScore !== bScore) {
+                            return bScore - aScore; // O vencedor do confronto direto sobe
+                        }
+                    }
+
+                    // Total de chaves forjadas
+                    if (b.keysForged !== a.keysForged) return b.keysForged - a.keysForged;
+
+                    return a.name.localeCompare(b.name);
+                });
+
+                return stats;
+            }
+
+            function renderStandings() {
+                const g1 = calculateStandings(1);
+                const g2 = calculateStandings(2);
+
+                elements.g1StandingsBody.innerHTML = '';
+                g1.forEach((p, i) => {
+                    const isTop4 = i < 4;
+                    elements.g1StandingsBody.innerHTML += `
+                        <tr class="border-b border-stone-900/60 hover:bg-stone-900/30 transition-colors ${isTop4 ? 'bg-blue-950/20' : ''}">
+                            <td class="p-3 font-bold ${isTop4 ? 'text-blue-400' : 'text-stone-500'}">${i + 1}</td>
+                            <td class="p-3 font-semibold text-stone-200">${p.name}</td>
+                            <td class="p-3 text-center text-green-400 font-bold">${p.wins}</td>
+                            <td class="p-3 text-center text-stone-500">${p.losses}</td>
+                            <td class="p-3 text-center text-stone-400">${p.played}</td>
+                            <td class="p-3 text-center text-blue-300 font-bold">${p.keysForged}</td>
+                        </tr>
+                    `;
+                });
+
+                elements.g2StandingsBody.innerHTML = '';
+                g2.forEach((p, i) => {
+                    const isTop4 = i < 4;
+                    elements.g2StandingsBody.innerHTML += `
+                        <tr class="border-b border-stone-900/60 hover:bg-stone-900/30 transition-colors ${isTop4 ? 'bg-emerald-950/20' : ''}">
+                            <td class="p-3 font-bold ${isTop4 ? 'text-emerald-400' : 'text-stone-500'}">${i + 1}</td>
+                            <td class="p-3 font-semibold text-stone-200">${p.name}</td>
+                            <td class="p-3 text-center text-green-400 font-bold">${p.wins}</td>
+                            <td class="p-3 text-center text-stone-500">${p.losses}</td>
+                            <td class="p-3 text-center text-stone-400">${p.played}</td>
+                            <td class="p-3 text-center text-emerald-300 font-bold">${p.keysForged}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            // Sub-abas de Grupos para Confrontos
+            function renderMatchGroupTabs() {
+                const container = document.getElementById('match-groups-tabs');
+                if (!container) return;
+                container.innerHTML = '';
+                const groupTabs = [
+                    { id: 1, name: 'Grupo 1 - Noxious', colorClass: 'border-blue-500 text-blue-300' },
+                    { id: 2, name: 'Grupo 2 - Voltash', colorClass: 'border-emerald-500 text-emerald-300' }
+                ];
+                groupTabs.forEach(gTab => {
+                    const btn = document.createElement('button');
+                    const isActive = activeMatchesGroup === gTab.id;
+                    btn.className = `font-retro-body text-xs py-2 px-4 border-b-2 transition-all duration-300 outline-none rounded-none -mb-px ${isActive ? gTab.colorClass + ' bg-stone-900/40 font-bold' : 'text-stone-400 border-transparent hover:text-stone-200'}`;
+                    btn.textContent = gTab.name;
+                    btn.addEventListener('click', () => {
+                        activeMatchesGroup = gTab.id;
+                        selectedFilterPlayer = null; // Limpa o filtro de jogador ao mudar de grupo
+                        renderMatchGroupTabs();
+                        renderFilters();
+                        renderMatches();
+                    });
+                    container.appendChild(btn);
+                });
+            }
+
+            // Exibição e Filtros dos Confrontos da Fase de Grupos
+            function renderFilters() {
+                elements.matchFiltersContainer.innerHTML = '';
+                
+                const allBtn = document.createElement('button');
+                allBtn.className = `px-3.5 py-1.5 rounded-none text-xs font-semibold shadow-md transition-all ${!selectedFilterPlayer ? 'bg-brand-gold text-black' : 'bg-stone-850 hover:bg-stone-800 text-stone-300'}`;
+                allBtn.textContent = 'Ver Todos';
+                allBtn.addEventListener('click', () => { selectedFilterPlayer = null; renderFilters(); renderMatches(); });
+                elements.matchFiltersContainer.appendChild(allBtn);
+
+                // Mostra apenas os jogadores do grupo ativo
+                const groupPlayers = players.filter(p => p.group === activeMatchesGroup);
+
+                groupPlayers.forEach(p => {
+                    const btn = document.createElement('button');
+                    const isSelected = selectedFilterPlayer === p.name;
+                    btn.className = `px-3.5 py-1.5 rounded-none text-xs font-semibold shadow-md transition-all ${isSelected ? 'bg-brand-gold text-black' : 'bg-stone-900 text-stone-300 hover:bg-stone-850'}`;
+                    btn.textContent = p.name;
+                    btn.addEventListener('click', () => {
+                        selectedFilterPlayer = isSelected ? null : p.name;
+                        renderFilters();
+                        renderMatches();
+                    });
+                    elements.matchFiltersContainer.appendChild(btn);
+                });
+            }
+
+            function renderMatches() {
+                elements.matchesContainer.innerHTML = '';
+                
+                // Filtra por grupo ativo
+                let filteredMatches = tournamentMatches.filter(m => m.group === activeMatchesGroup);
+
+                // Filtra por jogador se selecionado
+                if (selectedFilterPlayer) {
+                    filteredMatches = filteredMatches.filter(m => m.player1 === selectedFilterPlayer || m.player2 === selectedFilterPlayer);
+                }
+
+                // Atualiza o contador de concluídas específico do grupo ativo
+                const groupTotal = tournamentMatches.filter(m => m.group === activeMatchesGroup).length;
+                const groupCompleted = tournamentMatches.filter(m => m.group === activeMatchesGroup && m.completed).length;
+
+                elements.completedCountEl.textContent = groupCompleted;
+                elements.totalCountEl.textContent = groupTotal;
+
+                filteredMatches.forEach(m => {
+                    let p1c = 'text-stone-200', p2c = 'text-stone-200';
+                    let bgCardClass = 'glass-panel';
+                    
+                    if (m.completed) {
+                        if (m.player1Score > m.player2Score) {
+                            p1c = 'text-green-400 font-bold';
+                            p2c = 'text-stone-600';
+                        } else {
+                            p2c = 'text-green-400 font-bold';
+                            p1c = 'text-stone-600';
+                        }
+                        bgCardClass = 'bg-[#050A06]/60 border-2 border-green-500/30 shadow-sm opacity-90';
+                    }
+
+                    const groupColor = m.group === 1 ? 'border-l-blue-400/40' : 'border-l-emerald-400/40';
+
+                    elements.matchesContainer.innerHTML += `
+                        <div class="p-3.5 rounded-none shadow-lg border-l-4 ${groupColor} ${bgCardClass} transition-all duration-300 flex flex-col justify-center" data-match-id="${m.id}">
+                            <div class="flex items-center justify-end text-[11px] text-stone-500 mb-1.5 uppercase tracking-wide">
+                                ${m.completed ? `
+                                    <button class="reset-scores-btn text-stone-500 hover:text-red-400 transition-colors font-bold text-[10px] uppercase tracking-wider">
+                                        Limpar
+                                    </button>
+                                ` : '&nbsp;'}
+                            </div>
+                            <div class="flex items-center justify-between gap-1 text-sm md:text-base font-semibold">
+                                <!-- Player 1 Name -->
+                                <span class="w-[38%] text-left truncate ${p1c}" title="${m.player1}">${m.player1}</span>
+                                
+                                <!-- Score Inputs -->
+                                <div class="flex items-center gap-1 justify-center w-[24%]">
+                                    <input type="number" min="0" max="3" class="score-input bg-stone-950 text-center rounded-none w-10 py-1 text-sm md:text-base font-bold text-brand-lightgold border border-brand-gold/20" data-player="player1" value="${m.player1Score !== null ? m.player1Score : ''}" placeholder="-">
+                                    <span class="text-stone-600 text-xs font-mono">vs</span>
+                                    <input type="number" min="0" max="3" class="score-input bg-stone-950 text-center rounded-none w-10 py-1 text-sm md:text-base font-bold text-brand-lightgold border border-brand-gold/20" data-player="player2" value="${m.player2Score !== null ? m.player2Score : ''}" placeholder="-">
+                                </div>
+                                
+                                <!-- Player 2 Name -->
+                                <span class="w-[38%] text-right truncate ${p2c}" title="${m.player2}">${m.player2}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // Adiciona Event Listeners nos placares e botão Limpar
+                elements.matchesContainer.querySelectorAll('.score-input, .reset-scores-btn').forEach(el => {
+                    const card = el.closest('[data-match-id]');
+                    const matchId = card.dataset.matchId;
+                    const match = tournamentMatches.find(m => m.id === matchId);
+
+                    if (el.classList.contains('score-input')) {
+                        el.addEventListener('change', (e) => {
+                            const val = e.target.value !== "" ? parseInt(e.target.value) : null;
+                            const playerKey = e.target.dataset.player + 'Score';
+                            match[playerKey] = (val !== null && val >= 0 && val <= 3) ? val : null;
+                            
+                            // Define como finalizado apenas se ambos placares estiverem preenchidos e diferentes
+                            match.completed = match.player1Score !== null && match.player2Score !== null && match.player1Score !== match.player2Score;
+                            
+                            saveTournamentData();
+                            renderMatches();
+                            renderStandings();
+                        });
+                    } else {
+                        el.addEventListener('click', () => {
+                            match.player1Score = null;
+                            match.player2Score = null;
+                            match.completed = false;
+                            saveTournamentData();
+                            renderMatches();
+                            renderStandings();
+                        });
+                    }
+                });
+            }
+
+            // Exibição e atualização geral
+            function renderAll() {
+                renderTabs();
+                
+                // Oculta todas as telas
+                elements.playersTabContent.classList.add('hidden');
+                elements.groupsTabContent.classList.add('hidden');
+                elements.matchesTabContent.classList.add('hidden');
+
+                if (activeTab === 'players') {
+                    elements.playersTabContent.classList.remove('hidden');
+                    renderPlayers();
+                } else if (activeTab === 'groups') {
+                    elements.groupsTabContent.classList.remove('hidden');
+                    renderStandings();
+                } else if (activeTab === 'matches') {
+                    elements.matchesTabContent.classList.remove('hidden');
+                    renderMatchGroupTabs();
+                    renderFilters();
+                    renderMatches();
+                }
+            }
+
+            // Executa inicialização
+            loadTournamentData();
+            renderAll();
+
+            // Lógica de visualização interativa das cartas raras
+            function setupCardPreviews() {
+                const previewContainer = document.getElementById('card-preview-container');
+                const previewImage = document.getElementById('card-preview-image');
+                const mobileModal = document.getElementById('card-mobile-modal');
+                const mobileImage = document.getElementById('card-mobile-image');
+                const closeModalBtn = document.getElementById('close-card-modal-btn');
+
+                // Usamos event delegation para escutar os triggers
+                document.body.addEventListener('mouseover', (e) => {
+                    const trigger = e.target.closest('.rare-card-trigger');
+                    if (!trigger) return;
+
+                    // Apenas no desktop (telas >= 768px)
+                    if (window.innerWidth >= 768) {
+                        const imgUrl = trigger.dataset.cardImg;
+                        previewImage.src = imgUrl;
+                        previewContainer.classList.remove('hidden');
+                        setTimeout(() => {
+                            previewContainer.classList.remove('opacity-0');
+                        }, 20);
+                    }
+                });
+
+                document.body.addEventListener('mousemove', (e) => {
+                    if (window.innerWidth >= 768 && !previewContainer.classList.contains('hidden')) {
+                        const cardWidth = 224; // w-56
+                        const cardHeight = 312;
+                        let x = e.clientX + 15;
+                        let y = e.clientY + 15;
+
+                        // Ajusta se passar das bordas da tela
+                        if (x + cardWidth > window.innerWidth) {
+                            x = e.clientX - cardWidth - 15;
+                        }
+                        if (y + cardHeight > window.innerHeight) {
+                            y = window.innerHeight - cardHeight - 15;
+                        }
+
+                        previewContainer.style.left = `${x}px`;
+                        previewContainer.style.top = `${y}px`;
+                    }
+                });
+
+                document.body.addEventListener('mouseout', (e) => {
+                    const trigger = e.target.closest('.rare-card-trigger');
+                    if (!trigger) return;
+
+                    if (window.innerWidth >= 768) {
+                        previewContainer.classList.add('opacity-0');
+                        previewContainer.classList.add('hidden');
+                    }
+                });
+
+                // Clique para dispositivos móveis
+                document.body.addEventListener('click', (e) => {
+                    const trigger = e.target.closest('.rare-card-trigger');
+                    if (!trigger) return;
+
+                    if (window.innerWidth < 768) {
+                        e.preventDefault();
+                        const imgUrl = trigger.dataset.cardImg;
+                        mobileImage.src = imgUrl;
+                        mobileModal.classList.remove('hidden');
+                        setTimeout(() => {
+                            mobileModal.classList.remove('opacity-0');
+                        }, 20);
+                    }
+                });
+
+                const closeMobileModal = () => {
+                    mobileModal.classList.add('opacity-0');
+                    setTimeout(() => {
+                        mobileModal.classList.add('hidden');
+                    }, 300);
+                };
+
+                closeModalBtn.addEventListener('click', closeMobileModal);
+                mobileModal.addEventListener('click', (e) => {
+                    if (e.target === mobileModal) {
+                        closeMobileModal();
+                    }
+                });
+            }
+
+            setupCardPreviews();
+        });
+    </script>
+</body>
+</html>
