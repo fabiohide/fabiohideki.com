@@ -306,7 +306,7 @@
                 { name: "Chamon", nick: "dchamon_BR", rare: "Sand in Your Eye", houses: ["shw", "unf", "gst"], group: 1 },
                 { name: "David Pereira Neto", nick: "matougolias", rare: "Flash Freeze", houses: ["shw", "unf", "gst"], group: 1 },
                 { name: "Estêvão Balsalobre", nick: "EstevaotetoBR", rare: "Emphatic Malice", houses: ["shw", "gst", "mrs"], group: 1 },
-                { name: "Fábio Hideki", nick: "fabit", rare: "Aviatrix Virtuosa", houses: ["ekw", "gst", "mrs"], group: 1 },
+                { name: "Fábio Hideki", nick: "fabit", rare: "Aviatrix Virtuosa", houses: ["ekw", "skb", "mrs"], group: 1 },
                 { name: "Flávio Ciampone", nick: "Ciampone", rare: "Spherular Gem", houses: ["oub", "skb", "shw"], group: 2 },
                 { name: "Gabriel Guessi", nick: "gguessi", rare: "Star Path", houses: ["unf", "gst", "mrs"], group: 2 },
                 { name: "Gustavo Oliveira", nick: "Dreadsgu", rare: "Jahneerie", houses: ["gst", "oub", "ekw"], group: 1 },
@@ -438,6 +438,15 @@
                 if (setMatchResult("Marcos Pereira", 3, "Flávio Ciampone", 1)) updated = true;
                 if (setMatchResult("Fábio Hideki", 2, "Gustavo Oliveira", 3)) updated = true;
                 if (setMatchResult("Gustavo Oliveira", 3, "Pedro Vinícius Barbosa da Conceição Pires", 1)) updated = true;
+                if (setMatchResult("Chamon", 3, "Victor lemos", 0)) updated = true;
+                if (setMatchResult("Gustavo Oliveira", 3, "Chamon", 2)) updated = true;
+                if (setMatchResult("David Pereira Neto", 3, "Gustavo Oliveira", 1)) updated = true;
+                if (setMatchResult("David Pereira Neto", 3, "Pedro Vinícius Barbosa da Conceição Pires", 1)) updated = true;
+                if (setMatchResult("João Pedro Rodriguez Pinto", 3, "Marcos Pereira", 2)) updated = true;
+                if (setMatchResult("Chamon", 3, "Pedro Vinícius Barbosa da Conceição Pires", 1)) updated = true;
+                if (setMatchResult("Rigel Duarte", 3, "Chamon", 0)) updated = true;
+                if (setMatchResult("Rigel Duarte", 3, "David Pereira Neto", 1)) updated = true;
+                if (setMatchResult("Rigel Duarte", 3, "Pedro Vinícius Barbosa da Conceição Pires", 1)) updated = true;
 
                 if (updated) {
                     saveTournamentData();
