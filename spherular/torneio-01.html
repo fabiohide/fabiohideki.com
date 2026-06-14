@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chegou Agorinha - Torneio Spherular</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <!-- Configurações de Cores Customizadas no Tailwind -->
     <script>
@@ -296,10 +297,83 @@
         </div>
     </div>
 
+    <!-- Modal de Reporte de Resultado (Supabase) -->
+    <div id="report-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-[#050A06] rounded-none shadow-2xl p-6 w-full max-w-md border-2 border-brand-gold/50">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-brand-gold font-retro-title tracking-wider">Reportar Confronto</h3>
+                <button id="close-report-modal-btn" class="text-stone-400 hover:text-stone-200 text-2xl leading-none">&times;</button>
+            </div>
+            
+            <div class="mb-6 text-center">
+                <div class="text-xs uppercase text-stone-500 tracking-widest mb-2" id="report-group-name">Fase de Grupos</div>
+                <div class="flex items-center justify-center gap-4 text-base font-bold text-stone-100">
+                    <span id="report-player1-name" class="w-[40%] text-right truncate">Jogador 1</span>
+                    <span class="text-stone-600 font-normal">vs</span>
+                    <span id="report-player2-name" class="w-[40%] text-left truncate">Jogador 2</span>
+                </div>
+            </div>
+
+            <form id="report-form" class="space-y-4">
+                <input type="hidden" id="report-match-id">
+                
+                <div class="flex justify-center items-center gap-6 py-2 bg-stone-950/60 border border-brand-gold/15 p-4">
+                    <div class="text-center">
+                        <label class="block text-[10px] uppercase text-stone-500 mb-1" id="label-report-p1">Jogador 1</label>
+                        <input type="number" id="report-player1-score" min="0" max="3" required class="bg-stone-900 border border-brand-gold/30 text-center rounded-none w-16 py-2 text-xl font-bold text-brand-lightgold focus:border-brand-gold focus:outline-none">
+                    </div>
+                    
+                    <div class="text-stone-600 font-bold text-lg font-mono pt-4">:</div>
+                    
+                    <div class="text-center">
+                        <label class="block text-[10px] uppercase text-stone-500 mb-1" id="label-report-p2">Jogador 2</label>
+                        <input type="number" id="report-player2-score" min="0" max="3" required class="bg-stone-900 border border-brand-gold/30 text-center rounded-none w-16 py-2 text-xl font-bold text-brand-lightgold focus:border-brand-gold focus:outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="report-passcode" class="block text-xs font-semibold mb-1 text-brand-lightgold">Senha do Torneio</label>
+                    <input type="password" id="report-passcode" placeholder="Digite a senha para salvar..." required class="w-full bg-stone-950 border border-brand-gold/30 rounded-none py-2 px-3 text-sm text-stone-200 placeholder-stone-700 focus:border-brand-gold focus:outline-none">
+                </div>
+
+                <div id="report-error-msg" class="text-red-500 text-xs hidden font-semibold"></div>
+
+                <div class="pt-2">
+                    <button type="submit" id="submit-report-btn" class="w-full bg-brand-gold hover:bg-brand-lightgold text-black font-bold py-2.5 rounded-none transition-colors font-retro-body text-xs shadow-md uppercase tracking-wider">
+                        Enviar Resultado
+                    </button>
     <!-- Script de lógica interativa -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const STORAGE_KEY = 'chegou_agorinha_tournament_matches';
+
+            // Supabase credentials placeholder
+            const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co';
+            const SUPABASE_ANON_KEY = 'YOUR_ANON_PUBLIC_KEY';
+            const isSupabaseConfigured = SUPABASE_URL && !SUPABASE_URL.includes('YOUR_PROJECT_ID') && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includes('YOUR_ANON_PUBLIC_KEY');
+
+            let supabaseClient = null;
+            if (isSupabaseConfigured) {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+
+            // Elements for reporting modal
+            const reportElements = {
+                modal: document.getElementById('report-modal'),
+                form: document.getElementById('report-form'),
+                matchId: document.getElementById('report-match-id'),
+                groupName: document.getElementById('report-group-name'),
+                player1Name: document.getElementById('report-player1-name'),
+                player2Name: document.getElementById('report-player2-name'),
+                labelP1: document.getElementById('label-report-p1'),
+                labelP2: document.getElementById('label-report-p2'),
+                player1Score: document.getElementById('report-player1-score'),
+                player2Score: document.getElementById('report-player2-score'),
+                passcode: document.getElementById('report-passcode'),
+                errorMsg: document.getElementById('report-error-msg'),
+                closeBtn: document.getElementById('close-report-modal-btn'),
+                submitBtn: document.getElementById('submit-report-btn')
+            };
 
             // Dados estáticos dos 16 jogadores fornecidos pelo CSV
             const players = [
@@ -365,41 +439,21 @@
                 const g1 = players.filter(p => p.group === 1).map(p => p.name);
                 const g2 = players.filter(p => p.group === 2).map(p => p.name);
 
-                // Grupo 1 Noxious Matches
                 for (let i = 0; i < g1.length; i++) {
                     for (let j = i + 1; j < g1.length; j++) {
-                        list.push({
-                            id: `g1-${i}-${j}`,
-                            group: 1,
-                            player1: g1[i],
-                            player2: g1[j],
-                            player1Score: null,
-                            player2Score: null,
-                            completed: false
-                        });
+                        list.push({ id: `g1-${i}-${j}`, group: 1, player1: g1[i], player2: g1[j], player1Score: null, player2Score: null, completed: false });
                     }
                 }
-
-                // Grupo 2 Voltash Matches
                 for (let i = 0; i < g2.length; i++) {
                     for (let j = i + 1; j < g2.length; j++) {
-                        list.push({
-                            id: `g2-${i}-${j}`,
-                            group: 2,
-                            player1: g2[i],
-                            player2: g2[j],
-                            player1Score: null,
-                            player2Score: null,
-                            completed: false
-                        });
+                        list.push({ id: `g2-${i}-${j}`, group: 2, player1: g2[i], player2: g2[j], player1Score: null, player2Score: null, completed: false });
                     }
                 }
                 return list;
             }
 
-            function loadTournamentData() {
+            function loadLocalTournamentData() {
                 const savedMatches = localStorage.getItem(STORAGE_KEY);
-
                 if (savedMatches) {
                     try {
                         tournamentMatches = JSON.parse(savedMatches);
@@ -410,22 +464,16 @@
                 } else {
                     tournamentMatches = generateInitialMatches();
                 }
+                prePopulateMatches();
+            }
 
-                // Pre-popula os resultados solicitados caso não estejam definidos
+            function prePopulateMatches() {
                 let updated = false;
                 const setMatchResult = (p1Name, p1Score, p2Name, p2Score) => {
-                    const match = tournamentMatches.find(m => 
-                        (m.player1 === p1Name && m.player2 === p2Name) || 
-                        (m.player1 === p2Name && m.player2 === p1Name)
-                    );
+                    const match = tournamentMatches.find(m => (m.player1 === p1Name && m.player2 === p2Name) || (m.player1 === p2Name && m.player2 === p1Name));
                     if (match && match.player1Score === null && match.player2Score === null) {
-                        if (match.player1 === p1Name) {
-                            match.player1Score = p1Score;
-                            match.player2Score = p2Score;
-                        } else {
-                            match.player1Score = p2Score;
-                            match.player2Score = p1Score;
-                        }
+                        if (match.player1 === p1Name) { match.player1Score = p1Score; match.player2Score = p2Score; }
+                        else { match.player1Score = p2Score; match.player2Score = p1Score; }
                         match.completed = true;
                         return true;
                     }
@@ -464,18 +512,56 @@
                 if (setMatchResult("Nicholas", 3, "Mateus Barbosa", 1)) updated = true;
                 if (setMatchResult("Victor lemos", 3, "Pedro Vinícius Barbosa da Conceição Pires", 2)) updated = true;
 
-                if (updated) {
+                if (updated && !isSupabaseConfigured) {
                     saveTournamentData();
                 }
             }
 
+            async function loadTournamentData() {
+                if (isSupabaseConfigured) {
+                    try {
+                        const { data, error } = await supabaseClient
+                            .from('matches')
+                            .select('*');
+                        
+                        if (error) throw error;
+                        
+                        if (data && data.length > 0) {
+                            tournamentMatches = data.map(m => ({
+                                id: m.id,
+                                group: m.group,
+                                player1: m.player1,
+                                player2: m.player2,
+                                player1Score: m.player1_score,
+                                player2Score: m.player2_score,
+                                completed: m.completed
+                            }));
+                            const now = new Date();
+                            elements.lastUpdateText.textContent = `Supabase Online · ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+                        } else {
+                            console.warn("Matches table is empty. Local seed matches will be used.");
+                            loadLocalTournamentData();
+                        }
+                    } catch (e) {
+                        console.error("Error connecting to Supabase, loading from LocalStorage", e);
+                        loadLocalTournamentData();
+                        elements.lastUpdateText.textContent = `Offline (Erro Supabase)`;
+                    }
+                } else {
+                    loadLocalTournamentData();
+                    elements.lastUpdateText.textContent = `Modo Local`;
+                }
+            }
+
             function saveTournamentData() {
+                if (isSupabaseConfigured) {
+                    return;
+                }
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(tournamentMatches));
                 const now = new Date();
                 elements.lastUpdateText.textContent = `Salvo em ${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
             }
 
-            // Ações de backup/importação JSON
             elements.exportJsonBtn.addEventListener('click', () => {
                 const dataStr = JSON.stringify({ matches: tournamentMatches });
                 const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
@@ -515,7 +601,6 @@
                 }
             });
 
-            // Navegação por abas
             function switchTab(tabId) {
                 activeTab = tabId;
                 renderAll();
@@ -538,7 +623,6 @@
                 });
             }
 
-            // Exibição dos Jogadores
             function renderPlayers() {
                 elements.playersTableBody.innerHTML = '';
                 players.forEach(p => {
@@ -568,7 +652,6 @@
                 });
             }
 
-            // Cálculo do ranking dos grupos com tiebreaker customizado
             function calculateStandings(groupNumber) {
                 const groupPlayers = players.filter(p => p.group === groupNumber);
                 const groupMatches = tournamentMatches.filter(m => m.group === groupNumber);
@@ -578,7 +661,7 @@
                     wins: 0,
                     losses: 0,
                     played: 0,
-                    keysForged: 0 // Quantidade total de chaves forjadas
+                    keysForged: 0
                 }));
 
                 groupMatches.forEach(m => {
@@ -586,45 +669,25 @@
                     const p1 = stats.find(p => p.name === m.player1);
                     const p2 = stats.find(p => p.name === m.player2);
                     if (!p1 || !p2) return;
-
-                    p1.played++;
-                    p2.played++;
-                    
+                    p1.played++; p2.played++;
                     p1.keysForged += (m.player1Score || 0);
                     p2.keysForged += (m.player2Score || 0);
 
-                    if (m.player1Score > m.player2Score) {
-                        p1.wins++;
-                        p2.losses++;
-                    } else if (m.player2Score > m.player1Score) {
-                        p2.wins++;
-                        p1.losses++;
-                    }
+                    if (m.player1Score > m.player2Score) { p1.wins++; p2.losses++; }
+                    else if (m.player2Score > m.player1Score) { p2.wins++; p1.losses++; }
                 });
 
-                // Ordenação com os critérios:
-                // 1º Vitórias
-                // 2º Confronto Direto
-                // 3º Chaves Forjadas
-                // 4º Alfabético (placeholder para partida de desempate)
                 stats.sort((a, b) => {
                     if (b.wins !== a.wins) return b.wins - a.wins;
-
-                    // Confronto direto
                     const directMatch = groupMatches.find(m => m.completed &&
                         ((m.player1 === a.name && m.player2 === b.name) || (m.player1 === b.name && m.player2 === a.name))
                     );
                     if (directMatch) {
                         const aScore = directMatch.player1 === a.name ? directMatch.player1Score : directMatch.player2Score;
                         const bScore = directMatch.player1 === b.name ? directMatch.player1Score : directMatch.player2Score;
-                        if (aScore !== bScore) {
-                            return bScore - aScore; // O vencedor do confronto direto sobe
-                        }
+                        if (aScore !== bScore) return bScore - aScore;
                     }
-
-                    // Total de chaves forjadas
                     if (b.keysForged !== a.keysForged) return b.keysForged - a.keysForged;
-
                     return a.name.localeCompare(b.name);
                 });
 
@@ -666,7 +729,6 @@
                 });
             }
 
-            // Sub-abas de Grupos para Confrontos
             function renderMatchGroupTabs() {
                 const container = document.getElementById('match-groups-tabs');
                 if (!container) return;
@@ -682,7 +744,7 @@
                     btn.textContent = gTab.name;
                     btn.addEventListener('click', () => {
                         activeMatchesGroup = gTab.id;
-                        selectedFilterPlayer = null; // Limpa o filtro de jogador ao mudar de grupo
+                        selectedFilterPlayer = null;
                         renderMatchGroupTabs();
                         renderFilters();
                         renderMatches();
@@ -691,19 +753,15 @@
                 });
             }
 
-            // Exibição e Filtros dos Confrontos da Fase de Grupos
             function renderFilters() {
                 elements.matchFiltersContainer.innerHTML = '';
-                
                 const allBtn = document.createElement('button');
                 allBtn.className = `px-3.5 py-1.5 rounded-none text-xs font-semibold shadow-md transition-all ${!selectedFilterPlayer ? 'bg-brand-gold text-black' : 'bg-stone-850 hover:bg-stone-800 text-stone-300'}`;
                 allBtn.textContent = 'Ver Todos';
                 allBtn.addEventListener('click', () => { selectedFilterPlayer = null; renderFilters(); renderMatches(); });
                 elements.matchFiltersContainer.appendChild(allBtn);
 
-                // Mostra apenas os jogadores do grupo ativo
                 const groupPlayers = players.filter(p => p.group === activeMatchesGroup);
-
                 groupPlayers.forEach(p => {
                     const btn = document.createElement('button');
                     const isSelected = selectedFilterPlayer === p.name;
@@ -720,16 +778,12 @@
 
             function renderMatches() {
                 elements.matchesContainer.innerHTML = '';
-                
-                // Filtra por grupo ativo
                 let filteredMatches = tournamentMatches.filter(m => m.group === activeMatchesGroup);
 
-                // Filtra por jogador se selecionado
                 if (selectedFilterPlayer) {
                     filteredMatches = filteredMatches.filter(m => m.player1 === selectedFilterPlayer || m.player2 === selectedFilterPlayer);
                 }
 
-                // Atualiza o contador de concluídas específico do grupo ativo
                 const groupTotal = tournamentMatches.filter(m => m.group === activeMatchesGroup).length;
                 const groupCompleted = tournamentMatches.filter(m => m.group === activeMatchesGroup && m.completed).length;
 
@@ -741,13 +795,8 @@
                     let bgCardClass = 'glass-panel';
                     
                     if (m.completed) {
-                        if (m.player1Score > m.player2Score) {
-                            p1c = 'text-green-400 font-bold';
-                            p2c = 'text-stone-600';
-                        } else {
-                            p2c = 'text-green-400 font-bold';
-                            p1c = 'text-stone-600';
-                        }
+                        if (m.player1Score > m.player2Score) { p1c = 'text-green-400 font-bold'; p2c = 'text-stone-600'; }
+                        else { p2c = 'text-green-400 font-bold'; p1c = 'text-stone-600'; }
                         bgCardClass = 'bg-[#050A06]/60 border-2 border-green-500/30 shadow-sm opacity-90';
                     }
 
@@ -763,60 +812,65 @@
                                 ` : '&nbsp;'}
                             </div>
                             <div class="flex items-center justify-between gap-1 text-sm md:text-base font-semibold">
-                                <!-- Player 1 Name -->
                                 <span class="w-[38%] text-left truncate ${p1c}" title="${m.player1}">${m.player1}</span>
-                                
-                                <!-- Score Inputs -->
                                 <div class="flex items-center gap-1 justify-center w-[24%]">
-                                    <input type="number" min="0" max="3" class="score-input bg-stone-950 text-center rounded-none w-10 py-1 text-sm md:text-base font-bold text-brand-lightgold border border-brand-gold/20" data-player="player1" value="${m.player1Score !== null ? m.player1Score : ''}" placeholder="-">
+                                    <input type="number" min="0" max="3" class="score-input bg-stone-950 text-center rounded-none w-10 py-1 text-sm md:text-base font-bold text-brand-lightgold border border-brand-gold/20 ${isSupabaseConfigured ? 'cursor-pointer' : ''}" data-player="player1" value="${m.player1Score !== null ? m.player1Score : ''}" placeholder="-" ${isSupabaseConfigured ? 'readonly' : ''}>
                                     <span class="text-stone-600 text-xs font-mono">vs</span>
-                                    <input type="number" min="0" max="3" class="score-input bg-stone-950 text-center rounded-none w-10 py-1 text-sm md:text-base font-bold text-brand-lightgold border border-brand-gold/20" data-player="player2" value="${m.player2Score !== null ? m.player2Score : ''}" placeholder="-">
+                                    <input type="number" min="0" max="3" class="score-input bg-stone-950 text-center rounded-none w-10 py-1 text-sm md:text-base font-bold text-brand-lightgold border border-brand-gold/20 ${isSupabaseConfigured ? 'cursor-pointer' : ''}" data-player="player2" value="${m.player2Score !== null ? m.player2Score : ''}" placeholder="-" ${isSupabaseConfigured ? 'readonly' : ''}>
                                 </div>
-                                
-                                <!-- Player 2 Name -->
                                 <span class="w-[38%] text-right truncate ${p2c}" title="${m.player2}">${m.player2}</span>
                             </div>
                         </div>
                     `;
                 });
 
-                // Adiciona Event Listeners nos placares e botão Limpar
                 elements.matchesContainer.querySelectorAll('.score-input, .reset-scores-btn').forEach(el => {
                     const card = el.closest('[data-match-id]');
                     const matchId = card.dataset.matchId;
                     const match = tournamentMatches.find(m => m.id === matchId);
 
                     if (el.classList.contains('score-input')) {
-                        el.addEventListener('change', (e) => {
-                            const val = e.target.value !== "" ? parseInt(e.target.value) : null;
-                            const playerKey = e.target.dataset.player + 'Score';
-                            match[playerKey] = (val !== null && val >= 0 && val <= 3) ? val : null;
-                            
-                            // Define como finalizado apenas se ambos placares estiverem preenchidos e diferentes
-                            match.completed = match.player1Score !== null && match.player2Score !== null && match.player1Score !== match.player2Score;
-                            
-                            saveTournamentData();
-                            renderMatches();
-                            renderStandings();
-                        });
+                        if (isSupabaseConfigured) {
+                            el.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                e.target.blur();
+                                openReportModal(matchId, 'report');
+                            });
+                            el.addEventListener('focus', (e) => {
+                                e.preventDefault();
+                                e.target.blur();
+                                openReportModal(matchId, 'report');
+                            });
+                        } else {
+                            el.addEventListener('change', (e) => {
+                                const val = e.target.value !== "" ? parseInt(e.target.value) : null;
+                                const playerKey = e.target.dataset.player + 'Score';
+                                match[playerKey] = (val !== null && val >= 0 && val <= 3) ? val : null;
+                                match.completed = match.player1Score !== null && match.player2Score !== null && match.player1Score !== match.player2Score;
+                                saveTournamentData();
+                                renderMatches();
+                                renderStandings();
+                            });
+                        }
                     } else {
                         el.addEventListener('click', () => {
-                            match.player1Score = null;
-                            match.player2Score = null;
-                            match.completed = false;
-                            saveTournamentData();
-                            renderMatches();
-                            renderStandings();
+                            if (isSupabaseConfigured) {
+                                openReportModal(matchId, 'clear');
+                            } else {
+                                match.player1Score = null;
+                                match.player2Score = null;
+                                match.completed = false;
+                                saveTournamentData();
+                                renderMatches();
+                                renderStandings();
+                            }
                         });
                     }
                 });
             }
 
-            // Exibição e atualização geral
             function renderAll() {
                 renderTabs();
-                
-                // Oculta todas as telas
                 elements.playersTabContent.classList.add('hidden');
                 elements.groupsTabContent.classList.add('hidden');
                 elements.matchesTabContent.classList.add('hidden');
@@ -835,11 +889,149 @@
                 }
             }
 
-            // Executa inicialização
-            loadTournamentData();
-            renderAll();
+            function openReportModal(matchId, mode = 'report') {
+                const match = tournamentMatches.find(m => m.id === matchId);
+                if (!match) return;
 
-            // Lógica de visualização interativa das cartas raras
+                reportElements.matchId.value = matchId;
+                reportElements.groupName.textContent = match.group === 1 ? 'Grupo 1 - Noxious' : 'Grupo 2 - Voltash';
+                reportElements.player1Name.textContent = match.player1;
+                reportElements.player2Name.textContent = match.player2;
+                reportElements.labelP1.textContent = match.player1;
+                reportElements.labelP2.textContent = match.player2;
+                
+                reportElements.errorMsg.classList.add('hidden');
+                reportElements.errorMsg.textContent = '';
+                reportElements.passcode.value = '';
+
+                if (mode === 'clear') {
+                    document.querySelector('#report-modal h3').textContent = 'Limpar Confronto';
+                    reportElements.submitBtn.textContent = 'Confirmar Limpeza';
+                    reportElements.player1Score.disabled = true;
+                    reportElements.player2Score.disabled = true;
+                    reportElements.player1Score.value = '';
+                    reportElements.player2Score.value = '';
+                } else {
+                    document.querySelector('#report-modal h3').textContent = 'Reportar Confronto';
+                    reportElements.submitBtn.textContent = 'Enviar Resultado';
+                    reportElements.player1Score.disabled = false;
+                    reportElements.player2Score.disabled = false;
+                    reportElements.player1Score.value = match.player1Score !== null ? match.player1Score : '';
+                    reportElements.player2Score.value = match.player2Score !== null ? match.player2Score : '';
+                }
+
+                reportElements.modal.classList.remove('hidden');
+                setTimeout(() => reportElements.modal.classList.remove('opacity-0'), 10);
+            }
+
+            const closeReportModal = () => {
+                reportElements.modal.classList.add('opacity-0');
+                setTimeout(() => reportElements.modal.classList.add('hidden'), 300);
+            };
+
+            reportElements.closeBtn.addEventListener('click', closeReportModal);
+            reportElements.modal.addEventListener('click', (e) => { 
+                if (e.target === reportElements.modal) closeReportModal(); 
+            });
+
+            reportElements.form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const matchId = reportElements.matchId.value;
+                const passcode = reportElements.passcode.value;
+                const isClear = reportElements.player1Score.disabled;
+                
+                let p1Score = null;
+                let p2Score = null;
+                
+                if (!isClear) {
+                    p1Score = parseInt(reportElements.player1Score.value);
+                    p2Score = parseInt(reportElements.player2Score.value);
+                    
+                    if (isNaN(p1Score) || isNaN(p2Score) || p1Score < 0 || p1Score > 3 || p2Score < 0 || p2Score > 3) {
+                        showReportError('Placares inválidos. Devem ser entre 0 e 3.');
+                        return;
+                    }
+                    if (p1Score === p2Score) {
+                        showReportError('Empates não são permitidos no KeyForge.');
+                        return;
+                    }
+                }
+
+                reportElements.submitBtn.disabled = true;
+                reportElements.submitBtn.textContent = 'Enviando...';
+                
+                if (isSupabaseConfigured) {
+                    try {
+                        const { data, error } = await supabaseClient.rpc('report_match', {
+                            p_match_id: matchId,
+                            p_player1_score: p1Score,
+                            p_player2_score: p2Score,
+                            p_passcode: passcode
+                        });
+                        
+                        if (error) throw error;
+                        
+                        if (data === true) {
+                            closeReportModal();
+                            await loadTournamentData();
+                            renderAll();
+                        } else {
+                            throw new Error("Erro desconhecido ao registrar resultado.");
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        showReportError(err.message || 'Erro de conexão ou senha incorreta.');
+                    } finally {
+                        reportElements.submitBtn.disabled = false;
+                        reportElements.submitBtn.textContent = isClear ? 'Confirmar Limpeza' : 'Enviar Resultado';
+                    }
+                } else {
+                    const match = tournamentMatches.find(m => m.id === matchId);
+                    if (match) {
+                        match.player1Score = p1Score;
+                        match.player2Score = p2Score;
+                        match.completed = !isClear;
+                        saveTournamentData();
+                        renderAll();
+                        closeReportModal();
+                    }
+                    reportElements.submitBtn.disabled = false;
+                    reportElements.submitBtn.textContent = isClear ? 'Confirmar Limpeza' : 'Enviar Resultado';
+                }
+            });
+
+            function showReportError(msg) {
+                reportElements.errorMsg.textContent = msg;
+                reportElements.errorMsg.classList.remove('hidden');
+            }
+
+            function setupRealtimeSubscription() {
+                if (!isSupabaseConfigured || !supabaseClient) return;
+                
+                supabaseClient
+                    .channel('matches-channel')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, (payload) => {
+                        const newMatch = payload.new;
+                        if (newMatch) {
+                            const index = tournamentMatches.findIndex(m => m.id === newMatch.id);
+                            if (index !== -1) {
+                                tournamentMatches[index] = {
+                                    id: newMatch.id,
+                                    group: newMatch.group,
+                                    player1: newMatch.player1,
+                                    player2: newMatch.player2,
+                                    player1Score: newMatch.player1_score,
+                                    player2Score: newMatch.player2_score,
+                                    completed: newMatch.completed
+                                };
+                                renderAll();
+                            }
+                        }
+                    })
+                    .subscribe();
+            }
+
             function setupCardPreviews() {
                 const previewContainer = document.getElementById('card-preview-container');
                 const previewImage = document.getElementById('card-preview-image');
@@ -847,37 +1039,23 @@
                 const mobileImage = document.getElementById('card-mobile-image');
                 const closeModalBtn = document.getElementById('close-card-modal-btn');
 
-                // Usamos event delegation para escutar os triggers
                 document.body.addEventListener('mouseover', (e) => {
                     const trigger = e.target.closest('.rare-card-trigger');
                     if (!trigger) return;
-
-                    // Apenas no desktop (telas >= 768px)
                     if (window.innerWidth >= 768) {
                         const imgUrl = trigger.dataset.cardImg;
                         previewImage.src = imgUrl;
                         previewContainer.classList.remove('hidden');
-                        setTimeout(() => {
-                            previewContainer.classList.remove('opacity-0');
-                        }, 20);
+                        setTimeout(() => previewContainer.classList.remove('opacity-0'), 20);
                     }
                 });
 
                 document.body.addEventListener('mousemove', (e) => {
                     if (window.innerWidth >= 768 && !previewContainer.classList.contains('hidden')) {
-                        const cardWidth = 224; // w-56
-                        const cardHeight = 312;
                         let x = e.clientX + 15;
                         let y = e.clientY + 15;
-
-                        // Ajusta se passar das bordas da tela
-                        if (x + cardWidth > window.innerWidth) {
-                            x = e.clientX - cardWidth - 15;
-                        }
-                        if (y + cardHeight > window.innerHeight) {
-                            y = window.innerHeight - cardHeight - 15;
-                        }
-
+                        if (x + 224 > window.innerWidth) x = e.clientX - 224 - 15;
+                        if (y + 312 > window.innerHeight) y = window.innerHeight - 312 - 15;
                         previewContainer.style.left = `${x}px`;
                         previewContainer.style.top = `${y}px`;
                     }
@@ -886,45 +1064,40 @@
                 document.body.addEventListener('mouseout', (e) => {
                     const trigger = e.target.closest('.rare-card-trigger');
                     if (!trigger) return;
-
                     if (window.innerWidth >= 768) {
                         previewContainer.classList.add('opacity-0');
                         previewContainer.classList.add('hidden');
                     }
                 });
 
-                // Clique para dispositivos móveis
                 document.body.addEventListener('click', (e) => {
                     const trigger = e.target.closest('.rare-card-trigger');
                     if (!trigger) return;
-
                     if (window.innerWidth < 768) {
                         e.preventDefault();
-                        const imgUrl = trigger.dataset.cardImg;
-                        mobileImage.src = imgUrl;
+                        mobileImage.src = trigger.dataset.cardImg;
                         mobileModal.classList.remove('hidden');
-                        setTimeout(() => {
-                            mobileModal.classList.remove('opacity-0');
-                        }, 20);
+                        setTimeout(() => mobileModal.classList.remove('opacity-0'), 20);
                     }
                 });
 
                 const closeMobileModal = () => {
                     mobileModal.classList.add('opacity-0');
-                    setTimeout(() => {
-                        mobileModal.classList.add('hidden');
-                    }, 300);
+                    setTimeout(() => mobileModal.classList.add('hidden'), 300);
                 };
 
                 closeModalBtn.addEventListener('click', closeMobileModal);
-                mobileModal.addEventListener('click', (e) => {
-                    if (e.target === mobileModal) {
-                        closeMobileModal();
-                    }
-                });
+                mobileModal.addEventListener('click', (e) => { if (e.target === mobileModal) closeMobileModal(); });
             }
 
-            setupCardPreviews();
+            async function init() {
+                await loadTournamentData();
+                renderAll();
+                setupCardPreviews();
+                setupRealtimeSubscription();
+            }
+
+            init();
         });
     </script>
 </body>
