@@ -357,23 +357,6 @@
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             }
 
-            // Elements for reporting modal
-            const reportElements = {
-                modal: document.getElementById('report-modal'),
-                form: document.getElementById('report-form'),
-                matchId: document.getElementById('report-match-id'),
-                groupName: document.getElementById('report-group-name'),
-                player1Name: document.getElementById('report-player1-name'),
-                player2Name: document.getElementById('report-player2-name'),
-                labelP1: document.getElementById('label-report-p1'),
-                labelP2: document.getElementById('label-report-p2'),
-                player1Score: document.getElementById('report-player1-score'),
-                player2Score: document.getElementById('report-player2-score'),
-                passcode: document.getElementById('report-passcode'),
-                errorMsg: document.getElementById('report-error-msg'),
-                closeBtn: document.getElementById('close-report-modal-btn'),
-                submitBtn: document.getElementById('submit-report-btn')
-            };
 
             // Dados estáticos dos 16 jogadores fornecidos pelo CSV
             const players = [
@@ -814,37 +797,104 @@
                             <div class="flex items-center justify-between gap-1 text-sm md:text-base font-semibold">
                                 <span class="w-[38%] text-left truncate ${p1c}" title="${m.player1}">${m.player1}</span>
                                 <div class="flex items-center gap-1 justify-center w-[24%]">
-                                    <input type="number" min="0" max="3" class="score-input bg-stone-950 text-center rounded-none w-10 py-1 text-sm md:text-base font-bold text-brand-lightgold border border-brand-gold/20 cursor-pointer" data-player="player1" value="${m.player1Score !== null ? m.player1Score : ''}" placeholder="-" readonly>
+                                    <input type="number" min="0" max="3" class="score-input bg-stone-950 text-center rounded-none w-10 py-1 text-sm md:text-base font-bold text-brand-lightgold border border-brand-gold/20" data-player="player1" value="${m.player1Score !== null ? m.player1Score : ''}" placeholder="-">
                                     <span class="text-stone-600 text-xs font-mono">vs</span>
-                                    <input type="number" min="0" max="3" class="score-input bg-stone-950 text-center rounded-none w-10 py-1 text-sm md:text-base font-bold text-brand-lightgold border border-brand-gold/20 cursor-pointer" data-player="player2" value="${m.player2Score !== null ? m.player2Score : ''}" placeholder="-" readonly>
+                                    <input type="number" min="0" max="3" class="score-input bg-stone-950 text-center rounded-none w-10 py-1 text-sm md:text-base font-bold text-brand-lightgold border border-brand-gold/20" data-player="player2" value="${m.player2Score !== null ? m.player2Score : ''}" placeholder="-">
                                 </div>
                                 <span class="w-[38%] text-right truncate ${p2c}" title="${m.player2}">${m.player2}</span>
+                            </div>
+                            <div class="inline-report-section hidden mt-3 pt-3 border-t border-stone-850 space-y-2">
+                                <div class="flex gap-2 items-center">
+                                    <input type="password" placeholder="Senha" class="inline-passcode bg-stone-950 border border-brand-gold/30 rounded-none py-1.5 px-3 text-xs text-stone-200 placeholder-stone-700 focus:border-brand-gold focus:outline-none flex-grow">
+                                    <button class="inline-submit-btn bg-brand-gold hover:bg-brand-lightgold text-black font-bold py-1.5 px-4 rounded-none transition-colors text-xs uppercase tracking-wider">
+                                        Reportar
+                                    </button>
+                                    <button class="inline-cancel-btn text-stone-400 hover:text-stone-200 py-1.5 px-2 text-xs uppercase">
+                                        Cancelar
+                                    </button>
+                                </div>
+                                <div class="inline-error-msg text-red-500 text-[10px] hidden font-semibold"></div>
                             </div>
                         </div>
                     `;
                 });
 
-                elements.matchesContainer.querySelectorAll('.score-input, .reset-scores-btn').forEach(el => {
-                    const card = el.closest('[data-match-id]');
+                elements.matchesContainer.querySelectorAll('[data-match-id]').forEach(card => {
                     const matchId = card.dataset.matchId;
                     const match = tournamentMatches.find(m => m.id === matchId);
+                    const reportSection = card.querySelector('.inline-report-section');
+                    const passcodeInp = card.querySelector('.inline-passcode');
+                    const submitBtn = card.querySelector('.inline-submit-btn');
+                    const cancelBtn = card.querySelector('.inline-cancel-btn');
+                    const errorMsg = card.querySelector('.inline-error-msg');
+                    const p1Input = card.querySelector('[data-player="player1"]');
+                    const p2Input = card.querySelector('[data-player="player2"]');
+                    const resetBtn = card.querySelector('.reset-scores-btn');
 
-                    if (el.classList.contains('score-input')) {
-                        el.addEventListener('click', (e) => {
-                            e.preventDefault();
-                            e.target.blur();
-                            openReportModal(matchId, 'report');
-                        });
-                        el.addEventListener('focus', (e) => {
-                            e.preventDefault();
-                            e.target.blur();
-                            openReportModal(matchId, 'report');
-                        });
-                    } else {
-                        el.addEventListener('click', () => {
-                            openReportModal(matchId, 'clear');
+                    const handleInputInteraction = () => {
+                        reportSection.classList.remove('hidden');
+                        submitBtn.textContent = 'Reportar';
+                        errorMsg.classList.add('hidden');
+                    };
+
+                    [p1Input, p2Input].forEach(inp => {
+                        inp.addEventListener('focus', handleInputInteraction);
+                        inp.addEventListener('input', handleInputInteraction);
+                    });
+
+                    if (resetBtn) {
+                        resetBtn.addEventListener('click', () => {
+                            p1Input.value = ''; p2Input.value = '';
+                            reportSection.classList.remove('hidden');
+                            submitBtn.textContent = 'Limpar';
+                            errorMsg.classList.add('hidden');
+                            passcodeInp.focus();
                         });
                     }
+
+                    cancelBtn.addEventListener('click', () => {
+                        p1Input.value = match.player1Score !== null ? match.player1Score : '';
+                        p2Input.value = match.player2Score !== null ? match.player2Score : '';
+                        reportSection.classList.add('hidden');
+                    });
+
+                    submitBtn.addEventListener('click', async () => {
+                        const passcode = passcodeInp.value;
+                        const isClear = submitBtn.textContent === 'Limpar';
+                        let p1Score = isClear ? null : parseInt(p1Input.value);
+                        let p2Score = isClear ? null : parseInt(p2Input.value);
+                        
+                        if (!isClear && (isNaN(p1Score) || isNaN(p2Score) || p1Score < 0 || p1Score > 3 || p2Score < 0 || p2Score > 3 || p1Score === p2Score)) {
+                            errorMsg.textContent = 'Placares inválidos.';
+                            errorMsg.classList.remove('hidden');
+                            return;
+                        }
+
+                        submitBtn.disabled = true;
+                        submitBtn.textContent = 'Enviando...';
+                        
+                        if (isSupabaseConfigured) {
+                            try {
+                                const { data, error } = await supabaseClient.rpc('report_match', { p_match_id: matchId, p_player1_score: p1Score, p_player2_score: p2Score, p_passcode: passcode });
+                                if (error) throw error;
+                                await loadTournamentData(); renderAll();
+                            } catch (err) {
+                                errorMsg.textContent = 'Senha incorreta ou erro.';
+                                errorMsg.classList.remove('hidden');
+                                submitBtn.disabled = false;
+                                submitBtn.textContent = isClear ? 'Limpar' : 'Reportar';
+                            }
+                        } else {
+                            if (passcode !== 'agorim') {
+                                errorMsg.textContent = 'Senha inválida!';
+                                errorMsg.classList.remove('hidden');
+                                submitBtn.disabled = false;
+                                return;
+                            }
+                            match.player1Score = p1Score; match.player2Score = p2Score; match.completed = !isClear;
+                            saveTournamentData(); renderAll();
+                        }
+                    });
                 });
             }
 
@@ -866,129 +916,6 @@
                     renderFilters();
                     renderMatches();
                 }
-            }
-
-            function openReportModal(matchId, mode = 'report') {
-                const match = tournamentMatches.find(m => m.id === matchId);
-                if (!match) return;
-
-                reportElements.matchId.value = matchId;
-                reportElements.groupName.textContent = match.group === 1 ? 'Grupo 1 - Noxious' : 'Grupo 2 - Voltash';
-                reportElements.player1Name.textContent = match.player1;
-                reportElements.player2Name.textContent = match.player2;
-                reportElements.labelP1.textContent = match.player1;
-                reportElements.labelP2.textContent = match.player2;
-                
-                reportElements.errorMsg.classList.add('hidden');
-                reportElements.errorMsg.textContent = '';
-                reportElements.passcode.value = '';
-
-                if (mode === 'clear') {
-                    document.querySelector('#report-modal h3').textContent = 'Limpar Confronto';
-                    reportElements.submitBtn.textContent = 'Confirmar Limpeza';
-                    reportElements.player1Score.disabled = true;
-                    reportElements.player2Score.disabled = true;
-                    reportElements.player1Score.value = '';
-                    reportElements.player2Score.value = '';
-                } else {
-                    document.querySelector('#report-modal h3').textContent = 'Reportar Confronto';
-                    reportElements.submitBtn.textContent = 'Enviar Resultado';
-                    reportElements.player1Score.disabled = false;
-                    reportElements.player2Score.disabled = false;
-                    reportElements.player1Score.value = match.player1Score !== null ? match.player1Score : '';
-                    reportElements.player2Score.value = match.player2Score !== null ? match.player2Score : '';
-                }
-
-                reportElements.modal.classList.remove('hidden');
-                setTimeout(() => reportElements.modal.classList.remove('opacity-0'), 10);
-            }
-
-            const closeReportModal = () => {
-                reportElements.modal.classList.add('opacity-0');
-                setTimeout(() => reportElements.modal.classList.add('hidden'), 300);
-            };
-
-            reportElements.closeBtn.addEventListener('click', closeReportModal);
-            reportElements.modal.addEventListener('click', (e) => { 
-                if (e.target === reportElements.modal) closeReportModal(); 
-            });
-
-            reportElements.form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const matchId = reportElements.matchId.value;
-                const passcode = reportElements.passcode.value;
-                const isClear = reportElements.player1Score.disabled;
-                
-                let p1Score = null;
-                let p2Score = null;
-                
-                if (!isClear) {
-                    p1Score = parseInt(reportElements.player1Score.value);
-                    p2Score = parseInt(reportElements.player2Score.value);
-                    
-                    if (isNaN(p1Score) || isNaN(p2Score) || p1Score < 0 || p1Score > 3 || p2Score < 0 || p2Score > 3) {
-                        showReportError('Placares inválidos. Devem ser entre 0 e 3.');
-                        return;
-                    }
-                    if (p1Score === p2Score) {
-                        showReportError('Empates não são permitidos no KeyForge.');
-                        return;
-                    }
-                }
-
-                reportElements.submitBtn.disabled = true;
-                reportElements.submitBtn.textContent = 'Enviando...';
-                
-                if (isSupabaseConfigured) {
-                    try {
-                        const { data, error } = await supabaseClient.rpc('report_match', {
-                            p_match_id: matchId,
-                            p_player1_score: p1Score,
-                            p_player2_score: p2Score,
-                            p_passcode: passcode
-                        });
-                        
-                        if (error) throw error;
-                        
-                        if (data === true) {
-                            closeReportModal();
-                            await loadTournamentData();
-                            renderAll();
-                        } else {
-                            throw new Error("Erro desconhecido ao registrar resultado.");
-                        }
-                    } catch (err) {
-                        console.error(err);
-                        showReportError(err.message || 'Erro de conexão ou senha incorreta.');
-                    } finally {
-                        reportElements.submitBtn.disabled = false;
-                        reportElements.submitBtn.textContent = isClear ? 'Confirmar Limpeza' : 'Enviar Resultado';
-                    }
-                } else {
-                    if (passcode !== 'agorim') {
-                        showReportError('Senha do torneio inválida!');
-                        reportElements.submitBtn.disabled = false;
-                        reportElements.submitBtn.textContent = isClear ? 'Confirmar Limpeza' : 'Enviar Resultado';
-                        return;
-                    }
-                    const match = tournamentMatches.find(m => m.id === matchId);
-                    if (match) {
-                        match.player1Score = p1Score;
-                        match.player2Score = p2Score;
-                        match.completed = !isClear;
-                        saveTournamentData();
-                        renderAll();
-                        closeReportModal();
-                    }
-                    reportElements.submitBtn.disabled = false;
-                    reportElements.submitBtn.textContent = isClear ? 'Confirmar Limpeza' : 'Enviar Resultado';
-                }
-            });
-
-            function showReportError(msg) {
-                reportElements.errorMsg.textContent = msg;
-                reportElements.errorMsg.classList.remove('hidden');
             }
 
             function setupRealtimeSubscription() {
