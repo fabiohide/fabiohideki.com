@@ -814,9 +814,9 @@
                             <div class="flex items-center justify-between gap-1 text-sm md:text-base font-semibold">
                                 <span class="w-[38%] text-left truncate ${p1c}" title="${m.player1}">${m.player1}</span>
                                 <div class="flex items-center gap-1 justify-center w-[24%]">
-                                    <input type="number" min="0" max="3" class="score-input bg-stone-950 text-center rounded-none w-10 py-1 text-sm md:text-base font-bold text-brand-lightgold border border-brand-gold/20 ${isSupabaseConfigured ? 'cursor-pointer' : ''}" data-player="player1" value="${m.player1Score !== null ? m.player1Score : ''}" placeholder="-" ${isSupabaseConfigured ? 'readonly' : ''}>
+                                    <input type="number" min="0" max="3" class="score-input bg-stone-950 text-center rounded-none w-10 py-1 text-sm md:text-base font-bold text-brand-lightgold border border-brand-gold/20 cursor-pointer" data-player="player1" value="${m.player1Score !== null ? m.player1Score : ''}" placeholder="-" readonly>
                                     <span class="text-stone-600 text-xs font-mono">vs</span>
-                                    <input type="number" min="0" max="3" class="score-input bg-stone-950 text-center rounded-none w-10 py-1 text-sm md:text-base font-bold text-brand-lightgold border border-brand-gold/20 ${isSupabaseConfigured ? 'cursor-pointer' : ''}" data-player="player2" value="${m.player2Score !== null ? m.player2Score : ''}" placeholder="-" ${isSupabaseConfigured ? 'readonly' : ''}>
+                                    <input type="number" min="0" max="3" class="score-input bg-stone-950 text-center rounded-none w-10 py-1 text-sm md:text-base font-bold text-brand-lightgold border border-brand-gold/20 cursor-pointer" data-player="player2" value="${m.player2Score !== null ? m.player2Score : ''}" placeholder="-" readonly>
                                 </div>
                                 <span class="w-[38%] text-right truncate ${p2c}" title="${m.player2}">${m.player2}</span>
                             </div>
@@ -830,40 +830,19 @@
                     const match = tournamentMatches.find(m => m.id === matchId);
 
                     if (el.classList.contains('score-input')) {
-                        if (isSupabaseConfigured) {
-                            el.addEventListener('click', (e) => {
-                                e.preventDefault();
-                                e.target.blur();
-                                openReportModal(matchId, 'report');
-                            });
-                            el.addEventListener('focus', (e) => {
-                                e.preventDefault();
-                                e.target.blur();
-                                openReportModal(matchId, 'report');
-                            });
-                        } else {
-                            el.addEventListener('change', (e) => {
-                                const val = e.target.value !== "" ? parseInt(e.target.value) : null;
-                                const playerKey = e.target.dataset.player + 'Score';
-                                match[playerKey] = (val !== null && val >= 0 && val <= 3) ? val : null;
-                                match.completed = match.player1Score !== null && match.player2Score !== null && match.player1Score !== match.player2Score;
-                                saveTournamentData();
-                                renderMatches();
-                                renderStandings();
-                            });
-                        }
+                        el.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            e.target.blur();
+                            openReportModal(matchId, 'report');
+                        });
+                        el.addEventListener('focus', (e) => {
+                            e.preventDefault();
+                            e.target.blur();
+                            openReportModal(matchId, 'report');
+                        });
                     } else {
                         el.addEventListener('click', () => {
-                            if (isSupabaseConfigured) {
-                                openReportModal(matchId, 'clear');
-                            } else {
-                                match.player1Score = null;
-                                match.player2Score = null;
-                                match.completed = false;
-                                saveTournamentData();
-                                renderMatches();
-                                renderStandings();
-                            }
+                            openReportModal(matchId, 'clear');
                         });
                     }
                 });
@@ -987,6 +966,12 @@
                         reportElements.submitBtn.textContent = isClear ? 'Confirmar Limpeza' : 'Enviar Resultado';
                     }
                 } else {
+                    if (passcode !== 'agorim') {
+                        showReportError('Senha do torneio inválida!');
+                        reportElements.submitBtn.disabled = false;
+                        reportElements.submitBtn.textContent = isClear ? 'Confirmar Limpeza' : 'Enviar Resultado';
+                        return;
+                    }
                     const match = tournamentMatches.find(m => m.id === matchId);
                     if (match) {
                         match.player1Score = p1Score;
