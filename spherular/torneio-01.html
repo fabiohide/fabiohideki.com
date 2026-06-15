@@ -89,12 +89,12 @@
 
         /* Ticker de Resultados Animado */
         @keyframes marquee {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
         }
         .ticker-content {
             display: inline-flex;
-            animation: marquee 35s linear infinite;
+            animation: marquee 60s linear infinite;
         }
         .ticker-content:hover {
             animation-play-state: paused;
@@ -135,10 +135,10 @@
     <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
         
         <!-- Ticker de Últimos Resultados -->
-        <div id="ticker-wrapper" class="w-full bg-[#050A06] border-2 border-brand-gold/25 mb-6 overflow-hidden py-2 px-4 flex items-center relative hidden">
-            <span class="bg-[#050A06] text-brand-gold px-2 z-10 font-bold border-r border-brand-gold/20 text-[10px] uppercase tracking-widest shrink-0 mr-3">Últimos Resultados</span>
+        <div id="ticker-wrapper" class="w-full bg-[#050A06] border-2 border-brand-gold/25 mb-6 overflow-hidden py-2.5 px-4 flex items-center relative hidden">
+            <span class="bg-[#050A06] text-brand-gold px-2 z-10 font-bold border-r border-brand-gold/20 text-xs uppercase tracking-widest shrink-0 mr-3">Últimos Resultados</span>
             <div class="overflow-hidden w-full relative flex items-center ticker-mask">
-                <div id="recent-results-ticker" class="ticker-content whitespace-nowrap flex items-center gap-6 text-xs text-stone-300">
+                <div id="recent-results-ticker" class="ticker-content whitespace-nowrap flex items-center gap-6 text-sm md:text-base text-stone-300">
                     <!-- Resultados reportados dinamicamente via JS -->
                 </div>
             </div>
@@ -972,8 +972,8 @@
                     }
                 }
 
-                let html = '';
-                matchesToShow.forEach((m, idx) => {
+                let htmlItems = [];
+                matchesToShow.forEach((m) => {
                     const p1Nick = getNick(m.player1);
                     const p2Nick = getNick(m.player2);
                     
@@ -987,19 +987,19 @@
                         <span class="flex items-center gap-1.5 font-retro-body">
                             <span class="${p1Class}">${p1Nick}</span>
                             <span class="text-brand-lightgold font-mono font-bold">${m.player1Score}</span>
-                            <span class="text-stone-600 text-[10px] font-mono">x</span>
+                            <span class="text-stone-600 text-xs font-mono">x</span>
                             <span class="text-brand-lightgold font-mono font-bold">${m.player2Score}</span>
                             <span class="${p2Class}">${p2Nick}</span>
                         </span>
                     `;
-                    
-                    html += matchHtml;
-                    if (idx < matchesToShow.length - 1) {
-                        html += `<span class="text-brand-gold mx-4">★</span>`;
-                    }
+                    htmlItems.push(matchHtml);
                 });
 
-                elements.recentResultsTicker.innerHTML = html;
+                const separatorHtml = `<span class="text-brand-gold mx-4">★</span>`;
+                const singleCopyHtml = htmlItems.join(separatorHtml);
+
+                // Duplicate the items to allow a seamless 0% -> -50% infinite translation
+                elements.recentResultsTicker.innerHTML = singleCopyHtml + separatorHtml + singleCopyHtml + separatorHtml;
             }
 
             function renderAll() {
