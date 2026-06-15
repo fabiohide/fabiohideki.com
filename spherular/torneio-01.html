@@ -105,11 +105,15 @@
         }
 
         /* Smooth Cursor Customizado */
+        #smooth-cursor {
+            display: none;
+        }
         @media (min-width: 768px) {
             body, a, button, select, input, textarea, .rare-card-trigger, [role="button"] {
                 cursor: none !important;
             }
             #smooth-cursor {
+                display: block;
                 pointer-events: none;
                 position: fixed;
                 top: 0;
@@ -1201,9 +1205,9 @@
     </script>
 
     <!-- Cursor Customizado Suave (Smooth Cursor) -->
-    <div id="smooth-cursor" class="pointer-events-none fixed top-0 left-0 z-50 hidden md:block">
+    <div id="smooth-cursor" class="pointer-events-none fixed top-0 left-0 z-50">
         <div class="cursor-icon-wrapper w-8 h-8">
-            <img src="../assets/draguinho.svg" alt="" class="w-full h-full object-contain">
+            <img src="./assets/draguinho.svg" alt="" class="w-full h-full object-contain">
         </div>
     </div>
 </body>
