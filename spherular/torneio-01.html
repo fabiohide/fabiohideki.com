@@ -108,29 +108,36 @@
         #smooth-cursor {
             display: none;
         }
-        @media (min-width: 768px) {
-            body, a, button, select, input, textarea, .rare-card-trigger, [role="button"] {
-                cursor: none !important;
-            }
-            #smooth-cursor {
-                display: block;
-                pointer-events: none;
-                position: fixed;
-                top: 0;
-                left: 0;
-                z-index: 9999;
-                will-change: transform;
-                opacity: 0;
-                transition: opacity 0.3s ease;
-            }
-            .cursor-icon-wrapper {
-                transition: transform 0.2s ease-out, filter 0.2s ease-out;
-                transform-origin: top left;
-            }
-            #smooth-cursor.cursor-hover .cursor-icon-wrapper {
-                transform: scale(1.3);
-                filter: drop-shadow(0 0 8px rgba(234, 179, 8, 0.7));
-            }
+        body.has-custom-cursor,
+        body.has-custom-cursor a,
+        body.has-custom-cursor button,
+        body.has-custom-cursor select,
+        body.has-custom-cursor input,
+        body.has-custom-cursor textarea,
+        body.has-custom-cursor .rare-card-trigger,
+        body.has-custom-cursor [role="button"] {
+            cursor: none !important;
+        }
+        body.has-custom-cursor #smooth-cursor {
+            display: block;
+            pointer-events: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 32px;
+            height: 32px;
+            z-index: 9999;
+            will-change: transform;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .cursor-icon-wrapper {
+            transition: transform 0.2s ease-out, filter 0.2s ease-out;
+            transform-origin: top left;
+        }
+        #smooth-cursor.cursor-hover .cursor-icon-wrapper {
+            transform: scale(1.3);
+            filter: drop-shadow(0 0 8px rgba(234, 179, 8, 0.7));
         }
     </style>
 </head>
@@ -409,8 +416,10 @@
             const isSupabaseConfigured = SUPABASE_URL && !SUPABASE_URL.includes('YOUR_PROJECT_ID') && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includes('YOUR_ANON_PUBLIC_KEY');
 
             let supabaseClient = null;
-            if (isSupabaseConfigured) {
+            if (isSupabaseConfigured && typeof supabase !== 'undefined') {
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            } else if (isSupabaseConfigured) {
+                console.warn("Supabase library not loaded. Falling back to offline mode.");
             }
 
 
@@ -561,7 +570,7 @@
             }
 
             async function loadTournamentData() {
-                if (isSupabaseConfigured) {
+                if (isSupabaseConfigured && supabaseClient) {
                     try {
                         const { data, error } = await supabaseClient
                             .from('matches')
@@ -597,7 +606,7 @@
             }
 
             function saveTournamentData() {
-                if (isSupabaseConfigured) {
+                if (isSupabaseConfigured && supabaseClient) {
                     return;
                 }
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(tournamentMatches));
@@ -933,7 +942,7 @@
                         submitBtn.disabled = true;
                         submitBtn.textContent = 'Enviando...';
                         
-                        if (isSupabaseConfigured) {
+                        if (isSupabaseConfigured && supabaseClient) {
                             try {
                                 const { data, error } = await supabaseClient.rpc('report_match', { p_match_id: matchId, p_player1_score: p1Score, p_player2_score: p2Score, p_passcode: passcode });
                                 if (error) throw error;
@@ -1193,11 +1202,11 @@
             }
 
             async function init() {
+                setupSmoothCursor();
                 await loadTournamentData();
                 renderAll();
                 setupCardPreviews();
                 setupRealtimeSubscription();
-                setupSmoothCursor();
             }
 
             init();
