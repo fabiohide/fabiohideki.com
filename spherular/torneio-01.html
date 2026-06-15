@@ -448,6 +448,8 @@
                     tournamentMatches = generateInitialMatches();
                 }
                 prePopulateMatches();
+                const now = new Date();
+                elements.lastUpdateText.textContent = `Atualizado em ${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
             }
 
             function prePopulateMatches() {
@@ -520,7 +522,7 @@
                                 completed: m.completed
                             }));
                             const now = new Date();
-                            elements.lastUpdateText.textContent = `Supabase Online · ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+                            elements.lastUpdateText.textContent = `Atualizado em ${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
                         } else {
                             console.warn("Matches table is empty. Local seed matches will be used.");
                             loadLocalTournamentData();
@@ -528,11 +530,11 @@
                     } catch (e) {
                         console.error("Error connecting to Supabase, loading from LocalStorage", e);
                         loadLocalTournamentData();
-                        elements.lastUpdateText.textContent = `Offline (Erro Supabase)`;
+                        const now = new Date();
+                        elements.lastUpdateText.textContent = `Offline · Atualizado em ${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
                     }
                 } else {
                     loadLocalTournamentData();
-                    elements.lastUpdateText.textContent = `Modo Local`;
                 }
             }
 
@@ -542,7 +544,7 @@
                 }
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(tournamentMatches));
                 const now = new Date();
-                elements.lastUpdateText.textContent = `Salvo em ${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+                elements.lastUpdateText.textContent = `Atualizado em ${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
             }
 
             elements.exportJsonBtn.addEventListener('click', () => {
@@ -937,6 +939,8 @@
                                     player2Score: newMatch.player2_score,
                                     completed: newMatch.completed
                                 };
+                                const now = new Date();
+                                elements.lastUpdateText.textContent = `Atualizado em ${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
                                 renderAll();
                             }
                         }
