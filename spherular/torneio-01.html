@@ -879,7 +879,17 @@
                             try {
                                 const { data, error } = await supabaseClient.rpc('report_match', { p_match_id: matchId, p_player1_score: p1Score, p_player2_score: p2Score, p_passcode: passcode });
                                 if (error) throw error;
-                                await loadTournamentData(); renderAll();
+                                if (data === true) {
+                                    submitBtn.textContent = 'Sucesso!';
+                                    submitBtn.classList.remove('bg-brand-gold', 'hover:bg-brand-lightgold');
+                                    submitBtn.classList.add('bg-green-600', 'text-white');
+                                    await loadTournamentData();
+                                    setTimeout(() => {
+                                        renderAll();
+                                    }, 1000);
+                                } else {
+                                    throw new Error("Erro ao salvar no banco.");
+                                }
                             } catch (err) {
                                 console.error("Report error:", err);
                                 errorMsg.textContent = err.message || 'Senha incorreta ou erro.';
@@ -895,7 +905,13 @@
                                 return;
                             }
                             match.player1Score = p1Score; match.player2Score = p2Score; match.completed = !isClear;
-                            saveTournamentData(); renderAll();
+                            saveTournamentData();
+                            submitBtn.textContent = 'Sucesso!';
+                            submitBtn.classList.remove('bg-brand-gold', 'hover:bg-brand-lightgold');
+                            submitBtn.classList.add('bg-green-600', 'text-white');
+                            setTimeout(() => {
+                                renderAll();
+                            }, 1000);
                         }
                     });
                 });
