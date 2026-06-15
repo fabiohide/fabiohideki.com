@@ -881,7 +881,8 @@
                                 if (error) throw error;
                                 await loadTournamentData(); renderAll();
                             } catch (err) {
-                                errorMsg.textContent = 'Senha incorreta ou erro.';
+                                console.error("Report error:", err);
+                                errorMsg.textContent = err.message || 'Senha incorreta ou erro.';
                                 errorMsg.classList.remove('hidden');
                                 submitBtn.disabled = false;
                                 submitBtn.textContent = isClear ? 'Limpar' : 'Reportar';
