@@ -103,6 +103,31 @@
             mask-image: linear-gradient(to right, transparent 0%, #000 8%, #000 92%, transparent 100%);
             -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 8%, #000 92%, transparent 100%);
         }
+
+        /* Smooth Cursor Customizado */
+        @media (min-width: 768px) {
+            body, a, button, select, input, textarea, .rare-card-trigger, [role="button"] {
+                cursor: none !important;
+            }
+            #smooth-cursor {
+                pointer-events: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                z-index: 9999;
+                will-change: transform;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+            .cursor-icon-wrapper {
+                transition: transform 0.2s ease-out, filter 0.2s ease-out;
+                transform-origin: top left;
+            }
+            #smooth-cursor.cursor-hover .cursor-icon-wrapper {
+                transform: scale(1.3);
+                filter: drop-shadow(0 0 8px rgba(234, 179, 8, 0.7));
+            }
+        }
     </style>
 </head>
 <body class="text-stone-200 antialiased relative overflow-x-hidden">
@@ -1110,15 +1135,76 @@
                 mobileModal.addEventListener('click', (e) => { if (e.target === mobileModal) closeMobileModal(); });
             }
 
+            function setupSmoothCursor() {
+                const cursor = document.getElementById('smooth-cursor');
+                if (!cursor) return;
+
+                let mouseX = -100;
+                let mouseY = -100;
+                let cursorX = -100;
+                let cursorY = -100;
+                let firstMove = true;
+
+                document.addEventListener('mousemove', (e) => {
+                    mouseX = e.clientX;
+                    mouseY = e.clientY;
+                    if (firstMove) {
+                        cursor.style.opacity = '1';
+                        firstMove = false;
+                    }
+                });
+
+                document.addEventListener('mouseleave', () => {
+                    cursor.style.opacity = '0';
+                });
+                document.addEventListener('mouseenter', () => {
+                    if (!firstMove) cursor.style.opacity = '1';
+                });
+
+                function tick() {
+                    const ease = 0.15;
+                    cursorX += (mouseX - cursorX) * ease;
+                    cursorY += (mouseY - cursorY) * ease;
+                    cursor.style.transform = `translate3d(${cursorX}px, ${cursorY}px, 0)`;
+                    requestAnimationFrame(tick);
+                }
+                requestAnimationFrame(tick);
+
+                const addHover = () => cursor.classList.add('cursor-hover');
+                const removeHover = () => cursor.classList.remove('cursor-hover');
+
+                document.body.addEventListener('mouseover', (e) => {
+                    const target = e.target.closest('a, button, input, select, textarea, [role="button"], .rare-card-trigger');
+                    if (target) {
+                        addHover();
+                    }
+                });
+
+                document.body.addEventListener('mouseout', (e) => {
+                    const target = e.target.closest('a, button, input, select, textarea, [role="button"], .rare-card-trigger');
+                    if (target) {
+                        removeHover();
+                    }
+                });
+            }
+
             async function init() {
                 await loadTournamentData();
                 renderAll();
                 setupCardPreviews();
                 setupRealtimeSubscription();
+                setupSmoothCursor();
             }
 
             init();
         });
     </script>
+
+    <!-- Cursor Customizado Suave (Smooth Cursor) -->
+    <div id="smooth-cursor" class="pointer-events-none fixed top-0 left-0 z-50 hidden md:block">
+        <div class="cursor-icon-wrapper w-8 h-8">
+            <img src="../assets/draguinho.svg" alt="" class="w-full h-full object-contain">
+        </div>
+    </div>
 </body>
 </html>
