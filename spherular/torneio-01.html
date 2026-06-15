@@ -409,22 +409,6 @@
     <!-- Script de lógica interativa -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            window.addEventListener('error', (event) => {
-                const errDiv = document.createElement('div');
-                errDiv.style.position = 'fixed';
-                errDiv.style.top = '0';
-                errDiv.style.left = '0';
-                errDiv.style.width = '100%';
-                errDiv.style.backgroundColor = '#7f1d1d';
-                errDiv.style.color = '#fee2e2';
-                errDiv.style.padding = '12px';
-                errDiv.style.zIndex = '999999';
-                errDiv.style.fontFamily = 'monospace';
-                errDiv.style.fontSize = '12px';
-                errDiv.style.borderBottom = '2px solid #ef4444';
-                errDiv.textContent = `JS Error: ${event.message} (${event.filename}:${event.lineno}:${event.colno})`;
-                document.body.appendChild(errDiv);
-            });
 
             const STORAGE_KEY = 'chegou_agorinha_tournament_matches';
 
