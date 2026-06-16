@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KeyForge Set-Viz — Comparador de Coleções</title>
+  
+  <!-- Estilos e Fontes -->
+  <link rel="stylesheet" href="./style.css">
+  
+  <!-- Dependências via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <!-- Barra de Navegação -->
+  <header class="navbar">
+    <a href="#" class="logo-wordmark" style="display: flex; align-items: center; padding: 0;">
+      <img src="./assets/Spherular_Set-Viz-logo.png" alt="Spherular Set-Viz" style="height: 48px; width: auto; display: block;">
+    </a>
+    <nav class="nav-links">
+      <a href="../torneio-01.html" class="nav-link">Torneio Chegou Agorinha</a>
+      <a href="#" class="nav-link active">Visualizador</a>
+    </nav>
+  </header>
+
+  <!-- Container Geral do App -->
+  <div class="app-container">
+    
+    <!-- Barra Lateral de Filtros -->
+    <aside class="sidebar">
+      <div class="sidebar-title">
+        Filtros de Análise
+      </div>
+      
+      <!-- Coleções -->
+      <div class="filter-group">
+        <div class="filter-label">Coleções Analisadas</div>
+        <div class="pill-selector" id="collection-selector">
+          <div class="pill-option active" data-collection="DRACONIAN_MEASURES">Draconian Measures</div>
+          <div class="pill-option active" data-collection="GRIM_REMINDERS">Grim Reminders</div>
+        </div>
+      </div>
+      
+      <!-- Incluir Casas -->
+      <div class="filter-group">
+        <div class="filter-label">Incluir Casas</div>
+        <div class="pill-selector" id="include-houses-selector">
+          <div class="pill-option" data-house="Brobnar">Brobnar</div>
+          <div class="pill-option" data-house="Ekwidon">Ekwidon</div>
+          <div class="pill-option" data-house="Geistoid">Geistoid</div>
+          <div class="pill-option" data-house="Mars">Mars</div>
+          <div class="pill-option" data-house="Ouboros">Ouboros</div>
+          <div class="pill-option" data-house="Shadows">Shadows</div>
+          <div class="pill-option" data-house="Skyborn">Skyborn</div>
+          <div class="pill-option" data-house="StarAlliance">Star Alliance</div>
+          <div class="pill-option" data-house="Unfathomable">Unfathomable</div>
+          <div class="pill-option" data-house="Untamed">Untamed</div>
+        </div>
+      </div>
+
+
+      <!-- Modo de Casamento de Casas -->
+      <div class="filter-group">
+        <div class="filter-label">Modo de Combinação</div>
+        <select class="form-select" id="house-match-mode">
+          <option value="any">Contém qualquer uma</option>
+          <option value="all">Contém todas selecionadas</option>
+          <option value="exact">Exatamente estas casas</option>
+        </select>
+      </div>
+    </aside>
+
+    <!-- Área de Conteúdo Principal -->
+    <main class="main-content">
+      
+      <!-- Cabeçalho de Contexto -->
+      <section class="content-header">
+        <h1 class="main-title" id="dashboard-title">
+          Comparando <span>Draconian Measures</span> &amp; <span>Grim Reminders</span>
+        </h1>
+        <!-- Linha 1: Métrica e Corte Competitivo -->
+        <div class="active-filters-row">
+          
+          <!-- Métrica de Destaque como Chip -->
+          <div class="chip-select-container">
+            <select class="chip-select chip-select-metric" id="metric-select">
+              <option value="sas">Métrica: SAS Total</option>
+              <option value="aerc_base">Métrica: AERC Base</option>
+              <option value="synergy_net">Métrica: Sinergia Net</option>
+              <option value="synergy_positive">Métrica: Sinergia Positiva</option>
+              <option value="synergy_negative">Métrica: Antissinergia</option>
+              <option value="expected_amber">Métrica: Expected Amber</option>
+              <option value="amber_control">Métrica: Amber Control</option>
+              <option value="creature_control">Métrica: Creature Control</option>
+              <option value="effective_power">Métrica: Effective Power</option>
+            </select>
+          </div>
+
+          <!-- Corte Competitivo como Chip -->
+          <div class="chip-select-container">
+            <select class="chip-select chip-select-cutoff" id="top-preset-select">
+              <option value="100" selected>Corte: Ver Todos (100%)</option>
+              <option value="50">Corte: Top 50%</option>
+              <option value="25">Corte: Top 25%</option>
+              <option value="10">Corte: Top 10%</option>
+              <option value="5">Corte: Top 5%</option>
+              <option value="1">Corte: Top 1%</option>
+              <option value="0.1">Corte: Top 0.1%</option>
+              <option value="custom">Corte: Personalizado</option>
+            </select>
+          </div>
+
+          <!-- Controle de Corte Customizado (Slider) -->
+          <div class="slider-chip" id="custom-slider-group" style="display: none;">
+            <span class="slider-chip-label">Top %:</span>
+            <input type="range" class="range-slider" id="top-percent-slider" min="0.1" max="100" step="0.1" value="10">
+            <span id="slider-value-display">10.0%</span>
+          </div>
+
+        </div>
+
+        <!-- Linha 2: Chips de Casas (Fica em baixo com margem confortável) -->
+        <div class="active-filters-row" style="margin-top: var(--spacing-12);">
+          <div id="active-chips-row" style="display: inline-flex; gap: var(--spacing-8); align-items: center; flex-wrap: wrap;">
+            <!-- Gerado dinamicamente -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Navegação das Abas -->
+      <nav class="tab-nav">
+        <button class="tab-btn active" data-tab="overview">Visão Geral</button>
+        <button class="tab-btn" data-tab="distribution">Distribuição SAS</button>
+        <button class="tab-btn" data-tab="houses">Casas</button>
+        <button class="tab-btn" data-tab="synergy">Sinergia &amp; Base</button>
+
+        <button class="tab-btn" data-tab="decks-list">Explorador de Decks Elite</button>
+      </nav>
+
+      <!-- Painéis de Conteúdo -->
+      
+      <!-- ABA 1: Overview -->
+      <div class="tab-panel active" id="panel-overview">
+        <div class="kpi-grid" id="kpi-container">
+          <!-- Preenchido dinamicamente via JS -->
+        </div>
+        
+        <div class="chart-container">
+          <div class="chart-header">
+            <h2 class="chart-title">Comparação Dumbbell — Médias, Top 10% (P90) e Top 1% (P99)</h2>
+          </div>
+          <div class="chart-wrapper" id="dumbbell-chart">
+            <!-- Gráfico Dumbbell -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ABA 2: Distribuição SAS -->
+      <div class="tab-panel" id="panel-distribution">
+        <div class="charts-double-grid">
+          <div class="chart-container">
+            <div class="chart-header">
+              <h2 class="chart-title">Curva de Percentis (ECDF) — SAS Total</h2>
+            </div>
+            <div class="chart-wrapper" id="ecdf-chart">
+              <!-- ECDF Plot -->
+            </div>
+          </div>
+          
+          <div class="chart-container">
+            <div class="chart-header">
+              <h2 class="chart-title">Densidade de Frequência (Histograma)</h2>
+            </div>
+            <div class="chart-wrapper" id="histogram-chart">
+              <!-- Histograma Plot -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ABA 3: Casas -->
+      <div class="tab-panel" id="panel-houses">
+        <div class="chart-container">
+          <div class="chart-header">
+            <h2 class="chart-title">Matriz Comparativa das Casas (Média de House SAS Estimate)</h2>
+            <div class="filter-group" style="flex-direction: row; align-items: center; gap: 8px;">
+              <span class="filter-label" style="text-transform: none;">Medida:</span>
+              <select class="form-select" id="house-metric-selector" style="width: auto; padding: 4px 8px;">
+                <option value="mean">Média</option>
+                <option value="p90">P90 (Top 10%)</option>
+                <option value="p99">P99 (Top 1%)</option>
+                <option value="max">Máximo</option>
+              </select>
+            </div>
+          </div>
+          <div class="chart-wrapper" id="house-heatmap">
+            <!-- Heatmap -->
+          </div>
+        </div>
+        
+        <div class="chart-container">
+          <div class="chart-header">
+            <h2 class="chart-title">Distribuição do Estimado de SAS por Casa (Ridgeline)</h2>
+          </div>
+          <div class="chart-wrapper" id="house-ridgeline">
+            <!-- Ridgeline Chart -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ABA 4: Sinergia e Base -->
+      <div class="tab-panel" id="panel-synergy">
+        <div class="charts-double-grid">
+          <div class="chart-container">
+            <div class="chart-header">
+              <h2 class="chart-title">Densidade de Sinergia vs AERC Base: Draconian Measures</h2>
+            </div>
+            <div class="chart-wrapper" id="synergy-density-dm">
+              <!-- Heatmap AERC vs Synergy DM -->
+            </div>
+          </div>
+          
+          <div class="chart-container">
+            <div class="chart-header">
+              <h2 class="chart-title">Densidade de Sinergia vs AERC Base: Grim Reminders</h2>
+            </div>
+            <div class="chart-wrapper" id="synergy-density-gr">
+              <!-- Heatmap AERC vs Synergy GR -->
+            </div>
+          </div>
+        </div>
+        
+        <div class="chart-container">
+          <div class="chart-header">
+            <h2 class="chart-title">Correlação: AERC Base vs Synergy Net (Distribuição Geral)</h2>
+          </div>
+          <div class="chart-wrapper" id="synergy-scatter">
+            <!-- Scatter Plot -->
+          </div>
+        </div>
+      </div>
+
+
+              </tr>
+            </thead>
+            <tbody id="decks-table-body">
+              <!-- Inserido dinamicamente pelo Supabase -->
+            </tbody>
+          </table>
+        </div>
+        <div class="load-more-container">
+          <button class="btn-pill-ghost" id="load-more-btn" style="display: none;">
+            Carregar Mais Decks
+          </button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Script Principal da Aplicação -->
+  <script src="./app.js"></script>
+<!-- Welcome Modal -->
+<div class="modal" id="welcomeModal">
+  <div class="modal-content">
+    <span class="close-button" id="closeModal">&times;</span>
+    <img src="./assets/Terra_Plana.png" alt="Welcome Illustration" style="width:100%; height:auto; display:block;">
+  </div>
+</div>
+<script>
+  // Show modal on page load
+  window.addEventListener('load', function() {
+    const modal = document.getElementById('welcomeModal');
+    if (modal) modal.style.display = 'flex';
+  });
+  // Close modal when X is clicked
+  document.getElementById('closeModal')?.addEventListener('click', function() {
+    const modal = document.getElementById('welcomeModal');
+    if (modal) modal.style.display = 'none';
+  });
+  // Also close when clicking outside the content
+  window.addEventListener('click', function(event) {
+    const modal = document.getElementById('welcomeModal');
+    if (event.target === modal) {
+      modal.style.display = 'none';
+    }
+  });
+</script>
+<footer class="footer"><div class="footer-left">© 2026 fabit</div><div class="footer-right">DoK is owned and operated by Graylake LLC. KeyForge is copyright of Ghost Galaxy, Inc.</div></footer>
+</body>
+</html>
