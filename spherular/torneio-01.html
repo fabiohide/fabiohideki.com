@@ -7,6 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
+    <!-- Brackets Viewer Library -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/brackets-viewer@1.4.7/dist/brackets-viewer.min.css" />
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brackets-viewer@1.4.7/dist/brackets-viewer.min.js"></script>
     <!-- Configurações de Cores Customizadas no Tailwind -->
     <script>
         tailwind.config = {
@@ -135,6 +138,78 @@
         #smooth-cursor.cursor-hover svg #path3 {
             fill: #FEF08A; /* brand-lightgold (yellow) on hover */
         }
+
+        /* Custom styling overrides for brackets-viewer to match the page theme */
+        .brackets-viewer {
+            --primary-background: transparent !important;
+            --secondary-background: rgba(5, 10, 6, 0.85) !important;
+            --match-background: #050a06 !important;
+            --border-color: rgba(234, 179, 8, 0.4) !important;
+            --border-hover-color: rgba(234, 179, 8, 0.7) !important;
+            --border-selected-color: rgba(234, 179, 8, 0.9) !important;
+            --connector-color: rgba(234, 179, 8, 0.4) !important;
+            --font-color: #f5f5f4 !important; /* stone-200 */
+            --label-color: #a8a29e !important; /* stone-400 */
+            --win-color: #4ade80 !important; /* green-400 */
+            --loss-color: #78716c !important; /* stone-500 */
+            --match-border-radius: 0px !important; /* brutalist square edges */
+            --match-border-width: 2px !important; /* brutalist thick borders */
+            --text-size: 13px !important;
+            font-family: 'KH-Dot-Kabutochou-16', monospace !important;
+
+            /* Custom center alignment overrides */
+            align-items: center !important;
+            justify-content: center !important;
+            margin: 0 auto !important;
+        }
+
+        /* Adjust lines/connectors for brutalist style */
+        .brackets-viewer .connector {
+            border-width: 2px !important;
+        }
+
+        .brackets-viewer .match {
+            width: 280px !important;
+        }
+
+        .brackets-viewer .participant {
+            height: 58px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding: 4px 10px !important;
+            border-radius: 0px !important;
+        }
+
+        .brackets-viewer .participant .name {
+            flex-grow: 1 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            overflow: visible !important;
+            width: 100% !important;
+        }
+
+        .brackets-viewer .participant:not(.win):not(.loss) .result {
+            color: #78716c !important; /* stone-500 (gray) */
+        }
+
+        .brackets-viewer h3,
+        .brackets-viewer .round-name,
+        .brackets-viewer .br-round-name {
+            text-align: left !important;
+            padding-left: 8px !important;
+            background: transparent !important;
+        }
+
+        /* Make bracket responsive on mobile and scrollable */
+        @media (max-width: 1024px) {
+            .brackets-viewer {
+                padding: 10px 0;
+                align-items: flex-start !important;
+                justify-content: flex-start !important;
+            }
+        }
     </style>
 </head>
 <body class="text-stone-200 antialiased relative overflow-x-hidden">
@@ -260,7 +335,7 @@
                     </section>
                 </div>
                 <div class="mt-6 text-center text-xs text-stone-500 max-w-2xl mx-auto">
-                    <b>Critérios de Desempate:</b> 1º Vitórias (V) &bull; 2º Confronto Direto &bull; 3º Quantidade de Chaves Forjadas (CF) &bull; 4º Partida de desempate.
+                    <b>Critérios de Desempate:</b> 1º Vitórias (V) &bull; 2º Quantidade de Chaves Forjadas (CF) &bull; 3º Confronto Direto &bull; 4º Partida de desempate.
                 </div>
             </div>
 
@@ -289,7 +364,14 @@
                 </section>
             </div>
 
-            <!-- playoffs tab removed -->
+            <!-- ABA 4: PLAYOFFS -->
+            <div id="playoffs-tab-content" class="hidden">
+                <section class="glass-panel p-6 rounded-none shadow-lg border-2 border-brand-gold/25 mb-6">
+                    <div id="top8-bracket-container" class="brackets-viewer overflow-x-auto w-full py-4">
+                        <!-- Renderizado via brackets-viewer.js -->
+                    </div>
+                </section>
+            </div>
         </main>
 
     </div>
@@ -428,7 +510,7 @@
                 { name: "Flávio Ciampone", nick: "Ciampone", rare: "Spherular Gem", houses: ["oub", "skb", "shw"], group: 2 },
                 { name: "Gabriel Guessi", nick: "gguessi", rare: "Star Path", houses: ["unf", "gst", "mrs"], group: 2 },
                 { name: "Gustavo Oliveira", nick: "Dreadsgu", rare: "Jahneerie", houses: ["gst", "oub", "ekw"], group: 1 },
-                { name: "João Pedro Rodriguez Pinto", nick: "JPRodriguez", rare: "Plunder", houses: ["skb", "unf", "ekw"], group: 2 },
+                { name: "JP Rodriguez", nick: "JPRodriguez", rare: "Plunder", houses: ["skb", "unf", "ekw"], group: 2 },
                 { name: "Marcos Pereira", nick: "dhrago", rare: "Selwyn the Fence", houses: ["shw", "oub", "gst"], group: 2 },
                 { name: "Mateus Barbosa", nick: "mtsbarbosa", rare: "Three Sheets to The Wind", houses: ["shw", "unf", "gst"], group: 2 },
                 { name: "Nicholas", nick: "Sukorski", rare: "Ransom", houses: ["ekw", "gst", "shw"], group: 2 },
@@ -463,6 +545,7 @@
                 playersTabContent: document.getElementById('players-tab-content'),
                 groupsTabContent: document.getElementById('groups-tab-content'),
                 matchesTabContent: document.getElementById('matches-tab-content'),
+                playoffsTabContent: document.getElementById('playoffs-tab-content'),
                 tickerWrapper: document.getElementById('ticker-wrapper'),
                 recentResultsTicker: document.getElementById('recent-results-ticker')
             };
@@ -479,7 +562,7 @@
             elements.closeModalBtn.addEventListener('click', closeModal);
             elements.modal.addEventListener('click', (e) => { if (e.target === elements.modal) closeModal(); });
 
-            // Gera e inicia as partidas no formato todos contra todos (round-robin)
+            // Gera e inicia as partidas no formato todos contra todos (round-robin) e playoffs
             function generateInitialMatches() {
                 const list = [];
                 const g1 = players.filter(p => p.group === 1).map(p => p.name);
@@ -495,7 +578,44 @@
                         list.push({ id: `g2-${i}-${j}`, group: 2, player1: g2[i], player2: g2[j], player1Score: null, player2Score: null, completed: false });
                     }
                 }
+
+                // Quartas de final, Semifinais e Final do Top 8
+                const top8Ids = ['t8-q1', 't8-q2', 't8-q3', 't8-q4', 't8-s1', 't8-s2', 't8-f1'];
+                top8Ids.forEach(id => {
+                    list.push({
+                        id: id,
+                        group: 3,
+                        player1: '',
+                        player2: '',
+                        player1Score: null,
+                        player2Score: null,
+                        completed: false
+                    });
+                });
+
                 return list;
+            }
+
+            function ensurePlayoffsMatchesExist() {
+                const top8Ids = ['t8-q1', 't8-q2', 't8-q3', 't8-q4', 't8-s1', 't8-s2', 't8-f1'];
+                let updated = false;
+                top8Ids.forEach(id => {
+                    if (!tournamentMatches.some(m => m.id === id)) {
+                        tournamentMatches.push({
+                            id: id,
+                            group: 3,
+                            player1: '',
+                            player2: '',
+                            player1Score: null,
+                            player2Score: null,
+                            completed: false
+                        });
+                        updated = true;
+                    }
+                });
+                if (updated && !isSupabaseConfigured) {
+                    saveTournamentData();
+                }
             }
 
             function loadLocalTournamentData() {
@@ -510,6 +630,7 @@
                 } else {
                     tournamentMatches = generateInitialMatches();
                 }
+                ensurePlayoffsMatchesExist();
                 prePopulateMatches();
                 const now = new Date();
                 elements.lastUpdateText.textContent = `Atualizado em ${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
@@ -538,14 +659,14 @@
                 if (setMatchResult("Gustavo Oliveira", 3, "Chamon", 2)) updated = true;
                 if (setMatchResult("David Pereira Neto", 3, "Gustavo Oliveira", 1)) updated = true;
                 if (setMatchResult("David Pereira Neto", 3, "Pedro Vinícius Barbosa da Conceição Pires", 1)) updated = true;
-                if (setMatchResult("João Pedro Rodriguez Pinto", 3, "Marcos Pereira", 2)) updated = true;
+                if (setMatchResult("JP Rodriguez", 3, "Marcos Pereira", 2)) updated = true;
                 if (setMatchResult("Chamon", 3, "Pedro Vinícius Barbosa da Conceição Pires", 1)) updated = true;
                 if (setMatchResult("Rigel Duarte", 3, "Chamon", 0)) updated = true;
                 if (setMatchResult("Rigel Duarte", 3, "David Pereira Neto", 1)) updated = true;
                 if (setMatchResult("Rigel Duarte", 3, "Pedro Vinícius Barbosa da Conceição Pires", 1)) updated = true;
                 if (setMatchResult("Flávio Ciampone", 3, "Piter Machado", 0)) updated = true;
                 if (setMatchResult("David Pereira Neto", 3, "Fábio Hideki", 2)) updated = true;
-                if (setMatchResult("João Pedro Rodriguez Pinto", 3, "Vagner Di Gennaro", 2)) updated = true;
+                if (setMatchResult("JP Rodriguez", 3, "Vagner Di Gennaro", 2)) updated = true;
                 if (setMatchResult("Flávio Ciampone", 3, "Mateus Barbosa", 1)) updated = true;
                 if (setMatchResult("Flávio Ciampone", 2, "Nicholas", 3)) updated = true;
                 if (setMatchResult("Chamon", 3, "Estêvão Balsalobre", 2)) updated = true;
@@ -554,8 +675,8 @@
                 if (setMatchResult("Marcos Pereira", 3, "Mateus Barbosa", 2)) updated = true;
                 if (setMatchResult("Victor lemos", 3, "Fábio Hideki", 1)) updated = true;
                 if (setMatchResult("Flávio Ciampone", 3, "Gabriel Guessi", 1)) updated = true;
-                if (setMatchResult("João Pedro Rodriguez Pinto", 3, "Gabriel Guessi", 1)) updated = true;
-                if (setMatchResult("João Pedro Rodriguez Pinto", 3, "Mateus Barbosa", 1)) updated = true;
+                if (setMatchResult("JP Rodriguez", 3, "Gabriel Guessi", 1)) updated = true;
+                if (setMatchResult("JP Rodriguez", 3, "Mateus Barbosa", 1)) updated = true;
                 if (setMatchResult("Marcos Pereira", 3, "Gabriel Guessi", 1)) updated = true;
                 if (setMatchResult("Nicholas", 3, "Mateus Barbosa", 1)) updated = true;
                 if (setMatchResult("Victor lemos", 3, "Pedro Vinícius Barbosa da Conceição Pires", 2)) updated = true;
@@ -584,6 +705,7 @@
                                 player2Score: m.player2_score,
                                 completed: m.completed
                             }));
+                            ensurePlayoffsMatchesExist();
                             const now = new Date();
                             elements.lastUpdateText.textContent = `Atualizado em ${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
                         } else {
@@ -659,7 +781,8 @@
                 const tabs = [
                     { id: 'players', name: 'Jogadores' },
                     { id: 'groups', name: 'Tabela de Grupos' },
-                    { id: 'matches', name: 'Confrontos' }
+                    { id: 'matches', name: 'Confrontos' },
+                    { id: 'playoffs', name: 'Playoffs' }
                 ];
                 tabs.forEach(tab => {
                     const btn = document.createElement('button');
@@ -727,6 +850,7 @@
 
                 stats.sort((a, b) => {
                     if (b.wins !== a.wins) return b.wins - a.wins;
+                    if (b.keysForged !== a.keysForged) return b.keysForged - a.keysForged;
                     const directMatch = groupMatches.find(m => m.completed &&
                         ((m.player1 === a.name && m.player2 === b.name) || (m.player1 === b.name && m.player2 === a.name))
                     );
@@ -735,7 +859,6 @@
                         const bScore = directMatch.player1 === b.name ? directMatch.player1Score : directMatch.player2Score;
                         if (aScore !== bScore) return bScore - aScore;
                     }
-                    if (b.keysForged !== a.keysForged) return b.keysForged - a.keysForged;
                     return a.name.localeCompare(b.name);
                 });
 
@@ -783,7 +906,8 @@
                 container.innerHTML = '';
                 const groupTabs = [
                     { id: 1, name: 'Grupo 1 - Noxious', colorClass: 'border-blue-500 text-blue-300' },
-                    { id: 2, name: 'Grupo 2 - Voltash', colorClass: 'border-emerald-500 text-emerald-300' }
+                    { id: 2, name: 'Grupo 2 - Voltash', colorClass: 'border-emerald-500 text-emerald-300' },
+                    { id: 3, name: 'Playoffs', colorClass: 'border-brand-gold text-brand-gold' }
                 ];
                 groupTabs.forEach(gTab => {
                     const btn = document.createElement('button');
@@ -809,7 +933,16 @@
                 allBtn.addEventListener('click', () => { selectedFilterPlayer = null; renderFilters(); renderMatches(); });
                 elements.matchFiltersContainer.appendChild(allBtn);
 
-                const groupPlayers = players.filter(p => p.group === activeMatchesGroup);
+                let groupPlayers = [];
+                if (activeMatchesGroup === 3) {
+                    const g1 = calculateStandings(1).slice(0, 4).map(p => p.name);
+                    const g2 = calculateStandings(2).slice(0, 4).map(p => p.name);
+                    const t8Names = [...g1, ...g2];
+                    groupPlayers = players.filter(p => t8Names.includes(p.name));
+                } else {
+                    groupPlayers = players.filter(p => p.group === activeMatchesGroup);
+                }
+
                 groupPlayers.forEach(p => {
                     const btn = document.createElement('button');
                     const isSelected = selectedFilterPlayer === p.name;
@@ -824,7 +957,345 @@
                 });
             }
 
+            function updatePlayoffsMatchPlayers() {
+                const g1 = calculateStandings(1);
+                const g2 = calculateStandings(2);
+
+                const isG1Done = tournamentMatches.filter(m => m.group === 1).every(m => m.completed);
+                const isG2Done = tournamentMatches.filter(m => m.group === 2).every(m => m.completed);
+
+                const q1 = tournamentMatches.find(m => m.id === 't8-q1');
+                const q2 = tournamentMatches.find(m => m.id === 't8-q2');
+                const q3 = tournamentMatches.find(m => m.id === 't8-q3');
+                const q4 = tournamentMatches.find(m => m.id === 't8-q4');
+                const s1 = tournamentMatches.find(m => m.id === 't8-s1');
+                const s2 = tournamentMatches.find(m => m.id === 't8-s2');
+                const f1 = tournamentMatches.find(m => m.id === 't8-f1');
+                const f2 = tournamentMatches.find(m => m.id === 't8-f2');
+                const f3 = tournamentMatches.find(m => m.id === 't8-f3');
+
+                if (q1) {
+                    q1.player1 = (isG1Done && g1[0]) ? g1[0].name : '';
+                    q1.player2 = (isG2Done && g2[3]) ? g2[3].name : '';
+                }
+                if (q2) {
+                    q2.player1 = (isG1Done && g1[1]) ? g1[1].name : '';
+                    q2.player2 = (isG2Done && g2[2]) ? g2[2].name : '';
+                }
+                if (q3) {
+                    q3.player1 = (isG1Done && g1[2]) ? g1[2].name : '';
+                    q3.player2 = (isG2Done && g2[1]) ? g2[1].name : '';
+                }
+                if (q4) {
+                    q4.player1 = (isG1Done && g1[3]) ? g1[3].name : '';
+                    q4.player2 = (isG2Done && g2[0]) ? g2[0].name : '';
+                }
+
+                if (s1) {
+                    s1.player1 = (q1 && q1.completed) ? (q1.player1Score > q1.player2Score ? q1.player1 : q1.player2) : '';
+                    s1.player2 = (q2 && q2.completed) ? (q2.player1Score > q2.player2Score ? q2.player1 : q2.player2) : '';
+                }
+                if (s2) {
+                    s2.player1 = (q3 && q3.completed) ? (q3.player1Score > q3.player2Score ? q3.player1 : q3.player2) : '';
+                    s2.player2 = (q4 && q4.completed) ? (q4.player1Score > q4.player2Score ? q4.player1 : q4.player2) : '';
+                }
+
+                // Finalists are the winners of Semifinals
+                const p1Final = (s1 && s1.completed) ? (s1.player1Score > s1.player2Score ? s1.player1 : s1.player2) : '';
+                const p2Final = (s2 && s2.completed) ? (s2.player1Score > s2.player2Score ? s2.player1 : s2.player2) : '';
+
+                if (f1) { f1.player1 = p1Final; f1.player2 = p2Final; }
+                if (f2) { f2.player1 = p1Final; f2.player2 = p2Final; }
+                if (f3) { f3.player1 = p1Final; f3.player2 = p2Final; }
+            }
+
+            async function renderPlayoffsBracket() {
+                updatePlayoffsMatchPlayers();
+
+                const g1 = calculateStandings(1);
+                const g2 = calculateStandings(2);
+
+                const isG1Done = tournamentMatches.filter(m => m.group === 1).every(m => m.completed);
+                const isG2Done = tournamentMatches.filter(m => m.group === 2).every(m => m.completed);
+
+                const participants = [];
+                const p0_name = (isG1Done && g1[0]) ? g1[0].name : "1º G1";
+                const p1_name = (isG2Done && g2[3]) ? g2[3].name : "4º G2";
+                const p2_name = (isG1Done && g1[1]) ? g1[1].name : "2º G1";
+                const p3_name = (isG2Done && g2[2]) ? g2[2].name : "3º G2";
+                const p4_name = (isG1Done && g1[2]) ? g1[2].name : "3º G1";
+                const p5_name = (isG2Done && g2[1]) ? g2[1].name : "2º G2";
+                const p6_name = (isG1Done && g1[3]) ? g1[3].name : "4º G1";
+                const p7_name = (isG2Done && g2[0]) ? g2[0].name : "1º G2";
+
+                const t8Names = [p0_name, p1_name, p2_name, p3_name, p4_name, p5_name, p6_name, p7_name];
+                t8Names.forEach((name, idx) => {
+                    participants.push({ id: name || `tbd-${idx}`, name: name || `A definir` });
+                });
+
+                participants.push({ id: "Venc. Q1", name: "Vencedor Q1" });
+                participants.push({ id: "Venc. Q2", name: "Vencedor Q2" });
+                participants.push({ id: "Venc. Q3", name: "Vencedor Q3" });
+                participants.push({ id: "Venc. Q4", name: "Vencedor Q4" });
+                participants.push({ id: "Venc. S1", name: "Vencedor S1" });
+                participants.push({ id: "Venc. S2", name: "Vencedor S2" });
+
+                const dbMatches = [];
+
+                const mapPlayoffMatch = (matchId, roundId, number, defaultOpp1, defaultOpp2) => {
+                    const m = tournamentMatches.find(x => x.id === matchId);
+                    if (!m) return null;
+
+                    const opp1Id = m.player1 || defaultOpp1;
+                    const opp2Id = m.player2 || defaultOpp2;
+
+                    let opp1Result = null;
+                    let opp2Result = null;
+                    if (m.completed) {
+                        if (m.player1Score > m.player2Score) {
+                            opp1Result = 'win';
+                            opp2Result = 'loss';
+                        } else {
+                            opp1Result = 'loss';
+                            opp2Result = 'win';
+                        }
+                    }
+
+                    return {
+                        id: matchId,
+                        stage_id: 0,
+                        group_id: 0,
+                        round_id: roundId,
+                        number: number,
+                        status: m.completed ? 3 : (m.player1 && m.player2 ? 1 : 0),
+                        opponent1: {
+                            id: opp1Id,
+                            score: m.completed ? m.player1Score : 0,
+                            result: opp1Result
+                        },
+                        opponent2: {
+                            id: opp2Id,
+                            score: m.completed ? m.player2Score : 0,
+                            result: opp2Result
+                        }
+                    };
+                };
+
+                // Calculate final wins
+                const f1 = tournamentMatches.find(m => m.id === 't8-f1');
+                const f2 = tournamentMatches.find(m => m.id === 't8-f2');
+                const f3 = tournamentMatches.find(m => m.id === 't8-f3');
+                
+                let p1FinalWins = 0;
+                let p2FinalWins = 0;
+                if (f1 && f1.completed) { f1.player1Score > f1.player2Score ? p1FinalWins++ : p2FinalWins++; }
+                if (f2 && f2.completed) { f2.player1Score > f2.player2Score ? p1FinalWins++ : p2FinalWins++; }
+                if (f3 && f3.completed) { f3.player1Score > f3.player2Score ? p1FinalWins++ : p2FinalWins++; }
+                
+                const finalCompleted = p1FinalWins >= 2 || p2FinalWins >= 2;
+
+                const mapFinalMatch = () => {
+                    const m = f1;
+                    if (!m) return null;
+
+                    const opp1Id = m.player1 || "Venc. S1";
+                    const opp2Id = m.player2 || "Venc. S2";
+
+                    let opp1Result = null;
+                    let opp2Result = null;
+                    if (finalCompleted) {
+                        if (p1FinalWins > p2FinalWins) {
+                            opp1Result = 'win';
+                            opp2Result = 'loss';
+                        } else {
+                            opp1Result = 'loss';
+                            opp2Result = 'win';
+                        }
+                    }
+
+                    return {
+                        id: 't8-f1',
+                        stage_id: 0,
+                        group_id: 0,
+                        round_id: 2,
+                        number: 1,
+                        status: finalCompleted ? 3 : (m.player1 && m.player2 ? 1 : 0),
+                        opponent1: {
+                            id: opp1Id,
+                            score: p1FinalWins,
+                            result: opp1Result
+                        },
+                        opponent2: {
+                            id: opp2Id,
+                            score: p2FinalWins,
+                            result: opp2Result
+                        }
+                    };
+                };
+
+                dbMatches.push(mapPlayoffMatch('t8-q1', 0, 1, p0_name, p1_name));
+                dbMatches.push(mapPlayoffMatch('t8-q2', 0, 2, p2_name, p3_name));
+                dbMatches.push(mapPlayoffMatch('t8-q3', 0, 3, p4_name, p5_name));
+                dbMatches.push(mapPlayoffMatch('t8-q4', 0, 4, p6_name, p7_name));
+
+                dbMatches.push(mapPlayoffMatch('t8-s1', 1, 1, "Venc. Q1", "Venc. Q2"));
+                dbMatches.push(mapPlayoffMatch('t8-s2', 1, 2, "Venc. Q3", "Venc. Q4"));
+
+                dbMatches.push(mapFinalMatch());
+
+                await window.bracketsViewer.render({
+                    stages: [{
+                        id: 0,
+                        tournament_id: 0,
+                        name: "Playoffs",
+                        type: "single_elimination",
+                        number: 1,
+                        settings: { size: 8 }
+                    }],
+                    matches: dbMatches,
+                    matchGames: [],
+                    participants: participants
+                }, {
+                    selector: '#top8-bracket-container',
+                    clear: true,
+                    customRoundName: (info, t) => {
+                        if (info.roundNumber === 1) return "Top 8";
+                        if (info.roundNumber === 2) return "Semi Final";
+                        if (info.roundNumber === 3) return "Grande Final";
+                        return undefined;
+                    }
+                });
+
+                // Post-render DOM modifications
+                const applyCustomLabelsAndSlots = () => {
+                    // 1. Rename Rounds (avoid duplicate matching by restricting selectors and using dataset flags)
+                    const headers = document.querySelectorAll('#top8-bracket-container h3, #top8-bracket-container .round-name, #top8-bracket-container .br-round-name');
+                    headers.forEach(el => {
+                        if (el.dataset.roundRenamed) return;
+
+                        const text = el.textContent.trim().toLowerCase();
+                        if (text === 'round 1' || text === 'top 8') {
+                            el.textContent = 'Top 8';
+                            el.dataset.roundRenamed = "true";
+                        } else if (text === 'round 2' || text === 'semi final') {
+                            el.textContent = 'Semi Final';
+                            el.dataset.roundRenamed = "true";
+                        } else if (text === 'final round' || text === 'final' || text === 'round 3' || text === 'grande final' || text === 'grande final (md3)') {
+                            el.innerHTML = '<div class="flex flex-col items-start text-left leading-tight"><span>Grande Final</span><span class="text-[10px] text-stone-500 font-mono mt-1 font-normal tracking-wide normal-case">MD3</span></div>';
+                            el.dataset.roundRenamed = "true";
+                        }
+                    });
+
+                    // 2. Store original names and inject custom player details (TCO Nick and House Icons) for all participants
+                    const allParticipants = document.querySelectorAll('#top8-bracket-container .participant');
+                    allParticipants.forEach(part => {
+                        const nameEl = part.querySelector('.name');
+                        if (!nameEl) return;
+
+                        if (!nameEl.dataset.originalName) {
+                            nameEl.dataset.originalName = nameEl.textContent.trim();
+                        }
+                        const originalName = nameEl.dataset.originalName;
+
+                        const player = players.find(p => p.name === originalName);
+                        if (player) {
+                            const housesHTML = player.houses.map(h => 
+                                `<span class="w-4 h-4 inline-block house-icon" style="-webkit-mask-image: url('./assets/kf_icons/House=${h}.svg'); mask-image: url('./assets/kf_icons/House=${h}.svg');" title="${h.toUpperCase()}"></span>`
+                            ).join('');
+
+                            nameEl.innerHTML = `
+                                <div class="flex flex-col text-left justify-center py-1 leading-tight">
+                                    <span class="font-bold text-[12px] text-stone-200 tracking-wide">${player.name}</span>
+                                    <span class="text-[9px] text-stone-400 font-mono mt-0.5">${player.nick}</span>
+                                    <div class="flex items-center gap-1 mt-1">
+                                        ${housesHTML}
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            nameEl.innerHTML = `
+                                <div class="flex flex-col text-left leading-tight">
+                                    <span class="text-[11px] text-stone-500 italic font-medium">${originalName}</span>
+                                </div>
+                            `;
+                        }
+                    });
+
+                    // 3. Inject Final MD3 slots into the Grande Final match
+                    const finalMatch = document.querySelector('#top8-bracket-container .match[data-match-id="t8-f1"]');
+                    if (finalMatch) {
+                        const participants = finalMatch.querySelectorAll('.participant');
+                        if (participants.length === 2) {
+                            const getGameScore = (match, playerNum) => {
+                                if (!match || !match.completed) return '0';
+                                if (playerNum === 1) {
+                                    return match.player1Score > match.player2Score ? '1' : '0';
+                                } else {
+                                    return match.player2Score > match.player1Score ? '1' : '0';
+                                }
+                            };
+
+                            const isGamePlayed = (match) => {
+                                return match && match.completed;
+                            };
+
+                            participants.forEach(opp => {
+                                const nameEl = opp.querySelector('.name');
+                                const scoreContainer = opp.querySelector('.result');
+                                if (nameEl && scoreContainer) {
+                                    const playerName = nameEl.dataset.originalName || nameEl.textContent.trim();
+                                    
+                                    let s1Val = '0', s2Val = '0', s3Val = '0';
+                                    let s1Color = 'text-stone-600', s2Color = 'text-stone-600', s3Color = 'text-stone-600';
+                                    
+                                    if (f1 && playerName === f1.player1) {
+                                        s1Val = getGameScore(f1, 1);
+                                        s2Val = getGameScore(f2, 1);
+                                        s3Val = getGameScore(f3, 1);
+                                        
+                                        s1Color = isGamePlayed(f1) ? (f1.player1Score > f1.player2Score ? 'text-green-400 font-bold' : 'text-stone-600') : 'text-stone-600';
+                                        s2Color = isGamePlayed(f2) ? (f2.player1Score > f2.player2Score ? 'text-green-400 font-bold' : 'text-stone-600') : 'text-stone-600';
+                                        s3Color = isGamePlayed(f3) ? (f3.player1Score > f3.player2Score ? 'text-green-400 font-bold' : 'text-stone-600') : 'text-stone-600';
+                                    } else if (f1 && playerName === f1.player2) {
+                                        s1Val = getGameScore(f1, 2);
+                                        s2Val = getGameScore(f2, 2);
+                                        s3Val = getGameScore(f3, 2);
+                                        
+                                        s1Color = isGamePlayed(f1) ? (f1.player2Score > f1.player1Score ? 'text-green-400 font-bold' : 'text-stone-600') : 'text-stone-600';
+                                        s2Color = isGamePlayed(f2) ? (f2.player2Score > f2.player1Score ? 'text-green-400 font-bold' : 'text-stone-600') : 'text-stone-600';
+                                        s3Color = isGamePlayed(f3) ? (f3.player2Score > f3.player1Score ? 'text-green-400 font-bold' : 'text-stone-600') : 'text-stone-600';
+                                    }
+                                    
+                                    scoreContainer.innerHTML = `
+                                        <div class="flex items-center gap-1 font-mono text-[11px] justify-end">
+                                            <span class="w-4 h-4 flex items-center justify-center border border-stone-850 bg-stone-900/60 ${s1Color}">${s1Val}</span>
+                                            <span class="w-4 h-4 flex items-center justify-center border border-stone-850 bg-stone-900/60 ${s2Color}">${s2Val}</span>
+                                            <span class="w-4 h-4 flex items-center justify-center border border-stone-850 bg-stone-900/60 ${s3Color}">${s3Val}</span>
+                                        </div>
+                                    `;
+                                    scoreContainer.style.background = 'transparent';
+                                    scoreContainer.style.border = 'none';
+                                    scoreContainer.style.padding = '0';
+                                    scoreContainer.style.width = 'auto';
+                                    scoreContainer.style.display = 'flex';
+                                    scoreContainer.style.alignItems = 'center';
+                                    scoreContainer.style.justifyContent = 'flex-end';
+                                }
+                            });
+                        }
+                    }
+                };
+
+                // Run immediately and also set fallback timeout schedules to guarantee it executes after library DOM rendering cycles
+                applyCustomLabelsAndSlots();
+                setTimeout(applyCustomLabelsAndSlots, 50);
+                setTimeout(applyCustomLabelsAndSlots, 150);
+                setTimeout(applyCustomLabelsAndSlots, 300);
+                setTimeout(applyCustomLabelsAndSlots, 500);
+            }
+
             function renderMatches() {
+                updatePlayoffsMatchPlayers();
                 elements.matchesContainer.innerHTML = '';
                 let filteredMatches = tournamentMatches.filter(m => m.group === activeMatchesGroup);
 
@@ -848,11 +1319,47 @@
                         bgCardClass = 'bg-[#050A06]/60 border-2 border-green-500/30 shadow-sm opacity-90';
                     }
 
-                    const groupColor = m.group === 1 ? 'border-l-blue-400/40' : 'border-l-emerald-400/40';
+                    const isPlayoff = m.group === 3;
+                    const groupColor = m.group === 1 ? 'border-l-blue-400/40' : (m.group === 2 ? 'border-l-emerald-400/40' : 'border-l-brand-gold/40');
+
+                    let p1Display = m.player1;
+                    let p2Display = m.player2;
+                    if (isPlayoff) {
+                        if (!p1Display) {
+                            if (m.id === 't8-s1') p1Display = 'Vencedor Q1';
+                            else if (m.id === 't8-s2') p1Display = 'Vencedor Q3';
+                            else if (m.id === 't8-f1') p1Display = 'Vencedor S1';
+                            else p1Display = 'A definir';
+                        }
+                        if (!p2Display) {
+                            if (m.id === 't8-s1') p2Display = 'Vencedor Q2';
+                            else if (m.id === 't8-s2') p2Display = 'Vencedor Q4';
+                            else if (m.id === 't8-f1') p2Display = 'Vencedor S2';
+                            else p2Display = 'A definir';
+                        }
+                    }
+
+                    let matchLabel = 'Fase de Grupos';
+                    if (isPlayoff) {
+                        if (m.id === 't8-q1') matchLabel = 'Quartas J1 (1º G1 x 4º G2)';
+                        else if (m.id === 't8-q2') matchLabel = 'Quartas J2 (2º G1 x 3º G2)';
+                        else if (m.id === 't8-q3') matchLabel = 'Quartas J3 (3º G1 x 2º G2)';
+                        else if (m.id === 't8-q4') matchLabel = 'Quartas J4 (4º G1 x 1º G2)';
+                        else if (m.id === 't8-s1') matchLabel = 'Semifinal J1';
+                        else if (m.id === 't8-s2') matchLabel = 'Semifinal J2';
+                        else if (m.id === 't8-f1') matchLabel = 'Grande Final - Jogo 1 (MD3)';
+                        else if (m.id === 't8-f2') matchLabel = 'Grande Final - Jogo 2 (MD3)';
+                        else if (m.id === 't8-f3') matchLabel = 'Grande Final - Jogo 3 (MD3)';
+                    }
+
+                    const isDisabled = isPlayoff && (!m.player1 || !m.player2);
+                    const disabledAttr = isDisabled ? 'disabled' : '';
+                    const disabledClass = isDisabled ? 'opacity-50 cursor-not-allowed bg-stone-900' : 'bg-stone-950';
 
                     elements.matchesContainer.innerHTML += `
                         <div class="p-3.5 rounded-none shadow-lg border-l-4 ${groupColor} ${bgCardClass} transition-all duration-300 flex flex-col justify-center" data-match-id="${m.id}">
-                            <div class="flex items-center justify-end text-[11px] text-stone-500 mb-1.5 uppercase tracking-wide">
+                            <div class="flex items-center justify-between text-[11px] text-stone-500 mb-1.5 uppercase tracking-wide">
+                                <span>${matchLabel}</span>
                                 ${m.completed ? `
                                     <button class="reset-scores-btn text-stone-500 hover:text-red-400 transition-colors font-bold text-[10px] uppercase tracking-wider">
                                         Limpar
@@ -860,13 +1367,13 @@
                                 ` : '&nbsp;'}
                             </div>
                             <div class="flex items-center justify-between gap-1 text-sm md:text-base font-semibold">
-                                <span class="w-[38%] text-left truncate ${p1c}" title="${m.player1}">${m.player1}</span>
+                                <span class="w-[38%] text-left truncate ${p1c}" title="${p1Display}">${p1Display}</span>
                                 <div class="flex items-center gap-1 justify-center w-[24%]">
-                                    <input type="number" min="0" max="3" class="score-input bg-stone-950 text-center rounded-none w-10 py-1 text-sm md:text-base font-bold text-brand-lightgold border border-brand-gold/20" data-player="player1" value="${m.player1Score !== null ? m.player1Score : ''}" placeholder="-">
+                                    <input type="number" min="0" max="3" ${disabledAttr} class="score-input ${disabledClass} text-center rounded-none w-10 py-1 text-sm md:text-base font-bold text-brand-lightgold border border-brand-gold/20" data-player="player1" value="${m.player1Score !== null ? m.player1Score : ''}" placeholder="-">
                                     <span class="text-stone-600 text-xs font-mono">vs</span>
-                                    <input type="number" min="0" max="3" class="score-input bg-stone-950 text-center rounded-none w-10 py-1 text-sm md:text-base font-bold text-brand-lightgold border border-brand-gold/20" data-player="player2" value="${m.player2Score !== null ? m.player2Score : ''}" placeholder="-">
+                                    <input type="number" min="0" max="3" ${disabledAttr} class="score-input ${disabledClass} text-center rounded-none w-10 py-1 text-sm md:text-base font-bold text-brand-lightgold border border-brand-gold/20" data-player="player2" value="${m.player2Score !== null ? m.player2Score : ''}" placeholder="-">
                                 </div>
-                                <span class="w-[38%] text-right truncate ${p2c}" title="${m.player2}">${m.player2}</span>
+                                <span class="w-[38%] text-right truncate ${p2c}" title="${p2Display}">${p2Display}</span>
                             </div>
                             <div class="inline-report-section hidden mt-3 pt-3 border-t border-stone-850 space-y-2">
                                 <div class="flex gap-2 items-center">
@@ -896,7 +1403,11 @@
                     const p2Input = card.querySelector('[data-player="player2"]');
                     const resetBtn = card.querySelector('.reset-scores-btn');
 
+                    const isPlayoff = match.group === 3;
+                    const isDisabled = isPlayoff && (!match.player1 || !match.player2);
+
                     const handleInputInteraction = () => {
+                        if (isDisabled) return;
                         reportSection.classList.remove('hidden');
                         submitBtn.textContent = 'Reportar';
                         errorMsg.classList.add('hidden');
@@ -924,6 +1435,12 @@
                     });
 
                     submitBtn.addEventListener('click', async () => {
+                        if (isDisabled) {
+                            errorMsg.textContent = 'Aguardando definição dos jogadores.';
+                            errorMsg.classList.remove('hidden');
+                            return;
+                        }
+
                         const passcode = passcodeInp.value;
                         const isClear = submitBtn.textContent === 'Limpar';
                         let p1Score = isClear ? null : parseInt(p1Input.value);
@@ -1041,6 +1558,7 @@
                 elements.playersTabContent.classList.add('hidden');
                 elements.groupsTabContent.classList.add('hidden');
                 elements.matchesTabContent.classList.add('hidden');
+                elements.playoffsTabContent.classList.add('hidden');
 
                 if (activeTab === 'players') {
                     elements.playersTabContent.classList.remove('hidden');
@@ -1053,6 +1571,9 @@
                     renderMatchGroupTabs();
                     renderFilters();
                     renderMatches();
+                } else if (activeTab === 'playoffs') {
+                    elements.playoffsTabContent.classList.remove('hidden');
+                    renderPlayoffsBracket();
                 }
                 
                 updateTicker();
