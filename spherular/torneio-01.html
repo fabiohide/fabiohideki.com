@@ -378,6 +378,15 @@
                 <section class="glass-panel p-6 rounded-none shadow-lg border-2 border-brand-gold/25 mb-6">
                     <h2 class="text-2xl font-semibold mb-2 font-retro-title text-brand-lightgold tracking-wide">Selado Cego</h2>
                     <p class="text-stone-400 text-sm mb-6 font-retro-body leading-relaxed">Selecione o confronto, copie o ID do deck e cole direto no TCO. Como é um selado cego, a sugestão é você não ler a lista de cartas, e descobrir o que tem no deck conforme joga.</p>
+                    
+                    <!-- Filtros Selado Cego -->
+                    <div class="mb-6 p-4 bg-stone-950/40 border border-brand-gold/15">
+                        <div class="text-xs uppercase text-stone-500 tracking-wider mb-2 font-semibold font-retro-title">Filtrar por Jogador:</div>
+                        <div class="flex flex-wrap gap-2 items-center" id="selado-cego-filters-container">
+                            <!-- Gerado via JS -->
+                        </div>
+                    </div>
+
                     <div id="selado-cego-matches-container" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <!-- Gerado via JS -->
                     </div>
@@ -588,6 +597,7 @@
                 matchesTabContent: document.getElementById('matches-tab-content'),
                 playoffsTabContent: document.getElementById('playoffs-tab-content'),
                 seladoCegoTabContent: document.getElementById('selado-cego-tab-content'),
+                seladoCegoFiltersContainer: document.getElementById('selado-cego-filters-container'),
                 seladoCegoMatchesContainer: document.getElementById('selado-cego-matches-container'),
                 tickerWrapper: document.getElementById('ticker-wrapper'),
                 recentResultsTicker: document.getElementById('recent-results-ticker')
@@ -1589,6 +1599,51 @@
                 });
             }
 
+            let selectedSeladoCegoFilterPlayer = null;
+
+            function renderSeladoCegoFilters() {
+                if (!elements.seladoCegoFiltersContainer) return;
+                elements.seladoCegoFiltersContainer.innerHTML = '';
+                
+                const g1 = calculateStandings(1);
+                const g2 = calculateStandings(2);
+
+                const isG1Done = tournamentMatches.filter(m => m.group === 1).every(m => m.completed);
+                const isG2Done = tournamentMatches.filter(m => m.group === 2).every(m => m.completed);
+
+                const filterPlayers = [];
+                for (let i = 4; i < 8; i++) {
+                    filterPlayers.push((isG1Done && g1[i]) ? g1[i].name : `${i + 1}º G1`);
+                }
+                for (let i = 4; i < 8; i++) {
+                    filterPlayers.push((isG2Done && g2[i]) ? g2[i].name : `${i + 1}º G2`);
+                }
+
+                // "Ver Todos" button
+                const allBtn = document.createElement('button');
+                allBtn.className = `px-3.5 py-1.5 rounded-none text-xs font-semibold shadow-md transition-all ${!selectedSeladoCegoFilterPlayer ? 'bg-brand-gold text-black' : 'bg-stone-850 hover:bg-stone-800 text-stone-300'}`;
+                allBtn.textContent = 'Ver Todos';
+                allBtn.addEventListener('click', () => { 
+                    selectedSeladoCegoFilterPlayer = null; 
+                    renderSeladoCegoFilters(); 
+                    renderSeladoCego(); 
+                });
+                elements.seladoCegoFiltersContainer.appendChild(allBtn);
+
+                filterPlayers.forEach(pName => {
+                    const btn = document.createElement('button');
+                    const isSelected = selectedSeladoCegoFilterPlayer === pName;
+                    btn.className = `px-3.5 py-1.5 rounded-none text-xs font-semibold shadow-md transition-all ${isSelected ? 'bg-brand-gold text-black' : 'bg-stone-900 text-stone-300 hover:bg-stone-850'}`;
+                    btn.textContent = pName;
+                    btn.addEventListener('click', () => {
+                        selectedSeladoCegoFilterPlayer = isSelected ? null : pName;
+                        renderSeladoCegoFilters();
+                        renderSeladoCego();
+                    });
+                    elements.seladoCegoFiltersContainer.appendChild(btn);
+                });
+            }
+
             function renderSeladoCego() {
                 updatePlayoffsMatchPlayers();
                 elements.seladoCegoMatchesContainer.innerHTML = '';
@@ -1599,7 +1654,16 @@
                 const isG1Done = tournamentMatches.filter(m => m.group === 1).every(m => m.completed);
                 const isG2Done = tournamentMatches.filter(m => m.group === 2).every(m => m.completed);
 
-                blindSealedSchedule.forEach(sch => {
+                let filteredSchedule = blindSealedSchedule;
+                if (selectedSeladoCegoFilterPlayer) {
+                    filteredSchedule = blindSealedSchedule.filter(sch => {
+                        const p1Display = (isG1Done && g1[sch.p1Index]) ? g1[sch.p1Index].name : `${sch.p1Index + 1}º G1`;
+                        const p2Display = (isG2Done && g2[sch.p2Index]) ? g2[sch.p2Index].name : `${sch.p2Index + 1}º G2`;
+                        return p1Display === selectedSeladoCegoFilterPlayer || p2Display === selectedSeladoCegoFilterPlayer;
+                    });
+                }
+
+                filteredSchedule.forEach(sch => {
                     const m = tournamentMatches.find(match => match.id === sch.id);
                     if (!m) return;
 
@@ -1618,8 +1682,8 @@
                     const p1Display = p1Resolved ? g1[sch.p1Index].name : `${sch.p1Index + 1}º G1`;
                     const p2Display = p2Resolved ? g2[sch.p2Index].name : `${sch.p2Index + 1}º G2`;
 
-                    const p1DeckId = p1Resolved ? blindSealedDecks[sch.p1Deck].id : '';
-                    const p2DeckId = p2Resolved ? blindSealedDecks[sch.p2Deck].id : '';
+                    const p1DeckId = p1Resolved ? blindSealedDecks[sch.p1Deck].url : '';
+                    const p2DeckId = p2Resolved ? blindSealedDecks[sch.p2Deck].url : '';
 
                     const isDisabled = !p1Resolved || !p2Resolved;
                     const disabledAttr = isDisabled ? 'disabled' : '';
@@ -1896,6 +1960,7 @@
                     renderPlayoffsBracket();
                 } else if (activeTab === 'selado-cego') {
                     elements.seladoCegoTabContent.classList.remove('hidden');
+                    renderSeladoCegoFilters();
                     renderSeladoCego();
                 }
                 
