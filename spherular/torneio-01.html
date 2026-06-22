@@ -618,6 +618,13 @@
                 }
             }
 
+            function sanitizeLoadedMatches() {
+                tournamentMatches.forEach(m => {
+                    if (m.player1 === "João Pedro Rodriguez Pinto") m.player1 = "JP Rodriguez";
+                    if (m.player2 === "João Pedro Rodriguez Pinto") m.player2 = "JP Rodriguez";
+                });
+            }
+
             function loadLocalTournamentData() {
                 const savedMatches = localStorage.getItem(STORAGE_KEY);
                 if (savedMatches) {
@@ -630,6 +637,7 @@
                 } else {
                     tournamentMatches = generateInitialMatches();
                 }
+                sanitizeLoadedMatches();
                 ensurePlayoffsMatchesExist();
                 prePopulateMatches();
                 const now = new Date();
@@ -705,6 +713,7 @@
                                 player2Score: m.player2_score,
                                 completed: m.completed
                             }));
+                            sanitizeLoadedMatches();
                             ensurePlayoffsMatchesExist();
                             const now = new Date();
                             elements.lastUpdateText.textContent = `Atualizado em ${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
