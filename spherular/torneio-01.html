@@ -372,6 +372,17 @@
                     </div>
                 </section>
             </div>
+
+            <!-- ABA 5: SELADO CEGO -->
+            <div id="selado-cego-tab-content" class="hidden">
+                <section class="glass-panel p-6 rounded-none shadow-lg border-2 border-brand-gold/25 mb-6">
+                    <h2 class="text-2xl font-semibold mb-2 font-retro-title text-brand-lightgold tracking-wide">Selado Cego</h2>
+                    <p class="text-stone-400 text-sm mb-6 font-retro-body leading-relaxed">Selecione o confronto, copie o ID do deck e cole direto no TCO. Como é um selado cego, a sugestão é você não ler a lista de cartas, e descobrir o que tem no deck conforme joga.</p>
+                    <div id="selado-cego-matches-container" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <!-- Gerado via JS -->
+                    </div>
+                </section>
+            </div>
         </main>
 
     </div>
@@ -521,6 +532,36 @@
                 { name: "Victor lemos", nick: "Drake12345", rare: "Ashwing Protocol", houses: ["shw", "oub", "gst"], group: 1 }
             ];
 
+            const blindSealedDecks = {
+                'A1': { id: '06e7739a-0707-4bff-b29a-4c4b3f67367e', url: 'https://www.keyforgegame.com/deck-details/06e7739a-0707-4bff-b29a-4c4b3f67367e' },
+                'B1': { id: 'e22d3d9-3f88-49f5-8033-db8ca6dd609c', url: 'https://www.keyforgegame.com/deck-details/e22d3d9-3f88-49f5-8033-db8ca6dd609c' },
+                'C1': { id: 'e80d11dd-1c81-41b5-a43b-e77be83afa92', url: 'https://www.keyforgegame.com/deck-details/e80d11dd-1c81-41b5-a43b-e77be83afa92' },
+                'D1': { id: 'd8544fd3-959a-43be-8bb9-cfaeaa388437', url: 'https://www.keyforgegame.com/deck-details/d8544fd3-959a-43be-8bb9-cfaeaa388437' },
+                'A2': { id: 'e84d0f3a-efb5-4084-b22e-c1a5328d9aca', url: 'https://www.keyforgegame.com/deck-details/e84d0f3a-efb5-4084-b22e-c1a5328d9aca' },
+                'B2': { id: '44ede7d4-8bf6-4786-b3a8-0cbeab524b37', url: 'https://www.keyforgegame.com/deck-details/44ede7d4-8bf6-4786-b3a8-0cbeab524b37' },
+                'C2': { id: '1d0cc3bd-6492-47b4-9d0d-19fdb9b82bb5', url: 'https://www.keyforgegame.com/deck-details/1d0cc3bd-6492-47b4-9d0d-19fdb9b82bb5' },
+                'D2': { id: 'a11dffcb-5d08-45cd-a996-8131d20005e3', url: 'https://www.keyforgegame.com/deck-details/a11dffcb-5d08-45cd-a996-8131d20005e3' }
+            };
+
+            const blindSealedSchedule = [
+                { id: 'sc-0', p1Index: 6, p2Index: 4, p1Deck: 'A1', p2Deck: 'C2' }, // p7_g1 vs p5_g2
+                { id: 'sc-1', p1Index: 5, p2Index: 5, p1Deck: 'C1', p2Deck: 'B2' }, // p6_g1 vs p6_g2
+                { id: 'sc-2', p1Index: 7, p2Index: 7, p1Deck: 'C1', p2Deck: 'D2' }, // p8_g1 vs p8_g2
+                { id: 'sc-3', p1Index: 5, p2Index: 4, p1Deck: 'A1', p2Deck: 'A2' }, // p6_g1 vs p5_g2
+                { id: 'sc-4', p1Index: 5, p2Index: 6, p1Deck: 'B1', p2Deck: 'B2' }, // p6_g1 vs p7_g2
+                { id: 'sc-5', p1Index: 5, p2Index: 7, p1Deck: 'D1', p2Deck: 'B2' }, // p6_g1 vs p8_g2
+                { id: 'sc-6', p1Index: 6, p2Index: 6, p1Deck: 'C1', p2Deck: 'A2' }, // p7_g1 vs p7_g2
+                { id: 'sc-7', p1Index: 6, p2Index: 5, p1Deck: 'D1', p2Deck: 'C2' }, // p7_g1 vs p6_g2
+                { id: 'sc-8', p1Index: 6, p2Index: 7, p1Deck: 'B1', p2Deck: 'C2' }, // p7_g1 vs p8_g2
+                { id: 'sc-9', p1Index: 4, p2Index: 6, p1Deck: 'C1', p2Deck: 'D2' }, // p5_g1 vs p7_g2
+                { id: 'sc-10', p1Index: 4, p2Index: 7, p1Deck: 'D1', p2Deck: 'A2' }, // p5_g1 vs p8_g2
+                { id: 'sc-11', p1Index: 4, p2Index: 4, p1Deck: 'B1', p2Deck: 'D2' }, // p5_g1 vs p5_g2
+                { id: 'sc-12', p1Index: 7, p2Index: 6, p1Deck: 'A1', p2Deck: 'C2' }, // p8_g1 vs p7_g2
+                { id: 'sc-13', p1Index: 7, p2Index: 4, p1Deck: 'B1', p2Deck: 'B2' }, // p8_g1 vs p5_g2
+                { id: 'sc-14', p1Index: 7, p2Index: 5, p1Deck: 'D1', p2Deck: 'A2' }, // p8_g1 vs p6_g2
+                { id: 'sc-15', p1Index: 4, p2Index: 5, p1Deck: 'A1', p2Deck: 'D2' }  // p5_g1 vs p6_g2
+            ];
+
             let tournamentMatches = [];
             let activeTab = 'players';
             let selectedFilterPlayer = null;
@@ -546,6 +587,8 @@
                 groupsTabContent: document.getElementById('groups-tab-content'),
                 matchesTabContent: document.getElementById('matches-tab-content'),
                 playoffsTabContent: document.getElementById('playoffs-tab-content'),
+                seladoCegoTabContent: document.getElementById('selado-cego-tab-content'),
+                seladoCegoMatchesContainer: document.getElementById('selado-cego-matches-container'),
                 tickerWrapper: document.getElementById('ticker-wrapper'),
                 recentResultsTicker: document.getElementById('recent-results-ticker')
             };
@@ -593,6 +636,19 @@
                     });
                 });
 
+                // Selado Cego matches
+                blindSealedSchedule.forEach(sch => {
+                    list.push({
+                        id: sch.id,
+                        group: 4,
+                        player1: '',
+                        player2: '',
+                        player1Score: null,
+                        player2Score: null,
+                        completed: false
+                    });
+                });
+
                 return list;
             }
 
@@ -613,6 +669,23 @@
                         updated = true;
                     }
                 });
+
+                // Selado Cego matches
+                blindSealedSchedule.forEach(sch => {
+                    if (!tournamentMatches.some(m => m.id === sch.id)) {
+                        tournamentMatches.push({
+                            id: sch.id,
+                            group: 4,
+                            player1: '',
+                            player2: '',
+                            player1Score: null,
+                            player2Score: null,
+                            completed: false
+                        });
+                        updated = true;
+                    }
+                });
+
                 if (updated && !isSupabaseConfigured) {
                     saveTournamentData();
                 }
@@ -791,7 +864,8 @@
                     { id: 'players', name: 'Jogadores' },
                     { id: 'groups', name: 'Tabela de Grupos' },
                     { id: 'matches', name: 'Confrontos' },
-                    { id: 'playoffs', name: 'Playoffs' }
+                    { id: 'playoffs', name: 'Playoffs' },
+                    { id: 'selado-cego', name: 'Selado Cego' }
                 ];
                 tabs.forEach(tab => {
                     const btn = document.createElement('button');
@@ -1016,6 +1090,15 @@
                 if (f1) { f1.player1 = p1Final; f1.player2 = p2Final; }
                 if (f2) { f2.player1 = p1Final; f2.player2 = p2Final; }
                 if (f3) { f3.player1 = p1Final; f3.player2 = p2Final; }
+
+                // Selado Cego players resolution
+                blindSealedSchedule.forEach(sch => {
+                    const match = tournamentMatches.find(m => m.id === sch.id);
+                    if (match) {
+                        match.player1 = (isG1Done && g1[sch.p1Index]) ? g1[sch.p1Index].name : '';
+                        match.player2 = (isG2Done && g2[sch.p2Index]) ? g2[sch.p2Index].name : '';
+                    }
+                });
             }
 
             async function renderPlayoffsBracket() {
@@ -1506,6 +1589,233 @@
                 });
             }
 
+            function renderSeladoCego() {
+                updatePlayoffsMatchPlayers();
+                elements.seladoCegoMatchesContainer.innerHTML = '';
+                
+                const g1 = calculateStandings(1);
+                const g2 = calculateStandings(2);
+
+                const isG1Done = tournamentMatches.filter(m => m.group === 1).every(m => m.completed);
+                const isG2Done = tournamentMatches.filter(m => m.group === 2).every(m => m.completed);
+
+                blindSealedSchedule.forEach(sch => {
+                    const m = tournamentMatches.find(match => match.id === sch.id);
+                    if (!m) return;
+
+                    let p1c = 'text-stone-200', p2c = 'text-stone-200';
+                    let bgCardClass = 'glass-panel';
+                    
+                    if (m.completed) {
+                        if (m.player1Score > m.player2Score) { p1c = 'text-green-400 font-bold'; p2c = 'text-stone-600'; }
+                        else { p2c = 'text-green-400 font-bold'; p1c = 'text-stone-600'; }
+                        bgCardClass = 'bg-[#050A06]/60 border-2 border-green-500/30 shadow-sm opacity-90';
+                    }
+
+                    const p1Resolved = isG1Done && g1[sch.p1Index];
+                    const p2Resolved = isG2Done && g2[sch.p2Index];
+
+                    const p1Display = p1Resolved ? g1[sch.p1Index].name : `${sch.p1Index + 1}º G1`;
+                    const p2Display = p2Resolved ? g2[sch.p2Index].name : `${sch.p2Index + 1}º G2`;
+
+                    const p1DeckId = p1Resolved ? blindSealedDecks[sch.p1Deck].id : '';
+                    const p2DeckId = p2Resolved ? blindSealedDecks[sch.p2Deck].id : '';
+
+                    const isDisabled = !p1Resolved || !p2Resolved;
+                    const disabledAttr = isDisabled ? 'disabled' : '';
+                    const disabledClass = isDisabled ? 'opacity-50 cursor-not-allowed bg-stone-900' : 'bg-stone-950';
+
+                    elements.seladoCegoMatchesContainer.innerHTML += `
+                        <div class="p-3.5 rounded-none shadow-lg border-l-4 border-l-brand-gold/40 ${bgCardClass} transition-all duration-300 flex flex-col justify-center" data-match-id="${m.id}">
+                            <div class="flex items-center justify-between text-[11px] text-stone-500 mb-1.5 uppercase tracking-wide">
+                                <span>Selado Cego</span>
+                                ${m.completed ? `
+                                    <button class="reset-scores-btn text-stone-500 hover:text-red-400 transition-colors font-bold text-[10px] uppercase tracking-wider">
+                                        Limpar
+                                    </button>
+                                ` : '&nbsp;'}
+                            </div>
+                            
+                            <div class="flex items-start justify-between gap-1 text-sm md:text-base font-semibold">
+                                <!-- Player 1 Column -->
+                                <div class="w-[38%] text-left flex flex-col">
+                                    <span class="truncate ${p1c}" title="${p1Display}">${p1Display}</span>
+                                    ${p1Resolved ? `
+                                        <div class="mt-1 flex flex-col items-start">
+                                            <span class="text-[10px] text-stone-500 font-mono">Deck ${sch.p1Deck}</span>
+                                            <button class="copy-deck-id-btn mt-0.5 text-[9px] bg-stone-900 border border-brand-gold/25 hover:border-brand-gold text-brand-lightgold px-1.5 py-0.5 transition-all uppercase tracking-wider" data-deck-id="${p1DeckId}">
+                                                Copiar ID
+                                            </button>
+                                        </div>
+                                    ` : ''}
+                                </div>
+
+                                <!-- Score Center Column -->
+                                <div class="flex flex-col items-center justify-center w-[24%] pt-1">
+                                    <div class="flex items-center gap-1 justify-center">
+                                        <input type="number" min="0" max="3" ${disabledAttr} class="score-input ${disabledClass} text-center rounded-none w-10 py-1 text-sm md:text-base font-bold text-brand-lightgold border border-brand-gold/20" data-player="player1" value="${m.player1Score !== null ? m.player1Score : ''}" placeholder="-">
+                                        <span class="text-stone-600 text-xs font-mono">vs</span>
+                                        <input type="number" min="0" max="3" ${disabledAttr} class="score-input ${disabledClass} text-center rounded-none w-10 py-1 text-sm md:text-base font-bold text-brand-lightgold border border-brand-gold/20" data-player="player2" value="${m.player2Score !== null ? m.player2Score : ''}" placeholder="-">
+                                    </div>
+                                </div>
+
+                                <!-- Player 2 Column -->
+                                <div class="w-[38%] text-right flex flex-col items-end">
+                                    <span class="truncate ${p2c}" title="${p2Display}">${p2Display}</span>
+                                    ${p2Resolved ? `
+                                        <div class="mt-1 flex flex-col items-end">
+                                            <span class="text-[10px] text-stone-500 font-mono">Deck ${sch.p2Deck}</span>
+                                            <button class="copy-deck-id-btn mt-0.5 text-[9px] bg-stone-900 border border-brand-gold/25 hover:border-brand-gold text-brand-lightgold px-1.5 py-0.5 transition-all uppercase tracking-wider" data-deck-id="${p2DeckId}">
+                                                Copiar ID
+                                            </button>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+
+                            <div class="inline-report-section hidden mt-3 pt-3 border-t border-stone-850 space-y-2">
+                                <div class="flex gap-2 items-center">
+                                    <input type="password" placeholder="Senha" class="inline-passcode bg-stone-950 border border-brand-gold/30 rounded-none py-1.5 px-3 text-xs text-stone-200 placeholder-stone-700 focus:border-brand-gold focus:outline-none flex-grow">
+                                    <button class="inline-submit-btn bg-brand-gold hover:bg-brand-lightgold text-black font-bold py-1.5 px-4 rounded-none transition-colors text-xs uppercase tracking-wider">
+                                        Reportar
+                                    </button>
+                                    <button class="inline-cancel-btn text-stone-400 hover:text-stone-200 py-1.5 px-2 text-xs uppercase">
+                                        Cancelar
+                                    </button>
+                                </div>
+                                <div class="inline-error-msg text-red-500 text-[10px] hidden font-semibold"></div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // Attach copy listeners
+                elements.seladoCegoMatchesContainer.querySelectorAll('.copy-deck-id-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const deckId = btn.dataset.deckId;
+                        navigator.clipboard.writeText(deckId).then(() => {
+                            const originalText = btn.textContent;
+                            btn.textContent = 'Copiado!';
+                            btn.classList.add('border-green-500', 'text-green-400');
+                            btn.classList.remove('text-brand-lightgold');
+                            setTimeout(() => {
+                                btn.textContent = originalText;
+                                btn.classList.remove('border-green-500', 'text-green-400');
+                                btn.classList.add('text-brand-lightgold');
+                            }, 1500);
+                        }).catch(err => {
+                            console.error('Error copying text: ', err);
+                        });
+                    });
+                });
+
+                // Attach report/reset score listeners
+                elements.seladoCegoMatchesContainer.querySelectorAll('[data-match-id]').forEach(card => {
+                    const matchId = card.dataset.matchId;
+                    const match = tournamentMatches.find(m => m.id === matchId);
+                    const reportSection = card.querySelector('.inline-report-section');
+                    const passcodeInp = card.querySelector('.inline-passcode');
+                    const submitBtn = card.querySelector('.inline-submit-btn');
+                    const cancelBtn = card.querySelector('.inline-cancel-btn');
+                    const errorMsg = card.querySelector('.inline-error-msg');
+                    const p1Input = card.querySelector('[data-player="player1"]');
+                    const p2Input = card.querySelector('[data-player="player2"]');
+                    const resetBtn = card.querySelector('.reset-scores-btn');
+
+                    const isPlayoffMatch = match.group === 3 || match.group === 4;
+                    const isDisabled = isPlayoffMatch && (!match.player1 || !match.player2);
+
+                    const handleInputInteraction = () => {
+                        if (isDisabled) return;
+                        reportSection.classList.remove('hidden');
+                        submitBtn.textContent = 'Reportar';
+                        errorMsg.classList.add('hidden');
+                    };
+
+                    [p1Input, p2Input].forEach(inp => {
+                        inp.addEventListener('focus', handleInputInteraction);
+                        inp.addEventListener('input', handleInputInteraction);
+                    });
+
+                    if (resetBtn) {
+                        resetBtn.addEventListener('click', () => {
+                            p1Input.value = ''; p2Input.value = '';
+                            reportSection.classList.remove('hidden');
+                            submitBtn.textContent = 'Limpar';
+                            errorMsg.classList.add('hidden');
+                            passcodeInp.focus();
+                        });
+                    }
+
+                    cancelBtn.addEventListener('click', () => {
+                        p1Input.value = match.player1Score !== null ? match.player1Score : '';
+                        p2Input.value = match.player2Score !== null ? match.player2Score : '';
+                        reportSection.classList.add('hidden');
+                    });
+
+                    submitBtn.addEventListener('click', async () => {
+                        if (isDisabled) {
+                            errorMsg.textContent = 'Aguardando definição dos jogadores.';
+                            errorMsg.classList.remove('hidden');
+                            return;
+                        }
+
+                        const passcode = passcodeInp.value;
+                        const isClear = submitBtn.textContent === 'Limpar';
+                        let p1Score = isClear ? null : parseInt(p1Input.value);
+                        let p2Score = isClear ? null : parseInt(p2Input.value);
+                        
+                        if (!isClear && (isNaN(p1Score) || isNaN(p2Score) || p1Score < 0 || p1Score > 3 || p2Score < 0 || p2Score > 3 || p1Score === p2Score)) {
+                            errorMsg.textContent = 'Placares inválidos.';
+                            errorMsg.classList.remove('hidden');
+                            return;
+                        }
+
+                        submitBtn.disabled = true;
+                        submitBtn.textContent = 'Enviando...';
+                        
+                        if (isSupabaseConfigured && supabaseClient) {
+                            try {
+                                const { data, error } = await supabaseClient.rpc('report_match', { p_match_id: matchId, p_player1_score: p1Score, p_player2_score: p2Score, p_passcode: passcode });
+                                if (error) throw error;
+                                if (data === true) {
+                                    submitBtn.textContent = 'Sucesso!';
+                                    submitBtn.classList.remove('bg-brand-gold', 'hover:bg-brand-lightgold');
+                                    submitBtn.classList.add('bg-green-600', 'text-white');
+                                    await loadTournamentData();
+                                    setTimeout(() => {
+                                        renderAll();
+                                    }, 1000);
+                                } else {
+                                    throw new Error("Erro ao salvar no banco.");
+                                }
+                            } catch (err) {
+                                console.error("Report error:", err);
+                                errorMsg.textContent = err.message || 'Senha incorreta ou erro.';
+                                errorMsg.classList.remove('hidden');
+                                submitBtn.disabled = false;
+                                submitBtn.textContent = isClear ? 'Limpar' : 'Reportar';
+                            }
+                        } else {
+                            if (passcode !== 'agorim') {
+                                errorMsg.textContent = 'Senha inválida!';
+                                errorMsg.classList.remove('hidden');
+                                submitBtn.disabled = false;
+                                return;
+                            }
+                            match.player1Score = p1Score; match.player2Score = p2Score; match.completed = !isClear;
+                            saveTournamentData();
+                            submitBtn.textContent = 'Sucesso!';
+                            submitBtn.classList.remove('bg-brand-gold', 'hover:bg-brand-lightgold');
+                            submitBtn.classList.add('bg-green-600', 'text-white');
+                            setTimeout(() => {
+                                renderAll();
+                            }, 1000);
+                        }
+                    });
+                });
+            }
+
             function updateTicker() {
                 if (!elements.recentResultsTicker || !elements.tickerWrapper) return;
 
@@ -1568,6 +1878,7 @@
                 elements.groupsTabContent.classList.add('hidden');
                 elements.matchesTabContent.classList.add('hidden');
                 elements.playoffsTabContent.classList.add('hidden');
+                elements.seladoCegoTabContent.classList.add('hidden');
 
                 if (activeTab === 'players') {
                     elements.playersTabContent.classList.remove('hidden');
@@ -1583,6 +1894,9 @@
                 } else if (activeTab === 'playoffs') {
                     elements.playoffsTabContent.classList.remove('hidden');
                     renderPlayoffsBracket();
+                } else if (activeTab === 'selado-cego') {
+                    elements.seladoCegoTabContent.classList.remove('hidden');
+                    renderSeladoCego();
                 }
                 
                 updateTicker();
