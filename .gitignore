@@ -1,0 +1,5 @@
+.DS_Store
+Jogadores.csv
+set-viz/
+*.gz
+*.map
