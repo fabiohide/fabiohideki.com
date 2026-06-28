@@ -1,0 +1,168 @@
+.album-view {
+  gap: 18px;
+}
+
+.album-stage {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 36px;
+  gap: 8px;
+  align-items: center;
+}
+
+.album-control {
+  width: 36px;
+  height: 64px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text);
+  font-size: 2rem;
+}
+
+.album-page {
+  position: relative;
+  overflow: hidden;
+  width: min(100%, 800px);
+  aspect-ratio: 800 / 1120;
+  margin: 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-md);
+  background-color: #111522;
+  background-position: center;
+  background-size: cover;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.42);
+}
+
+.album-page::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.12), transparent 7%, transparent 93%, rgba(0, 0, 0, 0.18));
+  mix-blend-mode: soft-light;
+}
+
+.album-slot {
+  position: absolute;
+  width: 41.25%;
+}
+
+.layout-a .album-slot:nth-child(1) {
+  left: 5%;
+  top: 21.43%;
+}
+
+.layout-a .album-slot:nth-child(2) {
+  left: 53.75%;
+  top: 56.16%;
+}
+
+.layout-b .album-slot:nth-child(1) {
+  left: 53.75%;
+  top: 21.43%;
+}
+
+.layout-b .album-slot:nth-child(2) {
+  left: 5%;
+  top: 56.16%;
+}
+
+.layout-c .album-slot:nth-child(1) {
+  left: 5%;
+  top: 35.71%;
+}
+
+.layout-c .album-slot:nth-child(2) {
+  left: 53.75%;
+  top: 10.71%;
+}
+
+.layout-c .album-slot:nth-child(3) {
+  left: 53.75%;
+  top: 56.16%;
+}
+
+.page-number {
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
+  z-index: 5;
+  color: rgba(255, 255, 255, 0.68);
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 900;
+}
+
+.page-rail {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 0 6px;
+}
+
+.page-rail button {
+  flex: 0 0 auto;
+  min-width: 40px;
+  height: 34px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-text-muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.page-rail button.is-active {
+  border-color: var(--color-blue);
+  background: rgba(49, 133, 255, 0.18);
+  color: var(--color-text);
+}
+
+.house-progress {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.house-progress article {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.house-progress img {
+  width: 28px;
+  height: 28px;
+  filter: brightness(0) invert(1);
+  opacity: 0.92;
+}
+
+.house-progress span {
+  font-weight: 900;
+}
+
+.house-progress strong {
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+}
+
+@media (min-width: 760px) {
+  .album-stage {
+    grid-template-columns: 48px minmax(0, 800px) 48px;
+    justify-content: center;
+  }
+
+  .album-control {
+    width: 48px;
+  }
+
+  .house-progress {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+}

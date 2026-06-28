@@ -1,0 +1,340 @@
+@font-face {
+  font-family: "Fixture";
+  src:
+    url("/assets/fonts/Fixture Regular.otf") format("opentype"),
+    local("Fixture");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Fixture";
+  src:
+    url("/assets/fonts/Fixture Condensed Bold.otf") format("opentype"),
+    local("Fixture Condensed Bold");
+  font-weight: 700;
+  font-style: normal;
+  font-stretch: condensed;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Fixture";
+  src:
+    url("/assets/fonts/Fixture Condensed ExtraBold.otf") format("opentype"),
+    local("Fixture Condensed ExtraBold");
+  font-weight: 800;
+  font-style: normal;
+  font-stretch: condensed;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: dark;
+  --color-bg: #070812;
+  --color-surface: #101322;
+  --color-surface-2: #171b2e;
+  --color-border: rgba(255, 255, 255, 0.12);
+  --color-text: #f7f8ff;
+  --color-text-muted: #aab0c3;
+  --color-red: #f04452;
+  --color-green: #23c483;
+  --color-blue: #3185ff;
+  --color-gold: #f2c14e;
+  --font-display: "Fixture", "Arial Narrow", sans-serif;
+  --font-body: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --shadow-panel: 0 16px 40px rgba(0, 0, 0, 0.28);
+  --shadow-gold: 0 0 28px rgba(242, 193, 78, 0.28);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background:
+    radial-gradient(circle at 18% -10%, rgba(49, 133, 255, 0.22), transparent 34rem),
+    radial-gradient(circle at 90% 8%, rgba(240, 68, 82, 0.16), transparent 28rem),
+    var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+}
+
+button,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled,
+select:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+.app-shell {
+  min-height: 100vh;
+  padding-bottom: 86px;
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 72px;
+  padding: 14px 16px 12px;
+  background: rgba(7, 8, 18, 0.88);
+  border-bottom: 1px solid var(--color-border);
+  backdrop-filter: blur(18px);
+}
+
+.app-header h1,
+.section-heading h2,
+.locked-panel h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 10vw, 3.8rem);
+  font-weight: 800;
+  line-height: 0.85;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.eyebrow,
+.panel-label {
+  margin: 0 0 7px;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.header-status {
+  min-width: 82px;
+  padding: 8px 10px;
+  border: 1px solid rgba(35, 196, 131, 0.38);
+  border-radius: var(--radius-md);
+  background: rgba(35, 196, 131, 0.11);
+  text-align: right;
+}
+
+.header-status span,
+.header-status strong {
+  display: block;
+}
+
+.header-status span {
+  color: var(--color-green);
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.header-status strong {
+  margin-top: 2px;
+  font-size: 0.82rem;
+}
+
+.app-main {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.dashboard-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.dashboard-strip article,
+.panel {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, rgba(23, 27, 46, 0.96), rgba(16, 19, 34, 0.96));
+  box-shadow: var(--shadow-panel);
+}
+
+.dashboard-strip article {
+  min-height: 72px;
+  padding: 12px;
+}
+
+.dashboard-strip span {
+  display: block;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.dashboard-strip strong {
+  display: block;
+  margin-top: 8px;
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 6vw, 2.2rem);
+  line-height: 0.9;
+}
+
+.page-view {
+  display: grid;
+  gap: 16px;
+}
+
+.section-heading {
+  display: grid;
+  gap: 2px;
+}
+
+.section-heading.compact h2 {
+  font-size: clamp(1.5rem, 7vw, 2.4rem);
+}
+
+.panel {
+  padding: 16px;
+}
+
+.button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0 16px;
+  color: var(--color-text);
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.button-primary {
+  background: linear-gradient(135deg, var(--color-blue), #1d55e8);
+}
+
+.button-secondary {
+  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.button-gold {
+  background: linear-gradient(135deg, #f9db76, #bd7e1f);
+  color: #1d1405;
+}
+
+.bottom-nav {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+  background: rgba(7, 8, 18, 0.94);
+  border-top: 1px solid var(--color-border);
+  backdrop-filter: blur(18px);
+}
+
+.nav-item {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: 3px;
+  min-height: 56px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.nav-icon {
+  color: currentColor;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.nav-item.is-active {
+  background: rgba(49, 133, 255, 0.14);
+  color: var(--color-text);
+}
+
+.nav-item.is-active::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 34px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--color-blue);
+}
+
+.nav-badge {
+  position: absolute;
+  top: 8px;
+  right: calc(50% - 26px);
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-red);
+}
+
+.meter {
+  overflow: hidden;
+  height: 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--color-green), var(--color-blue), var(--color-gold));
+}
+
+@media (min-width: 760px) {
+  .app-shell {
+    padding-bottom: 0;
+  }
+
+  .app-header,
+  .app-main {
+    padding-right: 28px;
+    padding-left: 28px;
+  }
+
+  .bottom-nav {
+    right: 28px;
+    bottom: 22px;
+    left: 50%;
+    width: min(420px, calc(100% - 56px));
+    transform: translateX(-50%);
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+  }
+}

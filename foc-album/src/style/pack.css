@@ -1,0 +1,109 @@
+.pack-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.pack-card {
+  display: grid;
+  grid-template-columns: minmax(96px, 34%) 1fr;
+  gap: 14px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, rgba(49, 133, 255, 0.16), rgba(16, 19, 34, 0.94));
+  box-shadow: var(--shadow-panel);
+}
+
+.pack-card.is-golden {
+  border-color: rgba(242, 193, 78, 0.48);
+  background: linear-gradient(135deg, rgba(242, 193, 78, 0.24), rgba(35, 24, 7, 0.94));
+  box-shadow: var(--shadow-gold);
+}
+
+.pack-art {
+  display: grid;
+  place-items: center;
+  min-height: 160px;
+}
+
+.pack-art img {
+  width: min(100%, 138px);
+  filter: drop-shadow(0 20px 26px rgba(0, 0, 0, 0.44));
+}
+
+.pack-info span {
+  display: inline-flex;
+  margin-bottom: 8px;
+  padding: 4px 7px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.pack-info h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 8vw, 3rem);
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+
+.pack-info p {
+  margin: 7px 0 14px;
+  color: var(--color-text-muted);
+}
+
+.collection-summary {
+  display: grid;
+  gap: 12px;
+}
+
+.collection-summary strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  line-height: 0.9;
+}
+
+.reveal-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.reveal-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.reveal-item {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.reveal-item span {
+  width: 100%;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (min-width: 760px) {
+  .pack-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .reveal-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}

@@ -1,0 +1,106 @@
+.sticker-card {
+  position: relative;
+  overflow: hidden;
+  display: block;
+  width: 100%;
+  aspect-ratio: 600 / 820;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+  color: var(--color-text);
+  padding: 0;
+  isolation: isolate;
+  transform-style: preserve-3d;
+  transition: transform var(--duration-normal, 220ms), border-color 180ms;
+}
+
+.sticker-card:hover {
+  transform: translateY(-2px) rotateX(2deg);
+  border-color: rgba(255, 255, 255, 0.32);
+}
+
+.sticker-card.is-small {
+  max-width: 150px;
+}
+
+.sticker-image,
+.sticker-silhouette {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sticker-silhouette {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 48%),
+    rgba(255, 255, 255, 0.04);
+}
+
+.sticker-card.is-empty .sticker-silhouette::after {
+  content: "";
+  position: absolute;
+  inset: 18%;
+  border-radius: 999px 999px 22px 22px;
+  background: rgba(255, 255, 255, 0.07);
+  filter: blur(1px);
+}
+
+.sticker-glow {
+  position: absolute;
+  inset: -30%;
+  z-index: 2;
+  background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.2), transparent 65%);
+  transform: translateX(-45%) rotate(8deg);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sticker-card.is-crest .sticker-glow {
+  opacity: 0.9;
+  animation: shimmer 3s linear infinite;
+}
+
+.sticker-code,
+.new-tag,
+.copy-count {
+  position: absolute;
+  z-index: 4;
+}
+
+.sticker-code {
+  top: 12px;
+  right: 10px;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.new-tag {
+  top: 48px;
+  right: 9px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  background: var(--color-red);
+  font-size: 0.62rem;
+  font-weight: 1000;
+}
+
+.copy-count {
+  bottom: 9px;
+  right: 9px;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: var(--color-blue);
+  font-size: 0.72rem;
+  font-weight: 1000;
+}
+
+@keyframes shimmer {
+  from {
+    transform: translateX(-55%) rotate(8deg);
+  }
+  to {
+    transform: translateX(55%) rotate(8deg);
+  }
+}

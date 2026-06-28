@@ -1,0 +1,28 @@
+# Dependências
+node_modules/
+
+# Build
+dist/
+
+# Ambiente
+.env
+.env.local
+.env.*.local
+
+# Dados sensíveis
+../foc26/
+foc26/
+*.xlsx
+*.csv
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
