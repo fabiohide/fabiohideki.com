@@ -1,5 +1,6 @@
 import { getSticker } from '../data/stickers.js';
 import { stickerCard } from '../components/sticker-card.js';
+import { getAssetUrl } from '../utils/format.js';
 
 export function renderPacks(state) {
   const reveal = state.reveal;
@@ -29,7 +30,7 @@ function renderPack(pack) {
   return `
     <article class="pack-card ${packClass}">
       <div class="pack-art">
-        <img src="${pack.image}" alt="${pack.title}" />
+        <img src="${getAssetUrl(pack.image)}" alt="${pack.title}" />
       </div>
       <button class="button ${btnClass}" data-action="openPack" data-value="${pack.id}" ${disabled}>
         ${label}
@@ -53,7 +54,7 @@ function renderReveal(reveal, collection) {
       <div class="flip-card ${cardClass} ${isCrest}" data-index="${index}">
         <div class="flip-card-inner">
           <div class="flip-card-back" style="padding: 0; background: transparent;">
-            <img src="/assets/sticker_back.webp" alt="Verso" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+            <img src="${getAssetUrl('/assets/sticker_back.webp')}" alt="Verso" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
           </div>
           <div class="flip-card-front">
             ${stickerCard(id, collection, { small: true, forceOwned: true })}
@@ -76,10 +77,10 @@ function renderReveal(reveal, collection) {
         <div class="pack-wrapper-3d" id="packWrapper">
           <div class="pack-rip-container" id="packRipContainer">
             <div class="pack-half pack-top">
-              <img src="${reveal.pack.image}" alt="${reveal.pack.title}" />
+              <img src="${getAssetUrl(reveal.pack.image)}" alt="${reveal.pack.title}" />
             </div>
             <div class="pack-half pack-bottom">
-              <img src="${reveal.pack.image}" alt="${reveal.pack.title}" />
+              <img src="${getAssetUrl(reveal.pack.image)}" alt="${reveal.pack.title}" />
             </div>
           </div>
           <div class="pack-glow-back"></div>

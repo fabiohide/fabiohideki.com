@@ -46,13 +46,13 @@ export function createInitialState() {
     reveal: null,
     selectedHouseCodes: [],
     report: {
-      matchId: 'r1m1',
+      matchId: '',
       housesSubmitted: false,
       reported: false,
       completed: false,
       playerAKeys: 0,
       playerBKeys: 0,
-      opponentHouses: ['MRS', 'SCT', 'SHW'],
+      opponentHouses: [],
       opponentReported: false,
       confirmed: false,
       conflict: false,
@@ -73,10 +73,7 @@ export function createInitialState() {
       { id: 'c8', title: 'Pós-MM econômico',            desc: 'Vencer com deck pós-Mass Mutation com no máximo 6 propagações',        completed: false, pickedId: null, pendingValidation: false },
     ],
     matches: [
-      { id: 'r1m1', playerA: 'Fábio Hideki', playerB: 'Flávio Ciampone' },
-      { id: 'r1m2', playerA: 'Pedro Godoy', playerB: 'Gian Carlo' },
-      { id: 'r1m3', playerA: 'Camilly Marcondes', playerB: 'Guilherme Monteiro' },
-      { id: 'r1m4', playerA: 'Daniel Chamon', playerB: 'Marc Emerim' },
+      { id: 'r1m_test', playerA: 'teste_1', playerB: 'teste_2' },
     ],
     opponentCollection: Object.fromEntries(
       STICKERS.filter((sticker) => sticker.type === 'player').map((sticker, index) => [

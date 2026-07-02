@@ -6,3 +6,15 @@ export function formatPlayerNameFromLogin(username) {
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
 }
+
+export function getAssetUrl(path) {
+  if (!path) return '';
+  if (path.startsWith('/assets')) {
+    const base = import.meta.env.BASE_URL || '/';
+    const cleanBase = base.endsWith('/') ? base : base + '/';
+    const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+    return cleanBase + cleanPath;
+  }
+  return path;
+}
+

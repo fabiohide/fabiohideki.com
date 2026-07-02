@@ -33,6 +33,7 @@ import {
   dbDeactivateRound
 } from './supabase.js';
 import { stickerCard } from './components/sticker-card.js';
+import { getAssetUrl } from './utils/format.js';
 import './style/login.css';
 
 import { ALBUM_PAGES, GOLDEN_CREST_IDS, INITIAL_PLAYER_IDS, PLAYER_STICKERS, STICKERS, getSticker } from './data/stickers.js';
@@ -705,7 +706,7 @@ function renderLoginView() {
   return `
     <div class="login-view">
       <div class="login-card">
-        <img src="/assets/logo.png" alt="Logo FOC" class="login-logo">
+        <img src="${getAssetUrl('/assets/logo.png')}" alt="Logo FOC" class="login-logo">
         <h1>Copa do Mundo do FOC 2026™</h1>
         
         <form class="login-form" id="loginForm">
@@ -790,7 +791,7 @@ function render() {
     <div class="app-shell">
       <header class="app-header">
         <div class="header-logo-container">
-          <img src="/assets/logo.png" alt="Logo FOC" class="header-logo" />
+          <img src="${getAssetUrl('/assets/logo.png')}" alt="Logo FOC" class="header-logo" />
           <h1 class="header-title">Copa do Mundo do <br class="mobile-only-break" />FOC 2026™</h1>
         </div>
         <div class="header-actions" style="display: flex; gap: 8px; align-items: center;">

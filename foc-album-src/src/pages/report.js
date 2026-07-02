@@ -1,5 +1,6 @@
 import { HOUSE_META, PLAYER_STICKERS } from '../data/stickers.js';
 import { renderChallengesContent } from './challenges.js';
+import { getAssetUrl } from '../utils/format.js';
 
 function formatDeadlineDate(isoString) {
   if (!isoString) return '—';
@@ -53,6 +54,20 @@ export function renderReport(state) {
 
 function renderMatchReportContent(state) {
   const report = state.report;
+  
+  // Encontra a partida do jogador no array de partidas
+  const myMatch = state.matches && state.matches.find(m => m.id === report.matchId);
+  
+  if (!myMatch) {
+    return `
+      <div class="panel" style="padding: 24px; text-align: center; color: var(--color-ash); background: var(--color-carbon); border-radius: var(--radius-lg); box-shadow: var(--shadow-subtle);">
+        <span style="font-size: 2.2rem; display: block; margin-bottom: 12px; filter: grayscale(1) opacity(0.5);">⏱</span>
+        <h4 style="color: var(--color-paper); font-size: 1.05rem; margin: 0 0 6px;">Nenhuma partida nesta rodada</h4>
+        <p style="font-size: 0.82rem; margin: 0; line-height: 1.4;">Você não possui confrontos agendados para a Rodada ${state.activeRound.number}.</p>
+      </div>
+    `;
+  }
+
   return `
       <div class="round-info-bar">
         <span class="deadline-badge">Prazo: ${formatDeadlineDate(state.activeRound.deadline)}</span>
@@ -61,7 +76,7 @@ function renderMatchReportContent(state) {
       <article class="panel match-card">
         <div class="match-info">
           <span class="panel-label">Mesa 1</span>
-          <h3>${state.matches[0].playerA} <span class="vs">vs</span> ${state.matches[0].playerB}</h3>
+          <h3>${myMatch.playerA} <span class="vs">vs</span> ${myMatch.playerB}</h3>
         </div>
         <div class="match-status-container">
           ${statusPill(report)}
@@ -128,7 +143,7 @@ function renderPreMatch(state) {
               return `
                 <details class="pre-match-accordion-item ${owned > 0 ? 'has-some' : 'has-none'} ${owned === total ? 'has-all' : ''}">
                   <summary class="pre-match-accordion-header">
-                    ${house ? `<img src="${house.icon}" alt="" class="house-mini-icon"/>` : ''}
+                    ${house ? `<img src="${getAssetUrl(house.icon)}" alt="" class="house-mini-icon"/>` : ''}
                     <span class="house-mini-name">${code}</span>
                     <span class="house-mini-count">${owned}/${total}</span>
                     <span class="chevron-icon">▼</span>
@@ -156,7 +171,7 @@ function renderPreMatch(state) {
               return `
                 <details class="pre-match-accordion-item ${owned > 0 ? 'has-some' : 'has-none'} ${owned === total ? 'has-all' : ''}">
                   <summary class="pre-match-accordion-header">
-                    ${house ? `<img src="${house.icon}" alt="" class="house-mini-icon"/>` : ''}
+                    ${house ? `<img src="${getAssetUrl(house.icon)}" alt="" class="house-mini-icon"/>` : ''}
                     <span class="house-mini-name">${code}</span>
                     <span class="house-mini-count">${owned}/${total}</span>
                     <span class="chevron-icon">▼</span>
@@ -200,7 +215,7 @@ function renderHousesSection(state) {
                       data-action="toggleHouse" 
                       data-value="${code}" 
                       type="button">
-                ${house ? `<img src="${house.icon}" alt="" />` : ''}
+                ${house ? `<img src="${getAssetUrl(house.icon)}" alt="" />` : ''}
                 <span class="house-name">${code}</span>
                 ${isSelected ? '<span class="check-indicator">✓</span>' : ''}
               </button>
@@ -244,7 +259,7 @@ function houseChip(code, revealed = false, delayIndex = 0) {
   const revealClass = revealed ? `is-revealed reveal-delay-${delayIndex}` : '';
   return `
     <span class="house-chip ${revealClass}">
-      ${house ? `<img src="${house.icon}" alt="" />` : ''}
+      ${house ? `<img src="${getAssetUrl(house.icon)}" alt="" />` : ''}
       <strong>${code}</strong>
     </span>
   `;

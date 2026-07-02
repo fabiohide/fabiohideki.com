@@ -1,14 +1,16 @@
 import { getSticker } from '../data/stickers.js';
 import { stickerCard } from '../components/sticker-card.js';
+import { getAssetUrl } from '../utils/format.js';
 
 export function renderAlbumBook(state, actions) {
   const pagesHtml = state.albumPages.map((page) => {
     const layout = page.layout ? `layout-${page.layout}` : '';
     const isCover = page.kind === 'cover';
+    const bgUrl = getAssetUrl(page.background || '/assets/pages/pages_mock.webp');
     
     return `
       <div class="page-wrapper-turn">
-        <article class="album-page ${layout}" style="background-image: url('${page.background || '/assets/pages/pages_mock.webp'}')">
+        <article class="album-page ${layout}" style="background-image: url('${bgUrl}')">
           ${!isCover ? page.stickers.map((id) => {
             const sticker = getSticker(id);
             return `<div class="album-slot" aria-label="${sticker?.name || id}">${stickerCard(id, state.collection)}</div>`;

@@ -1,4 +1,5 @@
 import { getSticker } from '../data/stickers.js';
+import { getAssetUrl } from '../utils/format.js';
 
 export function stickerCard(stickerId, collection, options = {}) {
   const sticker = getSticker(stickerId);
@@ -18,7 +19,7 @@ export function stickerCard(stickerId, collection, options = {}) {
     <button class="${classes.join(' ')}" ${actionAttr} type="button">
       <span class="card-holo-effect" aria-hidden="true"></span>
       <span class="card-holo-glare" aria-hidden="true"></span>
-      ${isOwned ? `<img class="sticker-image" src="${sticker.image}" alt="${sticker.name}" />` : `<span class="sticker-silhouette"></span><span class="sticker-code">${sticker.id}</span>`}
+      ${isOwned ? `<img class="sticker-image" src="${getAssetUrl(sticker.image)}" alt="${sticker.name}" />` : `<span class="sticker-silhouette"></span><span class="sticker-code">${sticker.id}</span>`}
     </button>
   `;
 }

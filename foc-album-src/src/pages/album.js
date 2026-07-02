@@ -1,5 +1,6 @@
 import { ALBUM_PAGES, getSticker, HOUSE_META, STICKERS } from '../data/stickers.js';
 import { renderAlbumBook } from '../components/album-book.js';
+import { getAssetUrl } from '../utils/format.js';
 
 export function renderAlbum(state) {
   // Adiciona a referência para o array de páginas no state
@@ -36,7 +37,7 @@ function renderHouseProgress(house, collection) {
   const owned = houseStickers.filter((sticker) => collection[sticker.id]).length;
   return `
     <article>
-      <img src="${house.icon}" alt="" />
+      <img src="${getAssetUrl(house.icon)}" alt="" />
       <span>${house.code}</span>
       <strong>${owned}/${houseStickers.length}</strong>
     </article>
