@@ -168,13 +168,17 @@ function renderCollectionsTab(state) {
       <div class="panel" style="margin-top: 24px; max-height: 250px; overflow-y: auto; background: var(--color-graphite); border: 1px solid rgba(255,255,255,0.04);">
         <span class="panel-label" style="font-size: 0.76rem;">Histórico de Edições (Admin)</span>
         <div style="font-family: monospace; font-size: 0.74rem; display: flex; flex-direction: column; gap: 6px; padding: 8px 0;">
-          ${(state.adminLogs || []).length === 0 
+          ${(state.adminLogs || []).length === 0
             ? `<p style="color: var(--color-ash); text-align: center; margin: 0; padding: 12px;">Nenhuma edição realizada ainda.</p>`
-            : (state.adminLogs || []).slice().reverse().map(log => `
-              <div style="color: var(--color-ash); line-height: 1.4; border-bottom: 1px solid rgba(255,255,255,0.02); padding-bottom: 4px;">
-                <span style="color: var(--color-steel); font-weight: 600;">[${new Date(log.timestamp).toLocaleTimeString()}]</span> ${log.message}
-              </div>
-            `).join('')
+            : (state.adminLogs || []).slice().map(log => {
+              const d = new Date(log.timestamp);
+              const dateStr = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+              return `
+                <div style="color: var(--color-ash); line-height: 1.4; border-bottom: 1px solid rgba(255,255,255,0.02); padding-bottom: 4px;">
+                  <span style="color: var(--color-steel); font-weight: 600;">[${dateStr}]</span> ${log.message}
+                </div>
+              `;
+            }).join('')
           }
         </div>
       </div>
@@ -203,15 +207,19 @@ function renderHistoryTab(state) {
               <div>
                 <h4 style="font-size: 0.9rem; color: var(--color-gold); text-transform: uppercase; border-left: 3px solid var(--color-gold); padding-left: 8px; margin: 0 0 10px; font-weight: 700; letter-spacing: 0.05em;">Rodada ${roundNum}</h4>
                 <div style="display: flex; flex-direction: column; gap: 8px; border-left: 1px dashed rgba(255,255,255,0.08); padding-left: 12px; margin-left: 8px;">
-                  ${logsByRound[roundNum].slice().reverse().map(log => `
-                    <div style="font-size: 0.8rem; color: var(--color-ash); display: flex; align-items: flex-start; gap: 8px; line-height: 1.4;">
-                      <span style="font-size: 0.72rem; color: var(--color-steel); white-space: nowrap; margin-top: 2px; font-family: monospace;">[${new Date(log.timestamp).toLocaleTimeString()}]</span>
-                      <div style="flex: 1;">
-                        <span style="color: var(--color-paper); font-weight: 500;">${log.message}</span>
-                        <span style="font-size: 0.64rem; padding: 2px 6px; border-radius: var(--radius-full); background: rgba(255,255,255,0.05); margin-left: 6px; font-weight: 700; text-transform: uppercase; color: var(--color-steel); display: inline-block;">${log.type || 'info'}</span>
+                  ${logsByRound[roundNum].slice().map(log => {
+                    const d = new Date(log.timestamp);
+                    const dateStr = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    return `
+                      <div style="font-size: 0.8rem; color: var(--color-ash); display: flex; align-items: flex-start; gap: 8px; line-height: 1.4;">
+                        <span style="font-size: 0.72rem; color: var(--color-steel); white-space: nowrap; margin-top: 2px; font-family: monospace;">[${dateStr}]</span>
+                        <div style="flex: 1;">
+                          <span style="color: var(--color-paper); font-weight: 500;">${log.message}</span>
+                          <span style="font-size: 0.64rem; padding: 2px 6px; border-radius: var(--radius-full); background: rgba(255,255,255,0.05); margin-left: 6px; font-weight: 700; text-transform: uppercase; color: var(--color-steel); display: inline-block;">${log.type || 'info'}</span>
+                        </div>
                       </div>
-                    </div>
-                  `).join('')}
+                    `;
+                  }).join('')}
                 </div>
               </div>
             `).join('')}
