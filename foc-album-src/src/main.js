@@ -30,7 +30,8 @@ import {
   dbResetMatch,
   dbSaveRoundDeadline,
   dbActivateRound,
-  dbDeactivateRound
+  dbDeactivateRound,
+  setSupabaseSession
 } from './supabase.js';
 import { stickerCard } from './components/sticker-card.js';
 import { getAssetUrl } from './utils/format.js';
@@ -751,6 +752,7 @@ function initLoginEvents() {
       const fetchedState = await fetchFullState(username);
       if (fetchedState) {
         localStorage.setItem('foc_username', username);
+        setSupabaseSession(username);
         state = fetchedState;
         render();
       } else {
@@ -850,6 +852,7 @@ function render() {
       }
       if (action === 'logout') {
         localStorage.removeItem('foc_username');
+        setSupabaseSession('');
         state = createInitialState();
         render();
         return;

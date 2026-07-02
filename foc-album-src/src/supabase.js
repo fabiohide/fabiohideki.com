@@ -5,8 +5,25 @@ import initialPacks from './data/initial-packs.json';
 const url = import.meta.env.VITE_SUPABASE_URL;
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = url && anonKey ? createClient(url, anonKey) : null;
+export let supabase = url && anonKey ? createClient(url, anonKey, {
+  global: {
+    headers: {
+      'x-player-username': (typeof window !== 'undefined' && window.localStorage.getItem('foc_username')) || ''
+    }
+  }
+}) : null;
 export const hasSupabaseConfig = Boolean(supabase);
+
+export function setSupabaseSession(username) {
+  if (!url || !anonKey) return;
+  supabase = createClient(url, anonKey, {
+    global: {
+      headers: {
+        'x-player-username': username || ''
+      }
+    }
+  });
+}
 
 // --- FUNÇÕES DE INTEGRAÇÃO ASSÍNCRONA ---
 

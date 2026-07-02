@@ -1,316 +1,238 @@
 {
   "packs": {
-    "teste_1": [
-      "UNF 1",
-      "STA 1",
-      "SCT 1",
-      "SCT 2",
-      "DIS 3",
-      "MRS 1"
-    ],
-    "teste_2": [
-      "LGS 2",
-      "DIS 1",
-      "EKW 1",
-      "SHW 2",
-      "SCT 1",
-      "SAU 1"
-    ],
-    "marcos_dhrago": [
-      "STA 1",
-      "GST 1",
-      "MRS 2",
-      "SCT 1",
-      "DIS 3",
-      "MRS 1"
-    ],
-    "guilherme_faria": [
-      "UNF 1",
-      "SCT 2",
-      "SHW 3",
-      "SAU 1",
-      "LGS 1",
-      "UNT 2"
-    ],
-    "rigel_duarte": [
-      "UNF 1",
-      "SHW 2",
-      "UNT 1",
-      "SKB 1",
-      "SAU 1",
-      "RDP 1"
-    ],
-    "nicholas_sukorski": [
-      "UNT 3",
-      "UNT 2",
-      "SCT 1",
-      "BRB 2",
-      "UNF 1",
-      "DIS 2"
-    ],
-    "dreadsgu": [
-      "SAU 1",
-      "UNT 3",
-      "MRS 2",
-      "BRB 2",
-      "SCT 2",
-      "DIS 1"
-    ],
-    "mateus_barbosa": [
-      "EKW 1",
-      "SCT 2",
-      "UNF 1",
-      "BRB 2",
-      "STA 1",
-      "BRB 1"
-    ],
     "victor_faria": [
-      "SKB 1",
-      "RDP 1",
-      "SHW 1",
-      "SAU 2",
-      "STA 1",
-      "GST 1"
-    ],
-    "diogo_costa": [
-      "DIS 3",
+      "DIS 1",
+      "LGS 1",
+      "SAU 1",
       "MRS 1",
-      "UNT 2",
-      "LGS 2",
-      "SCT 1",
-      "UNT 1"
-    ],
-    "fabio_hideki": [
-      "SHW 3",
-      "BRB 1",
-      "EKW 1",
-      "STA 2",
-      "MRS 2",
+      "SHW 2",
       "SAU 2"
     ],
-    "flavio_ciampone": [
-      "UNT 3",
-      "UNF 2",
-      "STA 1",
-      "STA 2",
-      "DIS 2",
-      "GST 1"
-    ],
-    "marc_emerim": [
-      "SHW 2",
-      "SAU 2",
+    "leonardo_belchior": [
+      "SAU 1",
+      "UNT 2",
+      "DIS 1",
       "STA 2",
       "BRB 2",
-      "SHW 3",
-      "UNT 1"
-    ],
-    "hygow_lial": [
-      "DIS 2",
-      "LGS 2",
-      "UNT 2",
-      "SHW 2",
-      "MRS 2",
-      "RDP 1"
-    ],
-    "kammy": [
-      "LGS 2",
-      "UNT 2",
-      "STA 2",
-      "UNF 2",
-      "UNT 1",
       "LGS 1"
     ],
-    "gabriel_oliveira": [
-      "UNT 1",
-      "UNT 2",
-      "SHW 2",
-      "SHW 3",
-      "DIS 2",
-      "STA 2"
-    ],
-    "roberto_rocha": [
-      "SKB 1",
-      "SHW 2",
-      "SHW 1",
-      "UNF 1",
-      "DIS 3",
-      "SCT 1"
-    ],
-    "gian_rumachella": [
+    "marcos_dhrago": [
+      "DIS 1",
+      "STA 1",
       "UNT 3",
-      "EKW 1",
-      "MRS 2",
-      "MRS 1",
       "DIS 3",
-      "STA 1"
+      "UNT 2",
+      "SAU 2"
     ],
-    "jp_rodriguez": [
-      "STA 2",
-      "SHW 1",
-      "MRS 1",
-      "UNF 2",
+    "nicholas_sukorski": [
+      "UNT 2",
+      "SAU 1",
+      "SCT 1",
+      "STA 1",
+      "EKW 1",
+      "LGS 1"
+    ],
+    "marc_emerim": [
+      "DIS 1",
+      "SCT 1",
+      "SHW 3",
+      "LGS 1",
       "SAU 2",
       "UNT 3"
     ],
-    "leonardo_belchior": [
-      "UNF 2",
-      "BRB 2",
-      "STA 2",
-      "SCT 2",
-      "DIS 1",
-      "LGS 2"
-    ],
-    "tamara_holanda": [
-      "EKW 1",
-      "SCT 1",
-      "MRS 1",
-      "SAU 2",
-      "UNF 1",
-      "SCT 2"
-    ],
-    "rodrigo_bunda": [
-      "BRB 1",
-      "UNF 2",
-      "RDP 1",
-      "UNT 3",
-      "DIS 3",
-      "GST 1"
-    ],
-    "daniel_mekaro": [
-      "EKW 1",
-      "UNF 2",
-      "SAU 1",
-      "DIS 3",
+    "flavio_ciampone": [
       "STA 1",
-      "LGS 1"
+      "UNT 2",
+      "SHW 3",
+      "EKW 1",
+      "DIS 1",
+      "STA 2"
     ],
     "lucas_hubacek": [
-      "UNT 2",
-      "SAU 1",
+      "SHW 2",
       "DIS 3",
+      "EKW 1",
+      "STA 1",
+      "UNT 2",
+      "SHW 3"
+    ],
+    "kammy": [
+      "MRS 1",
+      "BRB 2",
+      "SHW 2",
+      "SCT 1",
+      "DIS 3",
+      "EKW 1"
+    ],
+    "pedro_godoy": [
+      "UNT 3",
+      "SAU 1",
+      "MRS 1",
+      "DIS 3",
+      "BRB 2",
+      "SAU 2"
+    ],
+    "roberto_rocha": [
+      "SCT 1",
+      "BRB 2",
+      "MRS 1",
+      "SHW 2",
+      "UNT 3",
+      "SAU 1"
+    ],
+    "david_matougolias": [
+      "LGS 1",
+      "BRB 2",
+      "SCT 1",
       "SHW 2",
       "SHW 3",
-      "GST 1"
+      "UNT 3"
     ],
-    "gabriel_firmo": [
+    "dreadsgu": [
+      "BRB 2",
+      "SCT 1",
+      "STA 2",
+      "DIS 3",
+      "SHW 3",
+      "MRS 1"
+    ],
+    "guilherme_faria": [
+      "BRB 2",
+      "DIS 1",
+      "LGS 1",
+      "MRS 1",
+      "DIS 3",
+      "UNT 2"
+    ],
+    "daniel_mekaro": [
+      "LGS 1",
+      "DIS 1",
+      "SHW 2",
+      "SHW 3",
+      "DIS 3",
+      "STA 2"
+    ],
+    "diogo_costa": [
+      "MRS 1",
+      "BRB 2",
+      "SCT 1",
       "SAU 2",
       "DIS 1",
-      "EKW 1",
+      "DIS 3"
+    ],
+    "hygow_lial": [
+      "RDP 1",
       "SHW 1",
+      "BRB 1",
+      "GST 1",
+      "SKB 1",
+      "LGS 2"
+    ],
+    "daniel_chamon": [
+      "DIS 2",
+      "BRB 1",
+      "UNT 1",
+      "RDP 1",
+      "UNF 1",
+      "LGS 2"
+    ],
+    "fabio_hideki": [
+      "UNT 1",
+      "MRS 2",
+      "GST 1",
+      "LGS 2",
+      "UNF 1",
+      "SHW 1"
+    ],
+    "gabriel_oliveira": [
+      "MRS 2",
+      "RDP 1",
+      "UNF 1",
+      "BRB 1",
       "GST 1",
       "UNF 2"
     ],
-    "david_matougolias": [
-      "DIS 3",
+    "rodrigo_bunda": [
+      "UNF 2",
+      "DIS 2",
       "RDP 1",
       "SCT 2",
-      "LGS 2",
-      "DIS 1",
-      "SKB 1"
+      "GST 1",
+      "BRB 1"
     ],
-    "daniel_chamon": [
-      "UNT 3",
-      "SKB 1",
-      "SHW 3",
-      "DIS 2",
+    "jp_rodriguez": [
+      "SHW 1",
       "LGS 2",
-      "MRS 2"
+      "MRS 2",
+      "DIS 2",
+      "SCT 2",
+      "BRB 1"
+    ],
+    "gabriel_firmo": [
+      "SKB 1",
+      "SCT 2",
+      "UNT 1",
+      "BRB 1",
+      "LGS 2",
+      "RDP 1"
+    ],
+    "gian_rumachella": [
+      "MRS 2",
+      "DIS 2",
+      "SHW 1",
+      "UNF 2",
+      "UNT 1",
+      "RDP 1"
+    ],
+    "tamara_holanda": [
+      "UNT 1",
+      "SKB 1",
+      "SCT 2",
+      "DIS 2",
+      "BRB 1",
+      "UNF 1"
     ],
     "guilherme_monteiro": [
+      "MRS 2",
+      "LGS 2",
       "DIS 2",
-      "LGS 1",
-      "SHW 1",
-      "SHW 2",
-      "SHW 3",
-      "SAU 2"
+      "UNF 2",
+      "UNF 1",
+      "BRB 1"
     ],
-    "pedro_godoy": [
-      "BRB 1",
-      "SKB 1",
-      "UNT 3",
-      "BRB 2",
+    "mateus_barbosa": [
+      "MRS 2",
+      "SHW 1",
+      "DIS 2",
       "SCT 2",
-      "SHW 3"
+      "SKB 1",
+      "UNT 1"
+    ],
+    "rigel_duarte": [
+      "DIS 2",
+      "SCT 2",
+      "SHW 1",
+      "UNF 2",
+      "LGS 2",
+      "MRS 2"
     ]
   },
   "testPacks": {
     "teste_1": [
-      [
-        "UNT 2",
-        "SKB 1",
-        "BRB 2",
-        "BRB 1",
-        "SHW 2",
-        "MRS 1"
-      ],
-      [
-        "SKB 1",
-        "DIS 2",
-        "BRB 1",
-        "UNF 1",
-        "DIS 1",
-        "LGS 1"
-      ],
-      [
-        "SCT 2",
-        "SHW 3",
-        "MRS 2",
-        "SAU 2",
-        "GST 1",
-        "SCT 1"
-      ]
+      "SCT 1",
+      "SAU 1",
+      "DIS 1",
+      "RDP 1",
+      "SHW 1",
+      "UNF 1"
     ],
     "teste_2": [
-      [
-        "RDP 1",
-        "BRB 1",
-        "SHW 1",
-        "STA 1",
-        "MRS 1",
-        "UNF 1"
-      ],
-      [
-        "DIS 1",
-        "DIS 2",
-        "LGS 2",
-        "GST 1",
-        "MRS 2",
-        "RDP 1"
-      ],
-      [
-        "DIS 3",
-        "SKB 1",
-        "UNF 1",
-        "UNT 2",
-        "UNT 1",
-        "SHW 2"
-      ]
-    ],
-    "album": [
-      [
-        "UNT 1",
-        "STA 2",
-        "SAU 1",
-        "SCT 2",
-        "RDP 1",
-        "SCT 1"
-      ],
-      [
-        "LGS 1",
-        "SCT 1",
-        "RDP 1",
-        "DIS 3",
-        "SAU 2",
-        "STA 1"
-      ],
-      [
-        "SAU 1",
-        "BRB 1",
-        "SHW 1",
-        "RDP 1",
-        "SCT 1",
-        "STA 1"
-      ]
+      "SHW 2",
+      "STA 2",
+      "UNT 1",
+      "LGS 2",
+      "BRB 2",
+      "SCT 2"
     ]
   }
 }
