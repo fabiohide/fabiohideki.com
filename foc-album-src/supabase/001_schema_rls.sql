@@ -378,12 +378,13 @@ begin
   select name into v_player_name from public.foc2026_players where username = v_username;
 
   foreach v_sticker in array p_sticker_ids loop
-    perform public.foc2026_upsert_collection(v_username, v_sticker, 'pick');
+    -- O admin apenas valida o resultado e as figurinhas. Sem injeção automatizada na coleção.
+    -- perform public.foc2026_upsert_collection(v_username, v_sticker, 'pick');
     insert into public.foc2026_stickers_log(player_username, round_number, message, type)
     values (
       v_username,
       p_round_number,
-      coalesce(v_player_name, v_username) || ' obteve a figurinha ' || v_sticker || ' via Pick pós-partida',
+      coalesce(v_player_name, v_username) || ' solicitou a figurinha ' || v_sticker || ' via Pick pós-partida',
       'pick'
     );
   end loop;

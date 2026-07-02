@@ -447,31 +447,7 @@ export async function dbApproveChallenge(playerUsername, challengeId, stickerId,
     .eq('player_username', playerUsername)
     .eq('id', challengeId);
 
-  // Injeta figurinha na coleção do jogador
-  const { data: existing } = await supabase
-    .from('foc2026_collections')
-    .select('quantity')
-    .eq('player_username', playerUsername)
-    .eq('sticker_id', stickerId)
-    .maybeSingle();
-
-  if (existing) {
-    await supabase
-      .from('foc2026_collections')
-      .update({ quantity: existing.quantity + 1, source: 'challenge', is_new: true })
-      .eq('player_username', playerUsername)
-      .eq('sticker_id', stickerId);
-  } else {
-    await supabase
-      .from('foc2026_collections')
-      .insert({
-        player_username: playerUsername,
-        sticker_id: stickerId,
-        quantity: 1,
-        source: 'challenge',
-        is_new: true
-      });
-  }
+  // O admin apenas valida o desafio. Sem injeção automatizada na coleção.
 
   // Busca título do desafio para o log
   const { data: challenge } = await supabase
