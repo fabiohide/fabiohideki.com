@@ -293,68 +293,70 @@ function renderRoundsTab(state) {
                         let statusLabel = 'Pendente';
                         let statusBg = 'var(--color-graphite)';
                         let statusColor = 'var(--color-steel)';
-                        let placarText = 'Aguardando reporte';
+                        
+                        const conflict = m.player_a_reported && m.player_b_reported && 
+                                         (m.player_a_keys !== m.player_b_opp_keys || m.player_b_keys !== m.player_a_opp_keys);
 
-                        if (m.completed) {
+                        if (m.completed && !conflict) {
                           statusLabel = 'Concluído';
                           statusBg = 'rgba(0, 180, 100, 0.15)';
                           statusColor = '#00e680';
-                          placarText = `Placar: <strong>${m.player_a_keys} x ${m.player_b_keys}</strong>`;
-                        } else if (m.player_a_reported && m.player_b_reported) {
+                        } else if (conflict) {
                           statusLabel = 'Conflito';
                           statusBg = 'rgba(230, 80, 80, 0.15)';
                           statusColor = '#ff6666';
-                          placarText = `Divergência: <strong>${m.player_a_keys} vs ${m.player_b_keys}</strong>`;
                         } else if (m.player_a_reported || m.player_b_reported) {
                           statusLabel = 'Parcial';
                           statusBg = 'rgba(255, 170, 0, 0.12)';
                           statusColor = '#ffb300';
-                          if (m.player_a_reported) {
-                            placarText = `Reportado por ${pA.name} (${m.player_a_keys} chaves)`;
-                          } else {
-                            placarText = `Reportado por ${pB.name} (${m.player_b_keys} chaves)`;
-                          }
                         }
 
-                        // Busca picks de figurinhas para esta partida
-                        const roundPicks = (state.allPicks || []).filter(log => log.round === r.number);
-                        
-                        const pAPicks = roundPicks
-                          .filter(log => log.player_username === m.player_a_username)
-                          .map(log => {
-                            const matchObj = log.message.match(/[A-Z]{3}\s\d/);
-                            return matchObj ? matchObj[0] : '';
-                          })
-                          .filter(Boolean);
+                        let reportAHtml = '';
+                        if (m.player_a_reported) {
+                          const pAPicksFormatted = m.player_a_picks
+                            ? m.player_a_picks.split(',').join(', ')
+                            : 'Nenhum pick';
+                          reportAHtml = `
+                            <div style="font-size: 0.8rem; color: var(--color-paper); padding: 6px 0; border-top: 1px dashed rgba(255,255,255,0.06);">
+                              <strong>${pA.name}</strong> - ${m.player_a_houses || 'Sem casas'} - Picks: ${pAPicksFormatted} <br/>
+                              <span style="color: var(--color-gold); font-weight: 600;">${pA.name} ${m.player_a_keys} x ${m.player_a_opp_keys} ${pB.name}</span>
+                            </div>
+                          `;
+                        } else {
+                          reportAHtml = `
+                            <div style="font-size: 0.8rem; color: var(--color-ash); padding: 6px 0; border-top: 1px dashed rgba(255,255,255,0.06);">
+                              <strong>${pA.name}</strong>: Não reportou ainda.
+                            </div>
+                          `;
+                        }
 
-                        const pBPicks = roundPicks
-                          .filter(log => log.player_username === m.player_b_username)
-                          .map(log => {
-                            const matchObj = log.message.match(/[A-Z]{3}\s\d/);
-                            return matchObj ? matchObj[0] : '';
-                          })
-                          .filter(Boolean);
-
-                        let picksHtml = '';
-                        if (pAPicks.length > 0 || pBPicks.length > 0) {
-                          picksHtml = `
-                            <div style="margin-top: 6px; display: flex; flex-direction: column; gap: 4px; font-size: 0.74rem; border-top: 1px dashed rgba(255,255,255,0.04); padding-top: 6px;">
-                              ${pAPicks.length > 0 ? `<div><span style="color: var(--color-gold); font-weight: 600;">${pA.name}:</span> ${pAPicks.map(id => `<span style="background: var(--color-graphite); padding: 2px 6px; border-radius: var(--radius-xs); margin-left: 4px; color: var(--color-paper); font-weight: bold; border: 1px solid rgba(255,255,255,0.04);">${id}</span>`).join('')}</div>` : ''}
-                              ${pBPicks.length > 0 ? `<div><span style="color: var(--color-gold); font-weight: 600;">${pB.name}:</span> ${pBPicks.map(id => `<span style="background: var(--color-graphite); padding: 2px 6px; border-radius: var(--radius-xs); margin-left: 4px; color: var(--color-paper); font-weight: bold; border: 1px solid rgba(255,255,255,0.04);">${id}</span>`).join('')}</div>` : ''}
+                        let reportBHtml = '';
+                        if (m.player_b_reported) {
+                          const pBPicksFormatted = m.player_b_picks
+                            ? m.player_b_picks.split(',').join(', ')
+                            : 'Nenhum pick';
+                          reportBHtml = `
+                            <div style="font-size: 0.8rem; color: var(--color-paper); padding: 6px 0; border-top: 1px dashed rgba(255,255,255,0.06);">
+                              <strong>${pB.name}</strong> - ${m.player_b_houses || 'Sem casas'} - Picks: ${pBPicksFormatted} <br/>
+                              <span style="color: var(--color-gold); font-weight: 600;">${pA.name} ${m.player_b_opp_keys} x ${m.player_b_keys} ${pB.name}</span>
+                            </div>
+                          `;
+                        } else {
+                          reportBHtml = `
+                            <div style="font-size: 0.8rem; color: var(--color-ash); padding: 6px 0; border-top: 1px dashed rgba(255,255,255,0.06);">
+                              <strong>${pB.name}</strong>: Não reportou ainda.
                             </div>
                           `;
                         }
 
                         return `
-                          <div style="padding: 12px; background: rgba(0,0,0,0.18); border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 6px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; font-weight: 600; gap: 10px;">
+                          <div style="padding: 12px; background: rgba(0,0,0,0.18); border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 4px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; font-weight: 600; gap: 10px; margin-bottom: 4px;">
                               <span style="color: var(--color-paper);">${pA.name} <span style="color: var(--color-steel); font-weight: normal;">vs</span> ${pB.name}</span>
                               <span style="font-size: 0.68rem; padding: 2px 6px; border-radius: var(--radius-sm); background: ${statusBg}; color: ${statusColor}; font-weight: 700; text-transform: uppercase;">${statusLabel}</span>
                             </div>
-                            <div style="font-size: 0.78rem; color: var(--color-ash); font-weight: 500;">
-                              ${placarText}
-                            </div>
-                            ${picksHtml}
+                            ${reportAHtml}
+                            ${reportBHtml}
                           </div>
                         `;
                       }).join('')

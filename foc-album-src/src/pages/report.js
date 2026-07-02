@@ -83,21 +83,14 @@ function renderMatchReportContent(state) {
         </div>
       </article>
 
-      ${!report.completed ? renderPreMatch(state) : ''}
-      ${renderHousesSection(state)}
-      ${report.housesSubmitted ? renderScoreSection(report, state) : ''}
-      ${report.confirmed ? renderPicker(state) : ''}
+      ${!report.reported ? renderPreMatch(state) : ''}
+      ${!report.reported ? renderSingleReportForm(state) : renderReportSummary(state)}
   `;
 }
 
 function statusPill(report) {
-  if (report.completed) return '<strong class="status-pill is-completed">Picks Concluídos</strong>';
-  if (report.confirmed) return '<strong class="status-pill is-confirmed">Confirmada</strong>';
-  if (report.conflict) return '<strong class="status-pill is-conflict">Conflito</strong>';
-  if (report.reported) return '<strong class="status-pill is-reported">Aguardando confirmação</strong>';
-  if (report.opponentReported) return '<strong class="status-pill is-active">Confirmar reporte</strong>';
-  if (report.housesSubmitted) return '<strong class="status-pill is-active">Aguardando Placar</strong>';
-  return '<strong class="status-pill is-waiting">Aguardando Casas</strong>';
+  if (report.reported) return '<strong class="status-pill is-completed">Reporte Enviado</strong>';
+  return '<strong class="status-pill is-waiting">Pendente</strong>';
 }
 
 function renderPreMatch(state) {
@@ -112,9 +105,6 @@ function renderPreMatch(state) {
 
   const iCanGet = PLAYER_STICKERS.filter(s =>
     state.opponentCollection[s.id] && (!state.collection[s.id] || state.collection[s.id].quantity === 0)
-  );
-  const heCanGet = PLAYER_STICKERS.filter(s =>
-    state.collection[s.id] && (!state.opponentCollection[s.id] || state.opponentCollection[s.id].quantity === 0)
   );
 
   const opponent = state.matches.find(m => m.id === state.report.matchId);
@@ -194,66 +184,6 @@ function renderPreMatch(state) {
   `;
 }
 
-function renderHousesSection(state) {
-  const report = state.report;
-  const selectedCodes = state.selectedHouseCodes || [];
-  
-  if (!report.housesSubmitted) {
-    const allHouses = Object.keys(HOUSE_META);
-    return `
-      <section class="panel houses-panel">
-        <div class="step-header">
-          <span class="step-number">Etapa 1</span>
-          <h4>Selecione as 3 casas do seu deck</h4>
-        </div>
-        <div class="house-selector-grid">
-          ${allHouses.map((code) => {
-            const house = HOUSE_META[code];
-            const isSelected = selectedCodes.includes(code);
-            return `
-              <button class="house-selector-chip ${isSelected ? 'is-selected' : ''}" 
-                      data-action="toggleHouse" 
-                      data-value="${code}" 
-                      type="button">
-                ${house ? `<img src="${getAssetUrl(house.icon)}" alt="" />` : ''}
-                <span class="house-name">${code}</span>
-                ${isSelected ? '<span class="check-indicator">✓</span>' : ''}
-              </button>
-            `;
-          }).join('')}
-        </div>
-        <div class="panel-action-bar">
-          <span class="selection-counter">${selectedCodes.length} de 3 selecionadas</span>
-          <button class="button button-primary" data-action="submitHouses" ${selectedCodes.length === 3 ? '' : 'disabled'}>
-            Confirmar casas
-          </button>
-        </div>
-      </section>
-    `;
-  }
-
-  return `
-    <section class="panel houses-panel">
-      <div class="panel-row-divided">
-        <div class="deck-display">
-          <span class="panel-label">Seu deck</span>
-          <div class="house-chips">
-            ${selectedCodes.map((code) => houseChip(code)).join('')}
-          </div>
-        </div>
-        <div class="deck-display">
-          <span class="panel-label">Deck do adversário</span>
-          <div class="house-chips">
-            ${report.confirmed || report.completed 
-              ? report.opponentHouses.map((code, idx) => houseChip(code, true, idx)).join('') 
-              : ['???', '???', '???'].map((code) => `<span class="house-chip is-hidden">${code}</span>`).join('')}
-          </div>
-        </div>
-      </div>
-    </section>
-  `;
-}
-
 function houseChip(code, revealed = false, delayIndex = 0) {
   const house = HOUSE_META[code];
   const revealClass = revealed ? `is-revealed reveal-delay-${delayIndex}` : '';
@@ -265,93 +195,18 @@ function houseChip(code, revealed = false, delayIndex = 0) {
   `;
 }
 
-function renderScoreSection(report, state) {
-  const showStepper = !report.reported || report.conflict;
-  const isExpired = state && state.activeRound.deadline && new Date(state.activeRound.deadline) < new Date();
-  const ownKeys = report.playerAKeys;
-  
-  return `
-    <section class="panel score-panel">
-      <div class="step-header">
-        <span class="step-number">Etapa 2</span>
-        <h4>${report.opponentReported && !report.reported ? 'Confirme o reporte da partida' : 'Informe suas chaves forjadas'}</h4>
-        <p>Cada jogador reporta apenas as próprias chaves. O segundo reporte confirma a partida.</p>
-      </div>
-
-      ${report.conflict ? `
-        <div class="alert-box is-error">
-          <span class="alert-icon">⚠</span>
-          <div class="alert-content">
-            <strong>Divergência nos dados!</strong>
-            <p>Seu reporte: Você ${report.playerAKeys} - ${report.playerBKeys} Oponente.</p>
-            <p>Reporte do oponente: Você ${report.opponentKeysB} - ${report.opponentKeysA} Oponente.</p>
-            <p>Ajuste os valores abaixo para corrigir.</p>
-          </div>
-        </div>
-      ` : ''}
-
-      ${showStepper ? `
-        <div class="stepper-grid">
-          <div class="stepper-item">
-            <span class="stepper-label">Suas chaves</span>
-            <div class="stepper-control">
-              <button class="stepper-btn" data-action="adjustKeys" data-side="a" data-amount="-1" ${report.playerAKeys === 0 || isExpired ? 'disabled' : ''}>−</button>
-              <span class="stepper-value">${report.playerAKeys}</span>
-              <button class="stepper-btn" data-action="adjustKeys" data-side="a" data-amount="1" ${report.playerAKeys === 3 || isExpired ? 'disabled' : ''}>+</button>
-            </div>
-          </div>
-
-          ${report.opponentReported || report.confirmed ? `
-            <div class="stepper-item is-readonly">
-              <span class="stepper-label">Chaves do adversário</span>
-              <div class="stepper-control">
-                <span class="stepper-value">${report.playerBKeys}</span>
-              </div>
-            </div>
-          ` : ''}
-        </div>
-
-        <button class="button button-primary button-large" data-action="reportMatch" ${isExpired ? 'disabled' : ''}>
-          ${isExpired ? 'Prazo encerrado' : (report.opponentReported ? 'Confirmar reporte' : report.conflict ? 'Corrigir e reenviar' : 'Enviar reporte')}
-        </button>
-      ` : `
-        <div class="score-display-card">
-          <span class="score-label">Placar reportado</span>
-          <div class="score-numbers">
-            <div class="score-num-item">
-              <span class="score-player">Você</span>
-              <strong class="score-num">${ownKeys}</strong>
-            </div>
-            <div class="score-divider">-</div>
-            <div class="score-num-item">
-              <span class="score-player">Adversário</span>
-              <strong class="score-num">${report.playerBKeys}</strong>
-            </div>
-          </div>
-          ${!report.confirmed ? `
-            <button class="button button-secondary button-large" data-action="editReport">
-              Alterar meu reporte
-            </button>
-          ` : ''}
-        </div>
-      `}
-    </section>
-  `;
-}
-
-function renderPicker(state) {
+function renderSingleReportForm(state) {
   const report = state.report;
   const selectedCodes = state.selectedHouseCodes || [];
-
-  // Figurinhas elegíveis: casas do SEU deck ∩ coleção do adversário ∩ você não tem
+  const allHouses = Object.keys(HOUSE_META);
+  
+  // Calculate pick pool dynamically
   const eligible = PLAYER_STICKERS
     .filter(s => selectedCodes.includes(s.house))
     .filter(s => state.opponentCollection[s.id])
     .filter(s => !state.collection[s.id] || state.collection[s.id].quantity === 0);
 
   const isFallback = eligible.length === 0;
-
-  // Se for fallback, escolhe livremente dentre as que você não tem das casas do seu deck
   const pool = isFallback
     ? PLAYER_STICKERS
         .filter(s => selectedCodes.includes(s.house))
@@ -359,154 +214,184 @@ function renderPicker(state) {
     : eligible;
 
   const maxPicks = isFallback ? 3 : Math.min(report.playerAKeys, eligible.length);
-  const remaining = Math.max(0, maxPicks - report.pickedIds.length);
+  const finalMaxPicks = report.playerAKeys > 0 ? maxPicks : 0;
+  
+  const selectedPicks = state.selectedPickIds || [];
+  const remaining = Math.max(0, finalMaxPicks - selectedPicks.length);
 
   return `
-    <section class="panel picker-panel">
-      <div class="countdown-wrapper">
-        <div class="countdown-bar" id="countdown-timer">
-          <!-- Vanilla JS Date Countdown -->
-        </div>
+    <!-- ETAPA 1: CASAS -->
+    <section class="panel houses-panel" style="margin-top: 20px;">
+      <div class="step-header">
+        <span class="step-number">Etapa 1</span>
+        <h4>Selecione as 3 casas do seu deck</h4>
+      </div>
+      <div class="house-selector-grid">
+        ${allHouses.map((code) => {
+          const house = HOUSE_META[code];
+          const isSelected = selectedCodes.includes(code);
+          return `
+            <button class="house-selector-chip ${isSelected ? 'is-selected' : ''}" 
+                    data-action="toggleHouse" 
+                    data-value="${code}" 
+                    type="button">
+              ${house ? `<img src="${getAssetUrl(house.icon)}" alt="" />` : ''}
+              <span class="house-name">${code}</span>
+              ${isSelected ? '<span class="check-indicator">✓</span>' : ''}
+            </button>
+          `;
+        }).join('')}
+      </div>
+      <div style="margin-top: 10px; font-size: 0.8rem; color: var(--color-ash);">
+        ${selectedCodes.length} de 3 selecionadas
+      </div>
+    </section>
+
+    <!-- ETAPA 2: PLACAR -->
+    <section class="panel score-panel" style="margin-top: 20px;">
+      <div class="step-header">
+        <span class="step-number">Etapa 2</span>
+        <h4>Informe o resultado da partida (Chaves)</h4>
+        <p>Defina quantas chaves você e seu oponente forjaram (de 0 a 3).</p>
       </div>
 
-      <div class="section-heading compact">
-        <p class="eyebrow">Picker pós-partida</p>
-        <h2>${remaining} escolhas restantes</h2>
+      <div class="stepper-grid">
+        <div class="stepper-item">
+          <span class="stepper-label">Suas chaves</span>
+          <div class="stepper-control">
+            <button class="stepper-btn" data-action="adjustKeys" data-side="a" data-amount="-1" ${report.playerAKeys === 0 ? 'disabled' : ''}>−</button>
+            <span class="stepper-value">${report.playerAKeys}</span>
+            <button class="stepper-btn" data-action="adjustKeys" data-side="a" data-amount="1" ${report.playerAKeys === 3 ? 'disabled' : ''}>+</button>
+          </div>
+        </div>
+
+        <div class="stepper-item">
+          <span class="stepper-label">Chaves do adversário</span>
+          <div class="stepper-control">
+            <button class="stepper-btn" data-action="adjustKeys" data-side="b" data-amount="-1" ${report.playerBKeys === 0 ? 'disabled' : ''}>−</button>
+            <span class="stepper-value">${report.playerBKeys}</span>
+            <button class="stepper-btn" data-action="adjustKeys" data-side="b" data-amount="1" ${report.playerBKeys === 3 ? 'disabled' : ''}>+</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ETAPA 3: PICKS -->
+    <section class="panel picker-panel" style="margin-top: 20px;">
+      <div class="step-header">
+        <span class="step-number">Etapa 3</span>
+        <h4>Escolha suas figurinhas (Picks)</h4>
         <p class="picker-instruction">
-          ${isFallback 
-            ? 'Regra de Fallback Ativa: como o adversário não tinha figurinhas elegíveis, você pode escolher livremente até 3 de suas casas.' 
-            : `Como você ganhou ${report.playerAKeys} ${report.playerAKeys === 1 ? 'chave' : 'chaves'}, você pode escolher até ${maxPicks} figurinha(s) elegível(eis) do adversário.`}
+          ${selectedCodes.length < 3 
+            ? 'Selecione 3 casas na Etapa 1 para liberar as opções de picks.'
+            : finalMaxPicks === 0
+              ? 'Você forjou 0 chaves nesta partida, portanto não possui picks para escolher.'
+              : isFallback 
+                ? 'Regra de Fallback Ativa: como o adversário não possui figurinhas elegíveis, você pode escolher livremente até 3 de suas casas.'
+                : `Como você forjou ${report.playerAKeys} ${report.playerAKeys === 1 ? 'chave' : 'chaves'}, você pode escolher até ${finalMaxPicks} figurinha(s) do oponente.`}
         </p>
       </div>
 
-      ${isFallback ? `
-        <div class="fallback-banner">
-          <span class="fallback-icon">⚡</span>
-          <div>
-            <strong>Fallback ativo</strong>
-            <p>Você pode escolher livremente até 3 figurinhas que você não tem nas casas do seu deck jogado.</p>
-          </div>
+      ${selectedCodes.length === 3 && finalMaxPicks > 0 ? `
+        <div style="margin-bottom: 12px; font-weight: 700; color: var(--color-gold); font-size: 0.85rem;">
+          ${remaining} escolhas restantes
         </div>
-      ` : ''}
 
-      ${pool.length ? `
-        <div class="picker-list">
-          ${pool.map((sticker) => {
-            return `
-              <div class="picker-list-item">
-                <div>
-                  <strong>${sticker.id}</strong>
-                  <span>${sticker.houseName} · ${sticker.name}</span>
+        ${isFallback ? `
+          <div class="fallback-banner" style="margin-bottom: 16px;">
+            <span class="fallback-icon">⚡</span>
+            <div>
+              <strong>Fallback ativo</strong>
+              <p>Escolha até 3 figurinhas que você não tem nas casas do seu deck.</p>
+            </div>
+          </div>
+        ` : ''}
+
+        ${pool.length ? `
+          <div class="picker-list">
+            ${pool.map((sticker) => {
+              const isSelected = selectedPicks.includes(sticker.id);
+              return `
+                <div class="picker-list-item" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--color-iron); border-radius: var(--radius-sm); margin-bottom: 6px;">
+                  <div>
+                    <strong>${sticker.id}</strong>
+                    <span style="font-size: 0.8rem; color: var(--color-ash); margin-left: 6px;">${sticker.houseName} · ${sticker.name}</span>
+                  </div>
+                  <button class="button ${isSelected ? 'button-primary' : 'button-secondary'}" 
+                          data-action="toggleReportPick" 
+                          data-value="${sticker.id}" 
+                          style="padding: 4px 12px; font-size: 0.78rem; height: 28px; min-height: auto; margin: 0;">
+                    ${isSelected ? 'Selecionada' : 'Pegar'}
+                  </button>
                 </div>
-                <button class="button button-secondary" 
-                        data-action="pickSticker" 
-                        data-value="${sticker.id}" 
-                        ${remaining === 0 || report.pickedIds.includes(sticker.id) || report.completed ? 'disabled' : ''}>
-                  ${report.pickedIds.includes(sticker.id) ? 'Escolhida' : 'Pegar'}
-                </button>
-              </div>
-            `;
-          }).join('')}
-        </div>
-      ` : `
-        <div class="empty-state-panel">
-          <span class="empty-icon">✕</span>
-          <p class="empty-text">Não há figurinhas elegíveis para pegar.</p>
-        </div>
-      `}
+              `;
+            }).join('')}
+          </div>
+        ` : `
+          <p class="empty-text">Não há figurinhas disponíveis para pegar nas casas selecionadas.</p>
+        `}
+      ` : ''}
+    </section>
 
-      ${report.completed ? `
-        <div class="alert-box is-success">
-          <span class="alert-icon">✓</span>
-          <div class="alert-content">
-            <strong>Picks concluídos com sucesso!</strong>
-            <p>As figurinhas escolhidas foram enviadas para um novo pacotinho.</p>
+    <!-- SUBMISSAO -->
+    <div style="margin-top: 24px; text-align: center;">
+      <button class="button button-primary button-large" 
+              data-action="submitSingleReport" 
+              ${selectedCodes.length === 3 ? '' : 'disabled'} 
+              style="width: 100%; max-width: 400px; padding: 14px; font-size: 1rem;">
+        Enviar Reporte da Partida
+      </button>
+    </div>
+  `;
+}
+
+function renderReportSummary(state) {
+  const report = state.report;
+  const myMatch = state.matches && state.matches.find(m => m.id === report.matchId);
+  const isPlayerA = report.isPlayerA;
+  const myHouses = (isPlayerA ? myMatch?.player_a_houses : myMatch?.player_b_houses)?.split(',') || [];
+  const myKeys = isPlayerA ? myMatch?.player_a_keys : myMatch?.player_b_keys;
+  const oppKeys = isPlayerA ? myMatch?.player_a_opp_keys : myMatch?.player_b_opp_keys;
+  
+  const myPicks = (isPlayerA ? myMatch?.player_a_picks : myMatch?.player_b_picks)?.split(',').filter(Boolean) || [];
+
+  return `
+    <div class="panel" style="margin-top: 20px; padding: 24px; background: var(--color-carbon); border-radius: var(--radius-lg);">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <span style="font-size: 2.5rem; color: var(--color-green); display: block; margin-bottom: 8px;">✓</span>
+        <h4 style="color: var(--color-paper); font-size: 1.2rem; margin: 0 0 6px;">Reporte Enviado!</h4>
+        <p style="font-size: 0.85rem; color: var(--color-ash); margin: 0;">Seus dados de partida foram enviados com sucesso e não requerem confirmação do adversário.</p>
+      </div>
+
+      <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 16px; display: flex; flex-direction: column; gap: 14px;">
+        <div>
+          <span class="panel-label">Seu deck jogado</span>
+          <div class="house-chips" style="display: flex; gap: 8px; margin-top: 6px;">
+            ${myHouses.map(code => houseChip(code)).join('')}
           </div>
         </div>
-      ` : `
-        <button class="button button-primary button-large" data-action="completePicks" ${report.completed ? 'disabled' : ''}>
-          Concluir picks
-        </button>
-      `}
-    </section>
+
+        <div>
+          <span class="panel-label">Resultado reportado por você</span>
+          <div style="font-size: 1.1rem; font-weight: 700; color: var(--color-paper); margin-top: 4px;">
+            Você <span style="color: var(--color-gold); font-size: 1.3rem;">${myKeys}</span> x <span style="color: var(--color-gold); font-size: 1.3rem;">${oppKeys}</span> Adversário
+          </div>
+        </div>
+
+        <div>
+          <span class="panel-label">Figurinhas solicitadas (Picks)</span>
+          <div style="margin-top: 6px;">
+            ${myPicks.length > 0
+              ? myPicks.map(id => `<span style="background: var(--color-graphite); padding: 4px 10px; border-radius: var(--radius-sm); margin-right: 6px; font-weight: 700; border: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; color: var(--color-paper); display: inline-block;">${id}</span>`).join('')
+              : '<span style="font-size: 0.85rem; color: var(--color-ash);">Nenhuma figurinha solicitada (0 chaves forjadas ou sem picks válidos).</span>'
+            }
+          </div>
+        </div>
+      </div>
+    </div>
   `;
 }
 
 export function initCountdown(state) {
-  if (window.countdownInterval) {
-    clearInterval(window.countdownInterval);
-  }
-  
-  const timerEl = document.getElementById('countdown-timer');
-  if (timerEl && state.report.confirmedAt && !state.report.completed) {
-    function updateTimer() {
-      const currentTimerEl = document.getElementById('countdown-timer');
-      if (!currentTimerEl) {
-        clearInterval(window.countdownInterval);
-        return;
-      }
-      
-      const deadline = new Date(state.report.confirmedAt).getTime() + 48 * 60 * 60 * 1000;
-      const now = Date.now();
-      const diff = deadline - now;
-      
-      if (diff <= 0) {
-        currentTimerEl.innerHTML = `
-          <div class="countdown-content is-expired">
-            <span class="countdown-icon">⏱</span>
-            <span class="countdown-text">Tempo para picks expirado! (Limite de 48h atingido)</span>
-          </div>
-        `;
-        clearInterval(window.countdownInterval);
-        
-        document.querySelectorAll('[data-action="pickSticker"]').forEach(btn => {
-          btn.disabled = true;
-        });
-        return;
-      }
-      
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      
-      currentTimerEl.innerHTML = `
-        <div class="countdown-content">
-          <span class="countdown-icon">⏱</span>
-          <span class="countdown-text">Tempo restante para os picks:</span>
-          <strong class="countdown-time">${hours}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s</strong>
-        </div>
-      `;
-    }
-    
-    updateTimer();
-    window.countdownInterval = setInterval(updateTimer, 1000);
-  }
-
-  // Timer do prazo da PARTIDA (separado do timer de picks de 48h)
-  const matchDeadlineEl = document.getElementById('match-deadline-display');
-  if (matchDeadlineEl && state.activeRound.deadline) {
-    if (window.matchDeadlineInterval) {
-      clearInterval(window.matchDeadlineInterval);
-    }
-    function updateMatchDeadline() {
-      const el = document.getElementById('match-deadline-display');
-      if (!el) return;
-      const deadline = new Date(state.activeRound.deadline).getTime();
-      const diff = deadline - Date.now();
-      if (diff <= 0) {
-        el.innerHTML = '⏱ Prazo encerrado';
-        el.classList.add('is-expired');
-        if (!state.report.reported) {
-          // Bloqueia reporte
-          document.querySelectorAll('[data-action="reportMatch"]').forEach(b => b.disabled = true);
-        }
-      } else {
-        const h = Math.floor(diff / 3600000);
-        const m = Math.floor((diff % 3600000) / 60000);
-        el.textContent = `⏱ Prazo: ${h}h ${m.toString().padStart(2,'0')}m`;
-      }
-    }
-    updateMatchDeadline();
-    window.matchDeadlineInterval = setInterval(updateMatchDeadline, 30000);
-  }
+  // Mantido para compatibilidade, sem necessidade de contador ativo no novo fluxo
 }

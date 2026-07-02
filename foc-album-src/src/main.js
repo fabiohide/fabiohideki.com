@@ -31,7 +31,8 @@ import {
   dbSaveRoundDeadline,
   dbActivateRound,
   dbDeactivateRound,
-  setSupabaseSession
+  setSupabaseSession,
+  dbSubmitSingleReport
 } from './supabase.js';
 import { stickerCard } from './components/sticker-card.js';
 import { getAssetUrl } from './utils/format.js';
@@ -249,6 +250,97 @@ async function editReport() {
   render();
 }
 
+function toggleReportPick(stickerId) {
+  if (!state.selectedPickIds) {
+    state.selectedPickIds = [];
+  }
+  const index = state.selectedPickIds.indexOf(stickerId);
+  
+  // Calculate pick limit
+  const selectedCodes = state.selectedHouseCodes || [];
+  const eligible = PLAYER_STICKERS
+    .filter(s => selectedCodes.includes(s.house))
+    .filter(s => state.opponentCollection[s.id])
+    .filter(s => !state.collection[s.id] || state.collection[s.id].quantity === 0);
+
+  const isFallback = eligible.length === 0;
+  const maxPicks = isFallback ? 3 : Math.min(state.report.playerAKeys, eligible.length);
+  const finalMaxPicks = state.report.playerAKeys > 0 ? maxPicks : 0;
+
+  if (index > -1) {
+    state.selectedPickIds.splice(index, 1);
+  } else {
+    if (state.selectedPickIds.length < finalMaxPicks) {
+      state.selectedPickIds.push(stickerId);
+    }
+  }
+  render();
+}
+
+async function submitSingleReport() {
+  if (state.selectedHouseCodes.length !== 3) return;
+  const pickedIds = state.selectedPickIds || [];
+  const matchId = state.report.matchId;
+
+  if (hasSupabaseConfig) {
+    await dbSubmitSingleReport(
+      matchId,
+      state.selectedHouseCodes,
+      state.report.playerAKeys,
+      state.report.playerBKeys,
+      pickedIds
+    );
+    const fetched = await fetchFullState(state.user.id);
+    if (fetched) state = fetched;
+  } else {
+    // offline simulation
+    state.report.housesSubmitted = true;
+    state.report.reported = true;
+    state.report.completed = true;
+    
+    // Add picked stickers to collection in memory
+    pickedIds.forEach((stickerId) => {
+      if (state.collection[stickerId]) {
+        state.collection[stickerId].quantity += 1;
+        state.collection[stickerId].isNew = true;
+        state.collection[stickerId].source = 'pick';
+      } else {
+        state.collection[stickerId] = { quantity: 1, isNew: true, source: 'pick' };
+      }
+      if (!state.stickersLog) state.stickersLog = [];
+      state.stickersLog.push({
+        round: state.activeRound.number,
+        timestamp: new Date().toISOString(),
+        message: `${state.user.name} obteve a figurinha ${stickerId} via Pick pós-partida`,
+        type: 'pick'
+      });
+    });
+  }
+
+  // Trigger pack reveal for the picked stickers if any
+  if (pickedIds.length) {
+    state.reveal = {
+      pack: {
+        id: `pick-${matchId}`,
+        type: 'player',
+        title: 'Pacotinho de picks',
+        subtitle: `${pickedIds.length} figurinhas`,
+        image: '/assets/pack/player_pack.webp',
+        opened: true,
+        stickerIds: pickedIds,
+      },
+      newIds: pickedIds,
+      duplicateIds: [],
+      ripped: false,
+      flippedIndexes: [],
+    };
+    state.currentRoute = 'packs';
+    window.history.replaceState(null, '', '#packs');
+  }
+
+  render();
+}
+
 async function pickSticker(stickerId) {
   if (state.report.pickedIds.includes(stickerId)) return;
   if (!getCurrentPickPool().some((sticker) => sticker.id === stickerId)) return;
@@ -335,6 +427,8 @@ async function completePicks() {
 }
 
 async function resetMatch() {
+  state.selectedHouseCodes = [];
+  state.selectedPickIds = [];
   if (hasSupabaseConfig) {
     const resetBtn = document.querySelector('[data-action="resetMatch"]');
     if (resetBtn) {
@@ -780,6 +874,9 @@ function initLoginEvents() {
 }
 
 function render() {
+  if (!state.selectedPickIds) state.selectedPickIds = [];
+  if (!state.selectedHouseCodes) state.selectedHouseCodes = [];
+
   if (hasSupabaseConfig && !localStorage.getItem('foc_username')) {
     app.innerHTML = renderLoginView();
     initLoginEvents();
@@ -901,6 +998,8 @@ function render() {
       if (action === 'submitHouses') submitHouses();
       if (action === 'reportMatch') reportMatch();
       if (action === 'editReport') editReport();
+      if (action === 'toggleReportPick') toggleReportPick(value);
+      if (action === 'submitSingleReport') submitSingleReport();
       if (action === 'pickSticker') pickSticker(value);
       if (action === 'completePicks') completePicks();
       if (action === 'resetMatch') resetMatch();

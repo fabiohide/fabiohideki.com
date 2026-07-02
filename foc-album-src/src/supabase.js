@@ -200,25 +200,23 @@ export async function fetchFullState(username) {
     report.reported = isPlayerA ? myMatch.player_a_reported : myMatch.player_b_reported;
     report.opponentReported = isPlayerA ? myMatch.player_b_reported : myMatch.player_a_reported;
     report.playerAKeys = isPlayerA ? myMatch.player_a_keys : myMatch.player_b_keys;
-    report.playerBKeys = isPlayerA ? myMatch.player_b_keys : myMatch.player_a_keys;
+    report.playerBKeys = isPlayerA ? myMatch.player_a_opp_keys : myMatch.player_b_opp_keys;
+    report.opponentKeysA = isPlayerA ? myMatch.player_b_keys : myMatch.player_a_keys;
+    report.opponentKeysB = isPlayerA ? myMatch.player_b_opp_keys : myMatch.player_a_opp_keys;
 
-    // A partida está confirmada (etapa de picks liberada) quando ambos reportaram
+    // A partida está confirmada quando ambos reportaram
     report.confirmed = myMatch.player_a_reported && myMatch.player_b_reported;
     report.confirmedAt = myMatch.confirmed_at || null;
-    // O status "concluído" (picks finalizados) é individual de cada jogador
-    report.completed = isPlayerA ? myMatch.player_a_picks_completed : myMatch.player_b_picks_completed;
+    // No fluxo simplificado, a conclusão é quando o próprio jogador reportou
+    report.completed = report.reported;
 
     report.matchDeadlinePassed = myMatch.match_deadline_passed;
     report.fallbackActive = myMatch.fallback_active;
     report.isPlayerA = isPlayerA;
 
-    // Se confirmada, puxa as figurinhas que o jogador escolheu via pick na coleção
-    if (report.confirmed) {
-      const picks = collectionData
-        ? collectionData.filter(c => c.source === 'pick').map(c => c.sticker_id)
-        : [];
-      report.pickedIds = picks;
-    }
+    // Puxa as figurinhas escolhidas do campo de picks do jogador
+    const myPicksStr = isPlayerA ? myMatch.player_a_picks : myMatch.player_b_picks;
+    report.pickedIds = myPicksStr ? myPicksStr.split(',').filter(Boolean) : [];
 
     // Busca a coleção do oponente EM MEMÓRIA
     if (opponentUsername && collectionsByPlayer[opponentUsername]) {
@@ -396,6 +394,18 @@ export async function dbReportMatch(matchId, username, keys, isPlayerA) {
   await supabase.rpc('foc2026_report_own_keys', {
     p_match_id: matchId,
     p_keys: keys
+  });
+}
+
+// Nova função para submeter o reporte único
+export async function dbSubmitSingleReport(matchId, houses, myKeys, oppKeys, picks) {
+  if (!supabase) return;
+  await supabase.rpc('foc2026_submit_single_report', {
+    p_match_id: matchId,
+    p_houses: houses,
+    p_my_keys: myKeys,
+    p_opp_keys: oppKeys,
+    p_picks: picks
   });
 }
 
@@ -611,6 +621,10 @@ export async function dbResetMatch(matchId) {
     .update({
       player_a_keys: 0,
       player_b_keys: 0,
+      player_a_opp_keys: 0,
+      player_b_opp_keys: 0,
+      player_a_picks: '',
+      player_b_picks: '',
       player_a_reported: false,
       player_b_reported: false,
       confirmed_at: null,
