@@ -91,6 +91,12 @@ async function openPack(packId) {
   pack.stickerIds = finalStickerIds;
 
   if (hasSupabaseConfig) {
+    // Adiciona localmente na coleção de forma síncrona instantânea para evitar race conditions
+    pack.stickerIds.forEach((id) => {
+      state.collection[id] = { quantity: 1, isNew: true, source: 'pack' };
+    });
+    state.user.packOpened = true;
+
     await dbOpenPack(state.user.id, pack.stickerIds, pack.type, state.activeRound.number, state.user.name);
     const fetched = await fetchFullState(state.user.id);
     if (fetched) {
@@ -898,7 +904,10 @@ function render() {
       if (action === 'pickSticker') pickSticker(value);
       if (action === 'completePicks') completePicks();
       if (action === 'resetMatch') resetMatch();
-      if (action === 'goAlbum') setRoute('album');
+      if (action === 'goAlbum') {
+        state.reveal = null;
+        setRoute('album');
+      }
       if (action === 'claimChallenge') claimChallenge(value);
       if (action === 'confirmChallenge') confirmChallenge(value);
       if (action === 'cancelChallenge') cancelChallenge();
