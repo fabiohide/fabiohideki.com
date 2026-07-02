@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { STICKERS } from './data/stickers.js';
 import initialPacks from './data/initial-packs.json';
 
+
 const url = import.meta.env.VITE_SUPABASE_URL;
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
