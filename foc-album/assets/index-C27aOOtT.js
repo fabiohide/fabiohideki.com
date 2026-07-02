@@ -761,7 +761,7 @@
   `}function St(){return`
     <div class="login-view">
       <div class="login-card">
-        <img src="/assets/logo.png" alt="Logo FOC" class="login-logo">
+        <img src="logo.png" alt="Logo FOC" class="login-logo">
         <h1>Copa do Mundo do FOC 2026™</h1>
         
         <form class="login-form" id="loginForm">
