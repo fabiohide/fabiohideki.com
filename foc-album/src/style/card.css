@@ -1,28 +1,38 @@
+/* ─── Sticker Card Base ───────────────────────────────────────────── */
 .sticker-card {
   position: relative;
   overflow: hidden;
   display: block;
   width: 100%;
   aspect-ratio: 600 / 820;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 10px;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
-  color: var(--color-text);
+  border-radius: 0;
+  background: var(--color-carbon);
+  box-shadow: var(--shadow-subtle);
+  color: var(--color-paper);
   padding: 0;
   isolation: isolate;
   transform-style: preserve-3d;
-  transition: transform var(--duration-normal, 220ms), border-color 180ms;
+  transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 200ms;
+  /* CSS vars updated by JS on hover/drag */
+  --pointer-x: 50%;
+  --pointer-y: 50%;
+  --pointer-from-center: 0;
+  --pointer-from-left: 0.5;
+  --pointer-from-top: 0.5;
+  --card-opacity: 0;
+  --rotate-x: 0deg;
+  --rotate-y: 0deg;
 }
 
-.sticker-card:hover {
-  transform: translateY(-2px) rotateX(2deg);
-  border-color: rgba(255, 255, 255, 0.32);
+.sticker-card.is-active {
+  transition: none;
 }
 
 .sticker-card.is-small {
   max-width: 150px;
 }
 
+/* ─── Card Image / Silhouette ─────────────────────────────────────── */
 .sticker-image,
 .sticker-silhouette {
   position: absolute;
@@ -30,12 +40,11 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  z-index: 1;
 }
 
 .sticker-silhouette {
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 48%),
-    rgba(255, 255, 255, 0.04);
+  background: var(--color-graphite);
 }
 
 .sticker-card.is-empty .sticker-silhouette::after {
@@ -43,30 +52,205 @@
   position: absolute;
   inset: 18%;
   border-radius: 999px 999px 22px 22px;
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.04);
   filter: blur(1px);
 }
 
-.sticker-glow {
+/* ─── HOLOGRAPHIC LAYERS ──────────────────────────────────────────── */
+
+/* Shared glow layer (mouse-position radial) */
+.card-holo-glare {
   position: absolute;
-  inset: -30%;
-  z-index: 2;
-  background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.2), transparent 65%);
-  transform: translateX(-45%) rotate(8deg);
-  opacity: 0;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
   pointer-events: none;
+  opacity: var(--card-opacity);
+  mix-blend-mode: hard-light;
+  background: radial-gradient(
+    farthest-corner circle at var(--pointer-x) var(--pointer-y),
+    rgba(255, 255, 255, 0.8) 10%,
+    rgba(255, 255, 255, 0.65) 20%,
+    rgba(0, 0, 0, 0.5) 90%
+  );
+  transition: opacity 0.4s ease;
 }
 
-.sticker-card.is-crest .sticker-glow {
-  opacity: 0.9;
-  animation: shimmer 3s linear infinite;
+/* ─── PLAYER CARD: Amazing Rare Holofoil ──────────────────────────── */
+/*   Sunpillars (6 colunas HSL) + glitter CSS puro + radial direcional */
+
+/* ─── PLAYER CARD: simeydotme Pokevibe Holographic Effect (Soft Spotlight) ─── */
+.sticker-card.is-player {
+  --color1: #00e7ff;
+  --color2: #ff00e7;
 }
 
+/* Fora da visualização de destaque: sem nenhum efeito holográfico */
+.sticker-card.is-player .card-holo-effect,
+.sticker-card.is-player .card-holo-glare {
+  opacity: 0 !important;
+  animation: none !important;
+}
+
+/* Ativado exclusivamente dentro da overlay de visualização única */
+.highlight-card-wrapper .sticker-card.is-player .card-holo-effect,
+.highlight-card-wrapper .sticker-card.is-player .card-holo-glare {
+  opacity: var(--card-opacity, 0) !important;
+  transition: opacity 0.35s ease;
+}
+
+/* Layer 1: Efeito de arco-íris linear espectral + Grão metálico */
+.highlight-card-wrapper .sticker-card.is-player .card-holo-effect {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  pointer-events: none;
+  mix-blend-mode: color-dodge;
+  filter: brightness(0.52) contrast(1.15) saturate(0.85);
+  background-size: 160% 160%, 150% 150%;
+  --posx: calc(50% - (var(--pointer-x) - 50%) / 2.2);
+  --posy: calc(50% - (var(--pointer-y) - 50%) / 2.2);
+  background-position: var(--posx) var(--posy), var(--posx) var(--posy);
+  background-image: 
+    url("https://assets.codepen.io/13471/mixed-noise.png"),
+    linear-gradient(
+      115deg,
+      transparent 0%,
+      var(--color1) 25%,
+      transparent 47%,
+      transparent 53%,
+      var(--color2) 75%,
+      transparent 100%
+    );
+  background-blend-mode: color-dodge;
+}
+
+/* Layer 2: Glare com Spotlight do mouse suavizado + textura de vidro (glare) */
+.highlight-card-wrapper .sticker-card.is-player .card-holo-glare {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+  filter: brightness(0.9) contrast(1.3);
+  background-size: 160% 160%;
+  --posx: calc(50% - (var(--pointer-x) - 50%) / 1.5);
+  --posy: calc(50% - (var(--pointer-y) - 50%) / 1.5);
+  background-position: var(--posx) var(--posy);
+  background-image: 
+    url("https://assets.codepen.io/13471/glare.png"),
+    radial-gradient(
+      circle at var(--pointer-x) var(--pointer-y),
+      rgba(255, 255, 255, 0.35) 10%,
+      rgba(255, 255, 255, 0.15) 20%,
+      rgba(0, 0, 0, 0.7) 90%
+    );
+  background-blend-mode: overlay;
+}
+
+/* Animação ociosa na modal de visualização */
+.highlight-card-wrapper .sticker-card.is-player:not(.is-active) {
+  --card-opacity: 0.38;
+  filter: drop-shadow(0 0 16px rgba(0, 231, 255, 0.1));
+}
+
+.highlight-card-wrapper .sticker-card.is-player:not(.is-active) .card-holo-effect,
+.highlight-card-wrapper .sticker-card.is-player:not(.is-active) .card-holo-glare {
+  --card-opacity: 0.38;
+  animation: simey-amazing-idle 16s ease-in-out infinite !important;
+  opacity: 0.38 !important;
+}
+
+@keyframes simey-amazing-idle {
+  0%, 100% {
+    --pointer-x: 30%;
+    --pointer-y: 20%;
+  }
+  50% {
+    --pointer-x: 70%;
+    --pointer-y: 80%;
+  }
+}
+
+/* ─── CREST CARD: full rainbow holographic foil ──────────────────── */
+/*   Classic TCG rainbow holo — vivid, iridescent, always shining    */
+.sticker-card.is-crest .card-holo-effect {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  pointer-events: none;
+  /* Crest always has a base shimmer even at rest */
+  opacity: max(0.15, var(--card-opacity));
+  mix-blend-mode: color-dodge;
+  background:
+    /* Rainbow foil */
+    repeating-linear-gradient(
+      0deg,
+      hsl(2, 100%, 73%) 0%,
+      hsl(50, 100%, 73%) calc(100% / 7),
+      hsl(120, 100%, 73%) calc(200% / 7),
+      hsl(180, 100%, 73%) calc(300% / 7),
+      hsl(210, 100%, 73%) calc(400% / 7),
+      hsl(270, 100%, 73%) calc(500% / 7),
+      hsl(2, 100%, 73%) 100%
+    ),
+    /* Gold sparkle grain */
+    repeating-linear-gradient(
+      133deg,
+      rgba(255, 193, 78, 0) 0%,
+      rgba(255, 193, 78, 0.18) 3.8%,
+      rgba(255, 193, 78, 0) 7.7%
+    ),
+    /* Glitter dots */
+    radial-gradient(
+      farthest-corner ellipse at var(--pointer-x) var(--pointer-y),
+      rgba(255, 215, 100, 0.6) 5%,
+      rgba(255, 255, 200, 0.35) 20%,
+      transparent 50%
+    );
+  background-size: 200% 700%, 200% 200%, 200% 200%;
+  background-position:
+    calc(var(--pointer-from-left) * -150%) calc(var(--pointer-from-top) * -150%),
+    calc(var(--pointer-from-left) * -100%) calc(var(--pointer-from-top) * -100%),
+    calc(var(--pointer-from-left) * 300% - 100%) calc(var(--pointer-from-top) * 300% - 100%);
+  transition: opacity 0.4s ease, background-position 0s;
+  animation: crest-idle-shine 4s linear infinite;
+}
+
+.sticker-card.is-crest.is-active .card-holo-effect {
+  animation: none;
+  transition: opacity 0.4s ease;
+}
+
+/* Idle animation for crest cards (always a bit alive) */
+@keyframes crest-idle-shine {
+  0%   { background-position: 0% 0%, 0% 0%, 0% 0%; }
+  50%  { background-position: -100% -50%, -100% -50%, 50% 100%; }
+  100% { background-position: 0% 0%, 0% 0%, 0% 0%; }
+}
+
+/* Gold border glow for crest cards */
+.sticker-card.is-crest {
+  box-shadow:
+    var(--shadow-subtle),
+    0 0 0 1px rgba(242, 193, 78, 0.2) inset;
+}
+
+.sticker-card.is-crest.is-active {
+  box-shadow:
+    0 0 30px rgba(242, 193, 78, calc(var(--pointer-from-center) * 0.6)),
+    0 0 0 1px rgba(242, 193, 78, 0.4) inset;
+}
+
+/* ─── Labels / Tags ───────────────────────────────────────────────── */
 .sticker-code,
 .new-tag,
 .copy-count {
   position: absolute;
-  z-index: 4;
+  z-index: 5;
 }
 
 .sticker-code {
@@ -77,30 +261,124 @@
 }
 
 .new-tag {
-  top: 48px;
-  right: 9px;
-  padding: 4px 6px;
-  border-radius: 4px;
-  background: var(--color-red);
-  font-size: 0.62rem;
-  font-weight: 1000;
+  top: 10px;
+  left: 10px;
+  right: auto;
+  padding: 4px 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-signal-blue);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-paper);
 }
 
 .copy-count {
   bottom: 9px;
   right: 9px;
-  padding: 4px 7px;
-  border-radius: 999px;
-  background: var(--color-blue);
-  font-size: 0.72rem;
-  font-weight: 1000;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: var(--color-iron);
+  box-shadow: var(--shadow-subtle);
+  font-size: var(--text-caption);
+  font-weight: 600;
 }
 
-@keyframes shimmer {
-  from {
-    transform: translateX(-55%) rotate(8deg);
-  }
-  to {
-    transform: translateX(55%) rotate(8deg);
-  }
+/* ─── Highlight Modal ─────────────────────────────────────────────── */
+.highlight-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  /* opacity gerenciada pelo JS via FLIP animation */
+}
+
+.highlight-overlay.is-leaving {
+  pointer-events: none;
+}
+
+.highlight-overlay-bg {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.94);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  z-index: -1;
+}
+
+.highlight-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.highlight-card-wrapper {
+  width: 100%;
+  max-width: 290px;
+  aspect-ratio: 600 / 820;
+  transform-origin: center center;
+  will-change: transform, opacity;
+  /* transform e opacity gerenciados pelo JS (FLIP) */
+}
+
+.highlight-card-wrapper .sticker-card {
+  box-shadow: rgba(255, 255, 255, 0.20) 0px 0px 0px 1px inset;
+}
+
+.close-highlight-btn {
+  position: absolute;
+  top: -48px;
+  right: 0;
+  background: none;
+  border: none;
+  color: var(--color-ash);
+  font-size: 1.8rem;
+  cursor: pointer;
+  z-index: 10;
+  transition: color 120ms ease;
+}
+
+.close-highlight-btn:hover {
+  color: var(--color-paper);
+}
+
+.highlight-source-label {
+  margin-top: 18px;
+  font-size: 0.85rem;
+  color: var(--color-ash);
+  text-align: center;
+  font-weight: 700;
+  font-family: var(--font-body);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+/* Ocultação da silhueta cinza padrão e renderização transparente no álbum */
+.album-page .sticker-card.is-empty {
+  background: transparent;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  box-shadow: none;
+}
+
+.album-page .sticker-card.is-empty .sticker-silhouette {
+  display: none;
+}
+
+.album-page .sticker-card.is-empty .sticker-code {
+  display: none;
+}
+
+/* Remove o efeito foil dos brasões caso a figurinha não esteja no álbum */
+.sticker-card.is-crest.is-empty .card-holo-effect,
+.sticker-card.is-crest.is-empty .card-holo-glare {
+  display: none !important;
 }

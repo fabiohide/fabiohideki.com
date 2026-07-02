@@ -1,101 +1,517 @@
+.packs-panel {
+  background: var(--color-carbon);
+  box-shadow: var(--shadow-subtle);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  width: 100%;
+}
+
 .pack-grid {
   display: grid;
-  gap: 14px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
 }
 
 .pack-card {
-  display: grid;
-  grid-template-columns: minmax(96px, 34%) 1fr;
-  gap: 14px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  padding: 14px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: linear-gradient(135deg, rgba(49, 133, 255, 0.16), rgba(16, 19, 34, 0.94));
-  box-shadow: var(--shadow-panel);
+  gap: 10px;
+  padding: 20px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--color-graphite);
+  box-shadow: var(--shadow-subtle);
+  transition: background 140ms ease, transform 140ms ease;
+}
+
+.pack-card:hover {
+  transform: translateY(-1px);
+  background: var(--color-iron);
 }
 
 .pack-card.is-golden {
-  border-color: rgba(242, 193, 78, 0.48);
-  background: linear-gradient(135deg, rgba(242, 193, 78, 0.24), rgba(35, 24, 7, 0.94));
-  box-shadow: var(--shadow-gold);
+  box-shadow: rgba(255, 255, 255, 0.12) 0px 0px 0px 1px inset;
+}
+
+.pack-card.is-golden:hover {
+  background: var(--color-iron);
+}
+
+.pack-card .button {
+  min-height: 32px;
+  padding: 0 16px;
+  font-size: var(--text-caption);
+  border-radius: var(--radius-full);
+  width: 100%;
+  max-width: 110px;
+  text-shadow: none;
 }
 
 .pack-art {
   display: grid;
   place-items: center;
-  min-height: 160px;
+  min-height: 120px;
 }
 
 .pack-art img {
-  width: min(100%, 138px);
-  filter: drop-shadow(0 20px 26px rgba(0, 0, 0, 0.44));
+  width: 90px;
+  filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.5));
+  transition: transform 0.2s ease;
 }
 
-.pack-info span {
-  display: inline-flex;
-  margin-bottom: 8px;
-  padding: 4px 7px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--color-text-muted);
-  font-size: 0.68rem;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.pack-info h3 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: clamp(1.75rem, 8vw, 3rem);
-  line-height: 0.9;
-  text-transform: uppercase;
-}
-
-.pack-info p {
-  margin: 7px 0 14px;
-  color: var(--color-text-muted);
+.pack-card:hover .pack-art img {
+  transform: scale(1.04);
 }
 
 .collection-summary {
   display: grid;
   gap: 12px;
+  border-top-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
 }
 
 .collection-summary strong {
   display: block;
-  font-family: var(--font-display);
+  font-family: "FWC Semi Expanded Black", sans-serif;
+  font-weight: 900;
   font-size: 2.4rem;
   line-height: 0.9;
 }
 
-.reveal-panel {
-  display: grid;
-  gap: 14px;
+/* Overlay de Revelação Premium */
+.reveal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
 }
 
-.reveal-grid {
+.reveal-overlay-bg {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.96);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  z-index: -1;
+}
+
+/* Controle de estágios */
+.reveal-overlay.state-unopened .pack-opening-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.reveal-overlay.state-unopened .cards-reveal-stage {
+  display: none;
+}
+
+.reveal-overlay.state-revealing .pack-opening-stage {
+  display: none;
+}
+
+.reveal-overlay.state-revealing .cards-reveal-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 900px;
+}
+
+/* Palco de abertura do pacote */
+.pack-opening-stage {
+  perspective: 1200px;
+  text-align: center;
+}
+
+.pack-wrapper-3d {
+  position: relative;
+  width: 200px;
+  height: 290px;
+  margin-bottom: 30px;
+  transform-style: preserve-3d;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.pack-wrapper-3d:hover {
+  transform: scale(1.05) rotateY(5deg);
+}
+
+.pack-wrapper-3d:active {
+  transform: scale(0.98);
+}
+
+.pack-rip-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+.pack-half {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  transition: transform 1.2s cubic-bezier(0.19, 1, 0.22, 1), opacity 1s ease;
+}
+
+.pack-half img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 15px 25px rgba(0, 0, 0, 0.6));
+}
+
+/* Linha de rasgo serrilhada em CSS */
+.pack-top {
+  clip-path: polygon(0 0, 100% 0, 100% 50%, 92% 48%, 84% 52%, 76% 48%, 68% 52%, 60% 48%, 52% 52%, 44% 48%, 36% 52%, 28% 48%, 20% 52%, 12% 48%, 0 50%);
+}
+
+.pack-bottom {
+  clip-path: polygon(0 50%, 12% 48%, 20% 52%, 28% 48%, 36% 52%, 44% 48%, 52% 52%, 60% 48%, 68% 52%, 76% 48%, 84% 52%, 92% 48%, 100% 50%, 100% 100%, 0 100%);
+}
+
+/* Animação de rasgar */
+.reveal-overlay.state-ripping .pack-top {
+  transform: translateY(-200px) rotate(-18deg) scale(0.9);
+  opacity: 0;
+}
+
+.reveal-overlay.state-ripping .pack-bottom {
+  transform: translateY(200px) rotate(18deg) scale(0.9);
+  opacity: 0;
+}
+
+.pack-glow-back {
+  position: absolute;
+  inset: -40px;
+  background: radial-gradient(circle, rgba(0, 99, 225, 0.25) 0%, rgba(0,0,0,0) 70%);
+  border-radius: 50%;
+  filter: blur(20px);
+  z-index: -1;
+  pointer-events: none;
+  animation: pulse-glow 2s infinite ease-in-out;
+}
+
+.reveal-overlay.state-ripping .pack-glow-back {
+  animation: explosion-glow 1.2s forwards cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+@keyframes pulse-glow {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.15); opacity: 0.8; }
+}
+
+@keyframes explosion-glow {
+  0% { transform: scale(1); opacity: 0.8; background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, rgba(0, 102, 255, 0.5) 40%, rgba(0,0,0,0) 70%); }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+.pack-instruction h3 {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.pack-instruction p {
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  animation: pulse-text 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse-text {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* Palco de revelação dos cards */
+.cards-reveal-stage {
+  width: 100%;
+}
+
+.reveal-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.reveal-header h2 {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  margin: 5px 0;
+  text-transform: uppercase;
+}
+
+.reveal-hint {
+  color: var(--color-signal-blue);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  animation: pulse-text 2s infinite;
+}
+
+.reveal-cards-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.reveal-item {
-  display: grid;
-  justify-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.reveal-item span {
+  gap: 16px;
   width: 100%;
+  margin-bottom: 40px;
+}
+
+@media (max-width: 580px) {
+  .reveal-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .reveal-overlay {
+    padding: 12px;
+  }
+
+  .reveal-header {
+    margin-bottom: 14px;
+  }
+
+  .reveal-header h2 {
+    font-size: 1.6rem;
+  }
+
+  .reveal-header .reveal-hint {
+    font-size: 0.8rem;
+  }
+
+  .flip-card {
+    max-width: 120px;
+    margin: 0 auto;
+  }
+
+  .pack-wrapper-3d {
+    width: 150px;
+    height: 218px;
+    margin-bottom: 16px;
+  }
+
+  .pack-instruction h3 {
+    font-size: 1.5rem;
+  }
+
+  /* Ajustes dos cards de pacotes na listagem principal */
+  .pack-card {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .pack-art {
+    min-height: 90px;
+  }
+
+  .pack-art img {
+    width: 70px;
+  }
+}
+
+@media (min-width: 760px) {
+  .reveal-cards-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 20px;
+  }
+}
+
+/* 3D Flip Card Container */
+.flip-card {
+  perspective: 1000px;
+  width: 100%;
+  aspect-ratio: 600 / 820;
+  cursor: pointer;
+}
+
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.flip-card.is-flipped .flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+.flip-card-front,
+.flip-card-back {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: var(--radius-md);
   overflow: hidden;
-  color: var(--color-text-muted);
-  font-size: 0.72rem;
-  font-weight: 800;
-  text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+}
+
+/* Frente do card (onde fica o sticker real) */
+.flip-card-front {
+  transform: rotateY(180deg);
+  z-index: 2;
+}
+
+/* O sticker-card dentro do flip herda o contexto 3D — desativa hover próprio */
+.flip-card-front .sticker-card {
+  pointer-events: none;
+  transform: none !important;
+  transition: none !important;
+}
+
+/* Reativa pointer-events após o flip para o efeito holográfico funcionar */
+.flip-card.is-flipped .flip-card-front .sticker-card {
+  pointer-events: auto;
+  transform: unset !important;
+  transition: unset !important;
+}
+
+/* Verso do card */
+.flip-card-back {
+  background: var(--color-carbon);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  box-shadow: var(--shadow-subtle);
+  transition: box-shadow 0.3s, transform 0.2s;
+  z-index: 1;
+}
+
+.flip-card-back::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-md);
+  pointer-events: none;
+}
+
+.flip-card:not(.is-flipped) .flip-card-back:hover {
+  box-shadow: rgba(0, 99, 225, 0.5) 0px 0px 0px 1px inset;
+}
+
+.card-back-design {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-back-design .logo {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  color: #fff;
+  letter-spacing: 1px;
+  background: linear-gradient(to bottom, #fff 40%, #8ca6cf 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.card-back-design .sub {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--color-signal-blue);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Estilos de partículas brilhantes */
+.pack-particle {
+  position: absolute;
+  width: var(--size);
+  height: var(--size);
+  background: var(--particle-color);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: fly-out var(--duration) cubic-bezier(0.19, 1, 0.22, 1) forwards;
+  z-index: 2000;
+}
+
+/* Tremor ao carregar energia no Brasão */
+@keyframes shake-card {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  20% { transform: translate(-2px, 1px) rotate(-1deg); }
+  40% { transform: translate(1px, -1px) rotate(1deg); }
+  60% { transform: translate(-1px, 2px) rotate(0deg); }
+  80% { transform: translate(2px, 1px) rotate(1deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+.flip-card.is-charging {
+  animation: shake-card 0.1s infinite;
+}
+
+/* Brasão com brilho holográfico extra e maior intensidade */
+.flip-card.is-crest .sticker-card.is-crest {
+  border-color: rgba(242, 193, 78, 0.8) !important;
+  box-shadow: 0 0 25px rgba(242, 193, 78, 0.6), inset 0 0 15px rgba(242, 193, 78, 0.3) !important;
+}
+
+/* Efeito de luz reflexiva / holográfica premium para o brasão */
+.flip-card.is-crest .sticker-card.is-crest::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.08) 20%,
+    rgba(242, 193, 78, 0.5) 40%,
+    rgba(255, 255, 255, 0.8) 50%,
+    rgba(242, 193, 78, 0.5) 60%,
+    rgba(255, 255, 255, 0.08) 80%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 200%;
+  mix-blend-mode: color-dodge;
+  pointer-events: none;
+  animation: holo-shine 3s ease infinite;
+}
+
+@keyframes holo-shine {
+  0% {
+    background-position: -100% -100%;
+  }
+  100% {
+    background-position: 200% 200%;
+  }
+}
+
+/* Animação de entrada dos cards com delay */
+.reveal-cards-grid .flip-card {
+  opacity: 0;
+  transform: scale(0.5) translateY(50px);
+  animation: card-entrance 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+.reveal-cards-grid .flip-card:nth-child(1) { animation-delay: 0.05s; }
+.reveal-cards-grid .flip-card:nth-child(2) { animation-delay: 0.15s; }
+.reveal-cards-grid .flip-card:nth-child(3) { animation-delay: 0.25s; }
+.reveal-cards-grid .flip-card:nth-child(4) { animation-delay: 0.35s; }
+.reveal-cards-grid .flip-card:nth-child(5) { animation-delay: 0.45s; }
+.reveal-cards-grid .flip-card:nth-child(6) { animation-delay: 0.55s; }
+
+@keyframes card-entrance {
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 @media (min-width: 760px) {
@@ -103,7 +519,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .reveal-grid {
+  .reveal-cards-grid {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 }
