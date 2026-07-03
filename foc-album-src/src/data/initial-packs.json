@@ -1,5 +1,13 @@
 {
   "packs": {
+    "album": [
+      "DIS 1",
+      "LGS 1",
+      "SHW 2",
+      "SAU 2",
+      "BRB 2",
+      "SCT 1"
+    ],
     "victor_faria": [
       "DIS 1",
       "LGS 1",
