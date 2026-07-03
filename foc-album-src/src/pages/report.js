@@ -108,7 +108,8 @@ function renderPreMatch(state) {
   );
 
   const opponent = state.matches.find(m => m.id === state.report.matchId);
-  const opponentName = opponent ? opponent.playerB : 'Adversário';
+  const isPlayerA = state.report.isPlayerA;
+  const opponentName = opponent ? (isPlayerA ? opponent.playerB : opponent.playerA) : 'Adversário';
 
   return `
     <section class="panel pre-match-panel">
