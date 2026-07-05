@@ -35,45 +35,22 @@ export function renderAdmin(state) {
 
 function renderValidationTab(state) {
   const challenges = state.challenges || [];
-  const pending = (state.pendingChallenges && state.pendingChallenges.length > 0)
+  const pendingChallenges = (state.pendingChallenges && state.pendingChallenges.length > 0)
     ? state.pendingChallenges
     : challenges.filter(c => c.pendingValidation && !c.completed);
 
-  // Lógica de Partida Congelada (W.O.)
-  const isExpired = state.activeRound.deadline && new Date(state.activeRound.deadline) < new Date();
-  const isMatchFrozen = isExpired && !state.report.completed;
+  // Filter matches of the active round
+  const activeRoundMatches = (state.matches || []).filter(m => m.round_number === state.activeRound.number);
 
-  let woSectionHtml = '';
-  if (isMatchFrozen) {
-    woSectionHtml = `
-      <div class="panel admin-panel" style="margin-top: 20px; border: 1px solid rgba(220, 60, 60, 0.3); background: rgba(220, 60, 60, 0.05);">
-        <span class="panel-label" style="color: #ff6b6b; font-weight: 700;">Partida Congelada (Prazo Vencido)</span>
-        <div style="padding: 12px 0; display: flex; flex-direction: column; gap: 8px;">
-          <p style="margin: 0; font-size: 0.85rem; color: var(--color-paper);">
-            A partida da Rodada <strong>${state.activeRound.number}</strong> não foi reportada a tempo e o prazo limite (<strong>${state.activeRound.deadline ? new Date(state.activeRound.deadline).toLocaleDateString() : '—'}</strong>) já expirou.
-          </p>
-          <div style="display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap;">
-            <button class="button button-primary" data-action="confirmWO" data-value="r1m1" style="flex: 1; min-width: 140px; height: 36px; min-height: auto; padding: 0 12px; background: #dc3c3c; border-color: #dc3c3c;">
-              Confirmar W.O. (0x0)
-            </button>
-            <button class="button button-secondary" data-action="unfreezeMatch" data-value="r1m1" style="flex: 1; min-width: 140px; height: 36px; min-height: auto; padding: 0 12px;">
-              Descongelar (+24h)
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  return `
-    <div class="panel admin-panel">
+  // Render Challenges Section
+  let challengesHtml = `
+    <div class="panel admin-panel" style="margin-bottom: 24px;">
       <span class="panel-label">Validação de Desafios</span>
-      ${pending.length === 0 
-        ? `<p class="empty-text" style="padding: 20px 0; text-align: center; color: var(--color-ash); font-size: 0.85rem;">Nenhum desafio aguardando validação no momento.</p>`
-        : `
-          <div class="admin-challenges-list" style="display: flex; flex-direction: column; gap: 12px; margin-top: 12px;">
-            ${pending.map(c => `
-              <div class="admin-challenge-card" style="padding: 16px; background: var(--color-iron); border-radius: var(--radius-md); box-shadow: var(--shadow-subtle); display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
+      ${pendingChallenges.length === 0 
+        ? `<p class="empty-text" style="padding: 16px 0; text-align: center; color: var(--color-ash); font-size: 0.85rem;">Nenhum desafio aguardando validação no momento.</p>`
+        : `<div class="admin-challenges-list" style="display: flex; flex-direction: column; gap: 12px; margin-top: 12px;">
+            ${pendingChallenges.map(c => `
+              <div class="admin-challenge-card" style="padding: 16px; background: var(--color-iron); border-radius: var(--radius-md); box-shadow: var(--shadow-subtle); display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; border-left: 3px solid var(--color-gold);">
                 <div style="flex: 1; min-width: 200px;">
                   <h5 style="margin: 0 0 4px; font-size: 0.95rem; color: var(--color-paper);">${c.title}</h5>
                   ${c.playerName ? `<p style="margin: 0 0 4px; font-size: 0.8rem; color: var(--color-gold);">Jogador: <strong>${c.playerName}</strong></p>` : ''}
@@ -87,12 +64,97 @@ function renderValidationTab(state) {
                 </button>
               </div>
             `).join('')}
-          </div>
-        `
+          </div>`
       }
     </div>
-    ${woSectionHtml}
   `;
+
+  // Render Matches Section
+  let matchesHtml = `
+    <div class="panel admin-panel">
+      <span class="panel-label">Validação de Partidas (Rodada ${state.activeRound.number})</span>
+      ${activeRoundMatches.length === 0
+        ? `<p class="empty-text" style="padding: 16px 0; text-align: center; color: var(--color-ash); font-size: 0.85rem;">Nenhuma partida registrada nesta rodada.</p>`
+        : `<div class="admin-matches-validation-list" style="display: flex; flex-direction: column; gap: 16px; margin-top: 10px;">
+            ${activeRoundMatches.map(m => {
+              const bothReported = m.player_a_reported && m.player_b_reported;
+              // Conflito = os dois reportaram mas os placares não batem entre si
+              const hasConflict = bothReported &&
+                (m.player_a_keys !== m.player_b_opp_keys || m.player_a_opp_keys !== m.player_b_keys);
+              
+              const canRelease = bothReported && !hasConflict && !m.packs_released;
+              const isResolved = m.packs_released;
+
+              let cardBorderColor = 'rgba(255,255,255,0.06)';
+              if (hasConflict) cardBorderColor = '#ff4d4d';
+              else if (isResolved) cardBorderColor = '#00cc66';
+
+              return `
+                <div class="admin-match-val-card" style="padding: 16px; background: var(--color-iron); border-radius: var(--radius-md); border: 1.5px solid ${cardBorderColor}; display: flex; flex-direction: column; gap: 12px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                    <strong style="color: var(--color-paper);">${m.playerA} vs ${m.playerB}</strong>
+                    <span style="font-size: 0.72rem; padding: 2px 8px; border-radius: var(--radius-sm); font-weight: 700; text-transform: uppercase; background: ${hasConflict ? 'rgba(255,77,77,0.15)' : isResolved ? 'rgba(0,204,102,0.15)' : 'rgba(255,255,255,0.05)'}; color: ${hasConflict ? '#ff4d4d' : isResolved ? '#00cc66' : 'var(--color-ash)'};">
+                      ${hasConflict ? 'Conflito' : isResolved ? 'Figurinhas Liberadas' : 'Pendente'}
+                    </span>
+                  </div>
+
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 0.82rem;">
+                    <!-- Report Player A -->
+                    <div style="border-right: 1px solid rgba(255,255,255,0.05); padding-right: 10px;">
+                      <span style="color: var(--color-gold); font-weight: 600;">Reporte de ${m.playerA}:</span>
+                      ${m.player_a_reported ? `
+                        <div style="margin-top: 4px; color: var(--color-paper);">
+                          Placar: <strong>${m.player_a_keys}</strong> (suas) x <strong>${m.player_a_opp_keys}</strong> (oponente)<br/>
+                          Deck: ${m.player_a_deck_name || 'N/A'} (SAS: ${m.player_a_deck_sas || 'N/A'})<br/>
+                          Picks: <code style="color: var(--color-gold);">${m.player_a_picks || 'Nenhum'}</code>
+                        </div>
+                      ` : '<div style="color: var(--color-ash); font-style: italic; margin-top: 4px;">Não reportou ainda</div>'}
+                    </div>
+
+                    <!-- Report Player B -->
+                    <div>
+                      <span style="color: var(--color-gold); font-weight: 600;">Reporte de ${m.playerB}:</span>
+                      ${m.player_b_reported ? `
+                        <div style="margin-top: 4px; color: var(--color-paper);">
+                          Placar: <strong>${m.player_b_keys}</strong> (suas) x <strong>${m.player_b_opp_keys}</strong> (oponente)<br/>
+                          Deck: ${m.player_b_deck_name || 'N/A'} (SAS: ${m.player_b_deck_sas || 'N/A'})<br/>
+                          Picks: <code style="color: var(--color-gold);">${m.player_b_picks || 'Nenhum'}</code>
+                        </div>
+                      ` : '<div style="color: var(--color-ash); font-style: italic; margin-top: 4px;">Não reportou ainda</div>'}
+                    </div>
+                  </div>
+
+                  <!-- Divergence Alert -->
+                  ${hasConflict ? `
+                    <div style="padding: 10px; background: rgba(255,77,77,0.1); border: 1px solid rgba(255,77,77,0.2); border-radius: var(--radius-sm); color: #ff6666; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                      <span>⚠️ OS PLACARES DIGITADOS SÃO DIVERGENTES! Resolva com os jogadores antes de liberar.</span>
+                    </div>
+                  ` : ''}
+
+                  <!-- Actions Footer -->
+                  <div style="display: flex; gap: 10px; margin-top: 6px; justify-content: flex-end;">
+                    ${!isResolved ? `
+                      <button class="button button-secondary" data-action="confirmWO" data-value="${m.id}" style="height: 32px; min-height: auto; font-size: 0.75rem; padding: 0 10px;">
+                        Confirmar W.O. (0x0)
+                      </button>
+                      <button class="button button-primary" data-action="releasePacks" data-match="${m.id}" style="height: 32px; min-height: auto; font-size: 0.75rem; padding: 0 14px;" ${!canRelease ? 'disabled' : ''}>
+                        Liberar Figurinhas
+                      </button>
+                    ` : `
+                      <span style="font-size: 0.78rem; color: var(--color-ash); font-weight: 600; display: flex; align-items: center; gap: 4px;">
+                        ✓ Pacotes enviados para coleção dos jogadores
+                      </span>
+                    `}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>`
+      }
+    </div>
+  `;
+
+  return challengesHtml + matchesHtml;
 }
 
 function renderCollectionsTab(state) {
@@ -173,9 +235,16 @@ function renderCollectionsTab(state) {
             : (state.adminLogs || []).slice().map(log => {
               const d = new Date(log.timestamp);
               const dateStr = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+              const adminPlayer = log.adminUsername && state.players
+                ? state.players.find(p => p.id === log.adminUsername)
+                : null;
+              const adminLabel = adminPlayer ? adminPlayer.name : (log.adminUsername || null);
+              const adminBadge = adminLabel
+                ? `<span style="display:inline-block; background: rgba(49,133,255,0.18); color: #8db9ff; border-radius: 4px; font-size: 0.68rem; font-weight: 700; padding: 1px 6px; margin-right: 4px; vertical-align: middle;">${adminLabel}</span>`
+                : '';
               return `
                 <div style="color: var(--color-ash); line-height: 1.4; border-bottom: 1px solid rgba(255,255,255,0.02); padding-bottom: 4px;">
-                  <span style="color: var(--color-steel); font-weight: 600;">[${dateStr}]</span> ${log.message}
+                  <span style="color: var(--color-steel); font-weight: 600;">[${dateStr}]</span> ${adminBadge}${log.message}
                 </div>
               `;
             }).join('')
@@ -294,8 +363,9 @@ function renderRoundsTab(state) {
                         let statusBg = 'var(--color-graphite)';
                         let statusColor = 'var(--color-steel)';
                         
-                        const conflict = m.player_a_reported && m.player_b_reported && 
-                                         (m.player_a_keys !== m.player_b_opp_keys || m.player_b_keys !== m.player_a_opp_keys);
+                        const bothRep = m.player_a_reported && m.player_b_reported;
+                        const conflict = bothRep &&
+                          (m.player_a_keys !== m.player_b_opp_keys || m.player_a_opp_keys !== m.player_b_keys);
 
                         if (m.completed && !conflict) {
                           statusLabel = 'Concluído';

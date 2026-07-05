@@ -1,6 +1,9 @@
 import { HOUSE_META, PLAYER_STICKERS } from '../data/stickers.js';
 import { renderChallengesContent } from './challenges.js';
 import { getAssetUrl } from '../utils/format.js';
+import { getSasBadgeData } from '../utils/sas.js';
+import { validateScore } from '../utils/validation.js';
+
 
 function formatDeadlineDate(isoString) {
   if (!isoString) return '—';
@@ -112,18 +115,22 @@ function renderPreMatch(state) {
   const opponentName = opponent ? (isPlayerA ? opponent.playerB : opponent.playerA) : 'Adversário';
 
   return `
-    <section class="panel pre-match-panel">
-      <div class="step-header">
-        <span class="step-number">Pré-partida</span>
-        <h4>Figurinhas disponíveis</h4>
-        <p>Veja o que cada jogador tem antes de escolher seu deck.</p>
-      </div>
+    <details class="panel pre-match-panel" style="grid-column: 1 / -1; width: 100%; margin-bottom: 16px;">
+      <summary class="step-header" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; list-style: none;">
+        <div style="display: flex; flex-direction: column;">
+          <span class="step-number">Pré-partida</span>
+          <h4 style="margin: 0;">Figurinhas disponíveis</h4>
+          <p style="margin: 4px 0 0 0; font-size: 0.8rem; color: var(--color-ash);">Veja o que cada jogador tem antes de escolher o deck.</p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="pre-match-badge can-get" style="margin: 0; padding: 2px 8px; background: rgba(49, 133, 255, 0.15); color: #8db9ff; border-radius: var(--radius-sm); font-size: 0.72rem;">
+            ${iCanGet.length} obter
+          </span>
+          <span class="chevron-icon" style="font-size: 0.8rem; transition: transform 0.2s;">▼</span>
+        </div>
+      </summary>
 
-      <div class="pre-match-summary">
-        <span class="pre-match-badge can-get">${iCanGet.length} figurinha${iCanGet.length !== 1 ? 's' : ''} que você pode tentar pegar</span>
-      </div>
-
-      <div class="pre-match-grid">
+      <div class="pre-match-grid" style="margin-top: 16px;">
         <div class="pre-match-col">
           <span class="panel-label">Sua coleção</span>
           <div class="pre-match-houses">
@@ -181,7 +188,7 @@ function renderPreMatch(state) {
           </div>
         </div>
       </div>
-    </section>
+    </details>
   `;
 }
 
@@ -197,7 +204,216 @@ function houseChip(code, revealed = false, delayIndex = 0) {
 }
 
 function renderSingleReportForm(state) {
-  return '';
+  const report = state.report;
+  
+  // 1. Seu deck view
+  let deckSectionHtml = '';
+  if (report.deckName) {
+    const badge = getSasBadgeData(report.deckSas);
+    const deckHousesArray = report.deckHouses ? report.deckHouses.split(',') : [];
+    
+    deckSectionHtml = `
+      <div class="deck-card" style="background: var(--color-graphite); border: 1.5px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 20px;">
+        <div class="deck-card-header">
+          <div class="deck-name">
+            <h4 style="margin: 0; font-family: var(--font-display); font-size: 1.1rem; color: var(--color-paper);">${report.deckName}</h4>
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--color-ash); margin-top: 6px;">
+              <img src="${getAssetUrl(`/assets/sets/${report.deckSet.toLowerCase()}.svg`)}" alt="${report.deckSet}" style="width: 18px; height: 18px; filter: brightness(0) invert(1);" onerror="this.style.display='none'" />
+              <span>Set: <strong>${report.deckSet}</strong></span>
+            </div>
+          </div>
+          <span class="status-pill ${badge.colorClass}" style="font-size: 0.78rem; padding: 4px 10px; flex-shrink: 0;">SAS ${report.deckSas} (${badge.diffStr})</span>
+        </div>
+        <div style="display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap;">
+          ${deckHousesArray.map(code => {
+            const h = HOUSE_META[code];
+            return `
+              <span class="house-chip" style="min-height: auto; padding: 4px 10px; font-size: 0.75rem; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);">
+                ${h ? `<img src="${getAssetUrl(h.icon)}" alt="" style="width: 14px; height: 14px; filter: brightness(0) invert(1);" />` : ''}
+                <strong>${code}</strong>
+              </span>
+            `;
+          }).join('')}
+        </div>
+        <button class="button button-secondary" data-action="removeDeck" style="width: 100%; margin: 12px 0 0 0; padding: 6px; font-size: 0.78rem; border-color: rgba(235, 87, 87, 0.3); color: #ff8c8c; height: 32px; min-height: auto;">
+          Remover Deck
+        </button>
+      </div>
+    `;
+  } else {
+    deckSectionHtml = `
+      <div style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px;">
+        <h4 style="margin: 0;">Seu deck</h4>
+        <div class="deck-input-row">
+          <button class="button button-secondary btn-paste" data-action="pasteDeckLink" style="margin: 0; padding: 0 14px; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 0.8rem; font-weight: bold;">
+            Colar
+          </button>
+          <input type="text" id="deck-link-input" placeholder="Link do Decks of KeyForge" style="margin: 0; background: var(--color-graphite); border: 1.5px solid rgba(255,255,255,0.08); color: var(--color-paper); border-radius: var(--radius-md); padding: 0 12px; font-size: 0.85rem;" />
+          <button class="button button-primary btn-fetch" data-action="fetchDeck" style="margin: 0; padding: 0 16px; font-size: 0.8rem; font-weight: bold;">
+            Buscar
+          </button>
+        </div>
+        <div id="deck-fetch-error" style="color: #ff8c8c; font-size: 0.78rem; display: none; margin-top: 2px;"></div>
+      </div>
+    `;
+  }
+
+  // 2. Placar view — jogador reporta suas chaves forjadas E as do adversário
+  const validation = validateScore(report.playerAKeys, report.playerBKeys, state.user.isAdmin);
+  const isScoreValid = validation.valid;
+
+  const scoreErrorHtml = !isScoreValid
+    ? `<div class="alert-box is-error" style="margin: 8px 0 0 0;"><div class="alert-content">${validation.message}</div></div>`
+    : '';
+
+  const scoreSectionHtml = `
+    <div style="margin-bottom: 24px;">
+      <h4 style="margin: 0 0 6px 0;">Placar da Partida</h4>
+      <p style="margin: 0 0 10px 0; font-size: 0.78rem; color: var(--color-ash);">Quantas chaves cada jogador forjou?</p>
+      <div class="stepper-grid" style="margin: 0;">
+        <div class="stepper-item">
+          <span class="stepper-label">Suas Chaves</span>
+          <div class="stepper-control">
+            <button class="stepper-btn" data-action="adjustKeys" data-side="a" data-amount="-1" ${report.playerAKeys <= 0 ? 'disabled' : ''}>-</button>
+            <span class="stepper-value">${report.playerAKeys}</span>
+            <button class="stepper-btn" data-action="adjustKeys" data-side="a" data-amount="1" ${report.playerAKeys >= 3 ? 'disabled' : ''}>+</button>
+          </div>
+        </div>
+        <div class="stepper-item">
+          <span class="stepper-label">Chaves Adversário</span>
+          <div class="stepper-control">
+            <button class="stepper-btn" data-action="adjustKeys" data-side="b" data-amount="-1" ${report.playerBKeys <= 0 ? 'disabled' : ''}>-</button>
+            <span class="stepper-value">${report.playerBKeys}</span>
+            <button class="stepper-btn" data-action="adjustKeys" data-side="b" data-amount="1" ${report.playerBKeys >= 3 ? 'disabled' : ''}>+</button>
+          </div>
+        </div>
+      </div>
+      ${scoreErrorHtml}
+    </div>
+  `;
+
+  // 3. Picks view — baseado nas próprias chaves forjadas
+  let picksSectionHtml = '';
+  const myKeys = report.playerAKeys;
+
+  if (isScoreValid && report.deckHouses) {
+    if (myKeys === 0) {
+      picksSectionHtml = `
+        <div style="margin-bottom: 20px;">
+          <h4 style="margin: 0 0 10px 0;">Figurinhas Solicitadas</h4>
+          <div class="alert-box is-success" style="background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.06); color: var(--color-ash); margin: 0; padding: 10px 14px;">
+            <div class="alert-content" style="font-size: 0.8rem;">
+              <strong>Consolação:</strong> Você fez 0 chaves e não pode solicitar figurinhas do oponente. Mais sorte na próxima rodada!
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      const selectedCodes = report.deckHouses.split(',');
+      const eligible = PLAYER_STICKERS
+        .filter(s => selectedCodes.includes(s.house))
+        .filter(s => state.opponentCollection[s.id])
+        .filter(s => !state.collection[s.id] || state.collection[s.id].quantity === 0);
+
+      const isFallback = eligible.length === 0;
+      const pool = isFallback 
+        ? PLAYER_STICKERS.filter(s => selectedCodes.includes(s.house) && (!state.collection[s.id] || state.collection[s.id].quantity === 0))
+        : eligible;
+
+      const maxPicks = isFallback ? myKeys : Math.min(myKeys, eligible.length);
+      
+      picksSectionHtml = `
+        <div style="margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px;">
+            <h4 style="margin: 0;">Figurinhas Solicitadas</h4>
+            <span class="selection-counter">${state.selectedPickIds.length}/${maxPicks} selecionadas</span>
+          </div>
+          <p class="picker-instruction" style="margin: 0 0 10px 0; font-size: 0.78rem;">
+            ${isFallback 
+              ? '<strong>Modo Fallback:</strong> Nenhuma figurinha inédita nas casas do seu deck no oponente. Selecione da coleção geral.' 
+              : `Escolha ${maxPicks} figurinha(s) inédita(s) nas casas do seu deck.`
+            }
+          </p>
+          
+          ${pool.length === 0 
+            ? `<p style="font-size: 0.82rem; color: var(--color-ash); font-style: italic;">Nenhuma figurinha disponível nas suas casas.</p>`
+            : `
+              <div class="picker-list" style="margin: 0; gap: 8px;">
+                ${pool.map(sticker => {
+                  const isSelected = state.selectedPickIds.includes(sticker.id);
+                  const isLimitReached = state.selectedPickIds.length >= maxPicks;
+                  const btnDisabled = !isSelected && isLimitReached;
+                  
+                  return `
+                    <div class="picker-list-item" style="padding: 10px 12px; min-height: auto; ${isSelected ? 'border-color: var(--color-signal-blue); background: rgba(49, 133, 255, 0.04);' : ''}">
+                      <div style="display: flex; flex-direction: column;">
+                        <strong style="font-size: 0.9rem;">${sticker.name}</strong>
+                        <span style="font-size: 0.75rem; margin-top: 1px; color: var(--color-ash);">ID: ${sticker.id} | Casa: ${sticker.house}</span>
+                      </div>
+                      <button class="button ${isSelected ? 'button-primary' : 'button-secondary'}" 
+                              data-action="toggleReportPick" 
+                              data-value="${sticker.id}" 
+                              ${btnDisabled ? 'disabled' : ''} 
+                              style="margin: 0; padding: 4px 10px; font-size: 0.72rem; min-height: auto; height: 28px;">
+                        ${isSelected ? 'Desmarcar' : 'Escolher'}
+                      </button>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            `
+          }
+        </div>
+      `;
+    }
+  }
+
+  // 4. Submit button
+  const isDeckLoaded = Boolean(report.deckName);
+  let correctPicks = false;
+  if (isScoreValid && report.deckHouses) {
+    const selectedCodes = report.deckHouses.split(',');
+    const eligible = PLAYER_STICKERS
+      .filter(s => selectedCodes.includes(s.house))
+      .filter(s => state.opponentCollection[s.id])
+      .filter(s => !state.collection[s.id] || state.collection[s.id].quantity === 0);
+    const expectedCount = eligible.length === 0 ? myKeys : Math.min(myKeys, eligible.length);
+    correctPicks = myKeys === 0 || state.selectedPickIds.length === expectedCount;
+  }
+  
+  const canSubmit = isDeckLoaded && isScoreValid && correctPicks;
+
+  return `
+    <div class="panel" style="margin-top: 16px; padding: 20px; background: var(--color-carbon); border-radius: var(--radius-lg); width: 100%; box-sizing: border-box;">
+      ${deckSectionHtml}
+      ${scoreSectionHtml}
+      ${picksSectionHtml}
+      
+      <button class="button button-primary" data-action="submitSingleReport" ${!canSubmit ? 'disabled' : ''} style="width: 100%; margin: 16px 0 0 0; height: 44px; font-size: 0.9rem; text-transform: uppercase; font-weight: 700;">
+        Reportar Partida
+      </button>
+    </div>
+    
+    ${state.showSuccessModal ? renderSuccessModal() : ''}
+  `;
+}
+
+function renderSuccessModal() {
+  return `
+    <div class="highlight-overlay" id="successReportModal">
+      <div class="highlight-overlay-bg"></div>
+      <div class="highlight-content" style="background: var(--color-carbon); padding: 28px; border-radius: var(--radius-lg); border: 1.5px solid rgba(255,255,255,0.08); text-align: center; max-width: 360px; box-shadow: var(--shadow-deep); z-index: 2001;">
+        <span style="font-size: 2.8rem; color: var(--color-green); display: block; margin-bottom: 8px;">✓</span>
+        <h3 style="font-family: var(--font-display); color: var(--color-paper); margin: 0 0 6px; font-size: 1.25rem;">Reporte Enviado!</h3>
+        <p style="font-size: 0.85rem; color: var(--color-ash); margin: 0 0 20px; line-height: 1.4;">Seu reporte de partida foi salvo com sucesso.</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+          <button class="button button-primary" data-action="goAlbum" style="width: 100%; margin: 0; height: 36px; font-size: 0.82rem; font-weight: bold;">Ver Álbum</button>
+          <button class="button button-secondary" data-action="setRoute" data-value="table" style="width: 100%; margin: 0; height: 36px; font-size: 0.82rem; font-weight: bold;">Ver Classificação (Tabela)</button>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function renderReportSummary(state) {
@@ -206,7 +422,8 @@ function renderReportSummary(state) {
   const isPlayerA = report.isPlayerA;
   const myHouses = (isPlayerA ? myMatch?.player_a_houses : myMatch?.player_b_houses)?.split(',') || [];
   const myKeys = isPlayerA ? myMatch?.player_a_keys : myMatch?.player_b_keys;
-  const oppKeys = isPlayerA ? myMatch?.player_a_opp_keys : myMatch?.player_b_opp_keys;
+  // oppKeys = chaves que o adversário reportou para si mesmo (player_b_keys se sou A, player_a_keys se sou B)
+  const oppKeys = isPlayerA ? myMatch?.player_b_keys : myMatch?.player_a_keys;
   
   const myPicks = (isPlayerA ? myMatch?.player_a_picks : myMatch?.player_b_picks)?.split(',').filter(Boolean) || [];
 
@@ -228,8 +445,14 @@ function renderReportSummary(state) {
 
         <div>
           <span class="panel-label">Resultado reportado por você</span>
-          <div style="font-size: 1.1rem; font-weight: 700; color: var(--color-paper); margin-top: 4px;">
-            Você <span style="color: var(--color-gold); font-size: 1.3rem;">${myKeys}</span> x <span style="color: var(--color-gold); font-size: 1.3rem;">${oppKeys}</span> Adversário
+          <div class="report-score-line">
+            <span>Você forjou</span>
+            <span style="color: var(--color-gold); font-size: 1.3rem; font-weight: 900; font-family: var(--font-display);">${myKeys}</span>
+            <span>chave(s)</span>
+            ${oppKeys !== undefined && oppKeys !== null
+              ? `<span style="color: var(--color-ash); font-size: 0.85rem; font-weight: 400;">· Adversário reportou</span><span style="color: var(--color-gold); font-size: 1.3rem; font-weight: 900; font-family: var(--font-display);">${oppKeys}</span><span style="color: var(--color-ash); font-size: 0.85rem; font-weight: 400;">chave(s)</span>`
+              : '<span style="color: var(--color-ash); font-size: 0.85rem; font-weight: 400;">· Aguardando reporte do adversário</span>'
+            }
           </div>
         </div>
 

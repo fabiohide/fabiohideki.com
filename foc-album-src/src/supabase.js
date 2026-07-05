@@ -73,7 +73,8 @@ export async function fetchFullState(username) {
     allMatchesRes,
     allChallengesRes,
     allRoundsRes,
-    allPicksRes
+    allPicksRes,
+    pendingPacksRes
   ] = await Promise.all([
     supabase.from('foc2026_collections').select('*').eq('player_username', username),
     supabase.from('foc2026_challenges').select('*').eq('player_username', username).order('id'),
@@ -86,7 +87,8 @@ export async function fetchFullState(username) {
     supabase.from('foc2026_matches').select('*'),
     supabase.from('foc2026_challenges').select('*'),
     supabase.from('foc2026_rounds').select('*').order('number'),
-    supabase.from('foc2026_stickers_log').select('*').eq('type', 'pick')
+    supabase.from('foc2026_stickers_log').select('*').eq('type', 'pick'),
+    supabase.from('foc2026_pending_packs').select('*').eq('player_username', username).eq('opened', false)
   ]);
 
   const collectionData = collectionRes.data;
@@ -101,6 +103,7 @@ export async function fetchFullState(username) {
   const allChallengesData = allChallengesRes.data;
   const allRoundsData = allRoundsRes.data;
   const allPicksData = allPicksRes.data;
+  const pendingPacksData = pendingPacksRes.data;
 
   // Processa a coleção do jogador logado
   const collection = {};
@@ -129,7 +132,30 @@ export async function fetchFullState(username) {
   const formattedMatches = (matchesData || []).map(m => ({
     id: m.id,
     playerA: playersMap[m.player_a_username] || m.player_a_username,
-    playerB: playersMap[m.player_b_username] || m.player_b_username
+    playerB: playersMap[m.player_b_username] || m.player_b_username,
+    player_a_username: m.player_a_username,
+    player_b_username: m.player_b_username,
+    round_number: m.round_number,
+    completed: m.completed,
+    player_a_reported: m.player_a_reported,
+    player_b_reported: m.player_b_reported,
+    player_a_houses: m.player_a_houses,
+    player_b_houses: m.player_b_houses,
+    player_a_keys: m.player_a_keys,
+    player_b_keys: m.player_b_keys,
+    player_a_opp_keys: m.player_a_opp_keys,
+    player_b_opp_keys: m.player_b_opp_keys,
+    player_a_picks: m.player_a_picks,
+    player_b_picks: m.player_b_picks,
+    player_a_deck_name: m.player_a_deck_name,
+    player_b_deck_name: m.player_b_deck_name,
+    player_a_deck_sas: m.player_a_deck_sas,
+    player_b_deck_sas: m.player_b_deck_sas,
+    player_a_deck_set: m.player_a_deck_set,
+    player_b_deck_set: m.player_b_deck_set,
+    player_a_deck_url: m.player_a_deck_url,
+    player_b_deck_url: m.player_b_deck_url,
+    packs_released: m.packs_released
   }));
 
   const pendingChallenges = (pendingChallengesData || []).map(c => ({
@@ -163,7 +189,20 @@ export async function fetchFullState(username) {
     pickedIds: [],
     matchDeadlinePassed: false,
     fallbackActive: false,
-    maxPicks: 3
+    maxPicks: 3,
+    // Novos campos de deck
+    deckName: null,
+    deckSas: null,
+    deckSet: null,
+    deckUrl: null,
+    deckHouses: null,
+    opponentDeckName: null,
+    opponentDeckSas: null,
+    opponentDeckSet: null,
+    opponentDeckUrl: null,
+    opponentDeckHouses: null,
+    opponentKeys: 0,
+    opponentPicks: null
   };
 
   let opponentUsername = '';
@@ -200,10 +239,25 @@ export async function fetchFullState(username) {
 
     report.reported = isPlayerA ? myMatch.player_a_reported : myMatch.player_b_reported;
     report.opponentReported = isPlayerA ? myMatch.player_b_reported : myMatch.player_a_reported;
-    report.playerAKeys = isPlayerA ? myMatch.player_a_keys : myMatch.player_b_keys;
-    report.playerBKeys = isPlayerA ? myMatch.player_a_opp_keys : myMatch.player_b_opp_keys;
-    report.opponentKeysA = isPlayerA ? myMatch.player_b_keys : myMatch.player_a_keys;
-    report.opponentKeysB = isPlayerA ? myMatch.player_b_opp_keys : myMatch.player_a_opp_keys;
+    report.playerAKeys = Number(isPlayerA ? myMatch.player_a_keys : myMatch.player_b_keys) || 0;
+    report.playerBKeys = Number(isPlayerA ? myMatch.player_a_opp_keys : myMatch.player_b_opp_keys) || 0;
+    
+    // Dados do deck do jogador logado
+    report.deckName = isPlayerA ? myMatch.player_a_deck_name : myMatch.player_b_deck_name;
+    report.deckSas = isPlayerA ? myMatch.player_a_deck_sas : myMatch.player_b_deck_sas;
+    report.deckSet = isPlayerA ? myMatch.player_a_deck_set : myMatch.player_b_deck_set;
+    report.deckUrl = isPlayerA ? myMatch.player_a_deck_url : myMatch.player_b_deck_url;
+    report.deckHouses = isPlayerA ? myMatch.player_a_deck_houses : myMatch.player_b_deck_houses;
+
+    // Dados do deck do adversário
+    report.opponentDeckName = isPlayerA ? myMatch.player_b_deck_name : myMatch.player_a_deck_name;
+    report.opponentDeckSas = isPlayerA ? myMatch.player_b_deck_sas : myMatch.player_a_deck_sas;
+    report.opponentDeckSet = isPlayerA ? myMatch.player_b_deck_set : myMatch.player_a_deck_set;
+    report.opponentDeckUrl = isPlayerA ? myMatch.player_b_deck_url : myMatch.player_a_deck_url;
+    report.opponentDeckHouses = isPlayerA ? myMatch.player_b_deck_houses : myMatch.player_a_deck_houses;
+
+    report.opponentKeys = isPlayerA ? myMatch.player_b_keys : myMatch.player_a_keys;
+    report.opponentPicks = isPlayerA ? myMatch.player_b_picks : myMatch.player_a_picks;
 
     // A partida está confirmada quando ambos reportaram
     report.confirmed = myMatch.player_a_reported && myMatch.player_b_reported;
@@ -232,7 +286,8 @@ export async function fetchFullState(username) {
   // Processa logs administrativos
   const adminLogs = (adminLogsData || []).map(l => ({
     timestamp: l.created_at,
-    message: l.message
+    message: l.message,
+    adminUsername: l.admin_username || null
   }));
 
   const stickersLog = (stickersLogData || []).map(l => ({
@@ -318,6 +373,23 @@ export async function fetchFullState(username) {
     }
   ];
 
+  if (pendingPacksData) {
+    pendingPacksData.forEach(p => {
+      if (!p.opened) {
+        packs.push({
+          id: p.id,
+          type: 'player',
+          title: `Pacotinho Rodada ${p.round_number}`,
+          subtitle: `vs ${p.opponent_name || 'Adversário'}`,
+          image: '/assets/pack/player_pack.webp',
+          opened: false,
+          stickerIds: Array.isArray(p.sticker_ids) ? p.sticker_ids : JSON.parse(p.sticker_ids || '[]'),
+          isPendingPack: true
+        });
+      }
+    });
+  }
+
   if (username === 'teste_1') {
     const packStickersCount = collectionData ? collectionData.filter(c => c.source === 'pack').length : 0;
     const extraOpened = packStickersCount > 6 || (typeof window !== 'undefined' && window.localStorage.getItem('foc_extra_pack_opened') === 'true');
@@ -363,6 +435,7 @@ export async function fetchFullState(username) {
     stickersLog,
     report,
     standings,
+    pendingPacks: pendingPacksData || [],
     allRounds: allRoundsData || [],
     allMatches: allMatchesData || [],
     allPicks: allPicksData || [],
@@ -388,44 +461,80 @@ export async function dbOpenPack(username, stickerIds, packType, roundNumber, pl
   });
 }
 
-// 3. Salva reporte de partida de um jogador
-export async function dbReportMatch(matchId, username, keys, isPlayerA) {
+// 3. Submete o reporte de etapa única (incluindo deck e picks)
+export async function dbSubmitSingleReport(matchId, houses, myKeys, oppKeys, picks, deckName, deckSas, deckSet, deckUrl) {
   if (!supabase) return;
 
-  await supabase.rpc('foc2026_report_own_keys', {
-    p_match_id: matchId,
-    p_keys: keys
-  });
-}
+  const housesStr = Array.isArray(houses) ? houses.join(',') : houses;
+  const picksStr = Array.isArray(picks) ? picks.join(',') : (picks || '');
 
-// Nova função para submeter o reporte único
-export async function dbSubmitSingleReport(matchId, houses, myKeys, oppKeys, picks) {
-  if (!supabase) return;
   await supabase.rpc('foc2026_submit_single_report', {
     p_match_id: matchId,
-    p_houses: houses,
+    p_houses: housesStr,
     p_my_keys: myKeys,
     p_opp_keys: oppKeys,
-    p_picks: picks
+    p_picks: picksStr,
+    p_deck_name: deckName,
+    p_deck_sas: deckSas,
+    p_deck_set: deckSet,
+    p_deck_url: deckUrl
   });
 }
 
+// Deprecated stubs to prevent build errors
+export async function dbReportMatch(matchId, username, myKeys, isPlayerA) {
+  console.warn("dbReportMatch is deprecated, use dbSubmitSingleReport instead.");
+}
+export async function dbPickStickers(username, pickedIds, matchId, roundNumber, playerName) {
+  console.warn("dbPickStickers is deprecated, use dbSubmitSingleReport instead.");
+}
 export async function dbReopenOwnReport(matchId, isPlayerA) {
-  if (!supabase) return;
+  console.warn("dbReopenOwnReport is deprecated.");
+}
 
-  await supabase.rpc('foc2026_reopen_own_report', {
-    p_match_id: matchId
+
+// 4. Cria um pacote pendente de pós-partida para o jogador (chamado pelo Admin)
+export async function dbCreatePendingPack(playerUsername, roundNumber, opponentName, stickerIds) {
+  if (!supabase) return;
+  await supabase
+    .from('foc2026_pending_packs')
+    .insert({
+      player_username: playerUsername,
+      round_number: roundNumber,
+      opponent_name: opponentName,
+      sticker_ids: stickerIds
+    });
+}
+
+// 5. Abre o pacote pendente na coleção (chamado ao clicar em Ver Álbum)
+export async function dbOpenPendingPack(packId) {
+  if (!supabase) return;
+  await supabase.rpc('foc2026_open_pending_pack', {
+    p_pack_id: packId
   });
 }
 
-// 4. Salva as figurinhas obtidas no pick pós-partida
-export async function dbPickStickers(username, stickerIds, matchId, roundNumber, playerName) {
+// 5b. Libera os pacotes da rodada para ambos os jogadores
+export async function dbReleaseMatchPacks(matchId, playerA, playerB, roundNumber, aName, bName, aPicks, bPicks, adminUsername) {
   if (!supabase) return;
 
-  await supabase.rpc('foc2026_claim_picks', {
+  const aPicksArr = Array.isArray(aPicks) ? aPicks : (aPicks ? aPicks.split(',').filter(Boolean) : []);
+  const bPicksArr = Array.isArray(bPicks) ? bPicks : (bPicks ? bPicks.split(',').filter(Boolean) : []);
+
+  await supabase.rpc('foc2026_release_match_packs', {
     p_match_id: matchId,
-    p_sticker_ids: stickerIds,
-    p_round_number: roundNumber
+    p_player_a: playerA,
+    p_player_b: playerB,
+    p_round_number: roundNumber,
+    p_player_a_name: aName,
+    p_player_b_name: bName,
+    p_player_a_picks: aPicksArr,
+    p_player_b_picks: bPicksArr
+  });
+
+  await supabase.from('foc2026_admin_logs').insert({
+    message: `Admin confirmou a partida ${matchId} (${aName} vs ${bName}) e liberou os pacotes de figurinhas`,
+    admin_username: adminUsername || null
   });
 }
 
@@ -446,7 +555,7 @@ export async function dbClaimChallenge(username, challengeId, stickerId) {
 // --- AÇÕES DO ADMINISTRADOR ---
 
 // 6. Aprovar desafio
-export async function dbApproveChallenge(playerUsername, challengeId, stickerId, roundNumber, playerName) {
+export async function dbApproveChallenge(playerUsername, challengeId, stickerId, roundNumber, playerName, adminUsername) {
   if (!supabase) return;
 
   await supabase
@@ -482,12 +591,13 @@ export async function dbApproveChallenge(playerUsername, challengeId, stickerId,
   await supabase
     .from('foc2026_admin_logs')
     .insert({
-      message: `Admin aprovou o desafio "${challengeTitle}" para ${playerName}`
+      message: `Admin aprovou o desafio "${challengeTitle}" para ${playerName}`,
+      admin_username: adminUsername || null
     });
 }
 
 // 7. Confirmar W.O. (0x0)
-export async function dbConfirmWO(matchId) {
+export async function dbConfirmWO(matchId, adminUsername) {
   if (!supabase) return;
 
   await supabase
@@ -507,12 +617,13 @@ export async function dbConfirmWO(matchId) {
   await supabase
     .from('foc2026_admin_logs')
     .insert({
-      message: `Admin confirmou W.O. (0x0) para a partida ${matchId}`
+      message: `Admin confirmou W.O. (0x0) para a partida ${matchId}`,
+      admin_username: adminUsername || null
     });
 }
 
 // 8. Descongelar partida (+24h)
-export async function dbUnfreezeMatch(matchId, roundNumber) {
+export async function dbUnfreezeMatch(matchId, roundNumber, adminUsername) {
   if (!supabase) return;
 
   const newDeadline = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
@@ -525,12 +636,13 @@ export async function dbUnfreezeMatch(matchId, roundNumber) {
   await supabase
     .from('foc2026_admin_logs')
     .insert({
-      message: `Admin descongelou partida ${matchId} (+24h de prazo na rodada ${roundNumber})`
+      message: `Admin descongelou partida ${matchId} (+24h de prazo na rodada ${roundNumber})`,
+      admin_username: adminUsername || null
     });
 }
 
 // 9. Adicionar/remover figurinha via Admin
-export async function dbAdminEditSticker(playerUsername, stickerId, changeAmount, playerName) {
+export async function dbAdminEditSticker(playerUsername, stickerId, changeAmount, playerName, adminUsername) {
   if (!supabase) return;
 
   const { data: existing } = await supabase
@@ -571,7 +683,10 @@ export async function dbAdminEditSticker(playerUsername, stickerId, changeAmount
   const actionLabel = changeAmount > 0 ? 'adicionou' : 'removeu';
   const logMessage = `Admin ${actionLabel} a figurinha ${stickerId} para ${playerName}`;
 
-  await supabase.from('foc2026_admin_logs').insert({ message: logMessage });
+  await supabase.from('foc2026_admin_logs').insert({
+    message: logMessage,
+    admin_username: adminUsername || null
+  });
 }
 
 // 10. Salva a submissão das 3 casas do deck do jogador no banco
@@ -646,7 +761,7 @@ export async function dbResetMatch(matchId) {
 }
 
 // 13. Salva o prazo da rodada manualmente
-export async function dbSaveRoundDeadline(roundNumber, deadline) {
+export async function dbSaveRoundDeadline(roundNumber, deadline, adminUsername) {
   if (!supabase) return;
 
   await supabase
@@ -657,12 +772,13 @@ export async function dbSaveRoundDeadline(roundNumber, deadline) {
   await supabase
     .from('foc2026_admin_logs')
     .insert({
-      message: `Admin alterou o prazo da rodada ${roundNumber} para ${new Date(deadline).toLocaleString()}`
+      message: `Admin alterou o prazo da rodada ${roundNumber} para ${new Date(deadline).toLocaleString()}`,
+      admin_username: adminUsername || null
     });
 }
 
 // 14. Ativa uma rodada (desativando todas as outras)
-export async function dbActivateRound(roundNumber) {
+export async function dbActivateRound(roundNumber, adminUsername) {
   if (!supabase) return;
 
   // Desativa todas
@@ -680,12 +796,13 @@ export async function dbActivateRound(roundNumber) {
   await supabase
     .from('foc2026_admin_logs')
     .insert({
-      message: `Admin começou a rodada ${roundNumber}`
+      message: `Admin começou a rodada ${roundNumber}`,
+      admin_username: adminUsername || null
     });
 }
 
 // 15. Desativa uma rodada
-export async function dbDeactivateRound(roundNumber) {
+export async function dbDeactivateRound(roundNumber, adminUsername) {
   if (!supabase) return;
 
   await supabase
@@ -696,6 +813,7 @@ export async function dbDeactivateRound(roundNumber) {
   await supabase
     .from('foc2026_admin_logs')
     .insert({
-      message: `Admin encerrou a rodada ${roundNumber}`
+      message: `Admin encerrou a rodada ${roundNumber}`,
+      admin_username: adminUsername || null
     });
 }

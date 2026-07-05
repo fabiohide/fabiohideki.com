@@ -663,6 +663,170 @@
 }
 
 /* Desktop layout adjustment overrides */
+/* ─── Mobile-first responsive layout ───────────────────────────── */
+
+/* Report view: single column on mobile */
+.report-view {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Match card: tighter on mobile */
+.match-card {
+  padding: 14px 16px;
+}
+
+.match-info h3 {
+  font-size: clamp(1.1rem, 5vw, 1.4rem);
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Deck input row: wrap on narrow screens */
+.deck-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.deck-input-row input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+}
+
+.deck-input-row .btn-paste {
+  min-height: 44px;
+  flex-shrink: 0;
+}
+
+.deck-input-row .btn-fetch {
+  min-height: 44px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 400px) {
+  .deck-input-row {
+    flex-wrap: wrap;
+  }
+  .deck-input-row input {
+    order: 1;
+    flex-basis: 100%;
+  }
+  .deck-input-row .btn-paste {
+    order: 0;
+    flex: 1;
+  }
+  .deck-input-row .btn-fetch {
+    order: 2;
+    flex: 1;
+  }
+}
+
+/* Deck card header: wrap name & SAS badge */
+.deck-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.deck-card-header .deck-name {
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+
+/* Stepper: fill 100% on mobile */
+.stepper-grid {
+  max-width: 100%;
+}
+
+.stepper-item {
+  width: 100%;
+}
+
+/* On small phones, stack the two steppers vertically */
+@media (max-width: 480px) {
+  .stepper-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Stepper buttons: bigger tap target on mobile */
+@media (max-width: 600px) {
+  .stepper-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 1.4rem;
+  }
+  .stepper-value {
+    font-size: 2.8rem;
+  }
+}
+
+/* Picker list item: stack on very small screens */
+.picker-list-item {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+@media (max-width: 380px) {
+  .picker-list-item {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .picker-list-item .button {
+    width: 100%;
+    min-height: 40px;
+  }
+}
+
+/* Pre-match grid: 2 cols default, 1 col on very small */
+.pre-match-grid {
+  grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 480px) {
+  .pre-match-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Report summary score: wrap on small screens */
+.report-score-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: baseline;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-paper);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+/* Tab buttons: ensure they're finger-friendly */
+.tab-button {
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
+/* Round info bar: tighter on mobile */
+@media (max-width: 480px) {
+  .round-info-bar {
+    margin-bottom: 10px;
+  }
+  .deadline-badge {
+    font-size: 0.72rem;
+    padding: 5px 10px;
+  }
+}
+
+/* Desktop layout override: 2-column grid ≥760px */
 @media (min-width: 760px) {
   .report-view {
     display: grid;
@@ -676,6 +840,8 @@
   .picker-panel {
     grid-column: 1 / -1;
   }
+
+  /* Full-width for both steppers — no max-width constraint */
 }
 
 /* ─── Round info bar ─────────────────────────────────────────────── */
@@ -874,4 +1040,8 @@
   color: var(--color-ash);
   font-size: 0.82rem;
   margin: 0;
+}
+
+.pre-match-panel[open] .chevron-icon {
+  transform: rotate(180deg);
 }

@@ -11,7 +11,7 @@ export function stickerCard(stickerId, collection, options = {}) {
   if (options.small) classes.push('is-small');
 
   let actionAttr = '';
-  if (isOwned) {
+  if (isOwned && !options.noAction) {
     actionAttr = `data-action="viewSticker" data-value="${sticker.id}"`;
   }
 

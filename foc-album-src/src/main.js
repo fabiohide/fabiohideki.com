@@ -32,10 +32,13 @@ import {
   dbActivateRound,
   dbDeactivateRound,
   setSupabaseSession,
-  dbSubmitSingleReport
+  dbSubmitSingleReport,
+  dbOpenPendingPack,
+  dbReleaseMatchPacks
 } from './supabase.js';
 import { stickerCard } from './components/sticker-card.js';
 import { getAssetUrl } from './utils/format.js';
+import { parseDokResponse } from './utils/sas.js';
 import './style/login.css';
 
 import { ALBUM_PAGES, GOLDEN_CREST_IDS, INITIAL_PLAYER_IDS, PLAYER_STICKERS, STICKERS, getSticker } from './data/stickers.js';
@@ -51,6 +54,7 @@ const app = document.querySelector('#app');
 
 function setRoute(route) {
   state.currentRoute = route;
+  state.showSuccessModal = false; // Reset success modal
   window.history.replaceState(null, '', `#${route}`);
   render();
 }
@@ -58,6 +62,19 @@ function setRoute(route) {
 async function openPack(packId) {
   const pack = state.packs.find((item) => item.id === packId);
   if (!pack || pack.opened || pack.disabled) return;
+
+  if (pack.isPendingPack) {
+    pack.opened = true;
+    state.reveal = {
+      pack,
+      newIds: pack.stickerIds,
+      duplicateIds: [],
+      ripped: false,
+      flippedIndexes: []
+    };
+    render();
+    return;
+  }
 
   pack.opened = true;
   if (pack.type === 'player') state.user.packOpened = true;
@@ -179,9 +196,11 @@ function setKeys(side, value) {
   if (next < 0 || next > 3) return;
   if (side === 'a') {
     state.report.playerAKeys = next;
+    state.selectedPickIds = [];
   }
   if (side === 'b') {
     state.report.playerBKeys = next;
+    state.selectedPickIds = [];
   }
   render();
 }
@@ -250,27 +269,104 @@ async function editReport() {
   render();
 }
 
-function toggleReportPick(stickerId) {
-  if (!state.selectedPickIds) {
-    state.selectedPickIds = [];
+async function pasteDeckLink() {
+  try {
+    const text = await navigator.clipboard.readText();
+    const input = document.getElementById('deck-link-input');
+    if (input) {
+      input.value = text.trim();
+    }
+  } catch (err) {
+    console.error('Falha ao acessar o clipboard:', err);
   }
-  const index = state.selectedPickIds.indexOf(stickerId);
+}
+
+async function fetchDeck() {
+  const input = document.getElementById('deck-link-input');
+  const errorEl = document.getElementById('deck-fetch-error');
+  if (!input) return;
   
-  // Calculate pick limit
+  const url = input.value.trim();
+  if (errorEl) errorEl.style.display = 'none';
+
+  const matchUuid = url.match(/decks\/([^/]+)/);
+  if (!matchUuid) {
+    if (errorEl) {
+      errorEl.textContent = 'URL do Decks of KeyForge inválida.';
+      errorEl.style.display = 'block';
+    }
+    return;
+  }
+  
+  const uuid = matchUuid[1];
+  const searchBtn = document.querySelector('[data-action="fetchDeck"]');
+  if (searchBtn) {
+    searchBtn.disabled = true;
+    searchBtn.textContent = 'Buscando...';
+  }
+
+  try {
+    const proxy = 'https://corsproxy.io/?';
+    const apiUrl = `https://www.decksofkeyforge.com/api/decks/${uuid}`;
+    const response = await fetch(`${proxy}${encodeURIComponent(apiUrl)}`);
+    if (!response.ok) throw new Error('Falha no proxy ou API do DoK.');
+    
+    const data = await response.json();
+    const deckInfo = parseDokResponse(data);
+
+    state.report.deckName = deckInfo.name;
+    state.report.deckSas = deckInfo.sas;
+    state.report.deckSet = deckInfo.expansion;
+    state.report.deckHouses = deckInfo.houses.join(',');
+    state.report.deckUrl = url;
+
+    // Prefill houses in player selection
+    state.selectedHouseCodes = deckInfo.houses;
+    state.selectedPickIds = []; // clear previous picks
+
+    render();
+  } catch (err) {
+    console.error(err);
+    if (errorEl) {
+      errorEl.textContent = 'Erro ao buscar o deck. Verifique a conexão.';
+      errorEl.style.display = 'block';
+    }
+  } finally {
+    if (searchBtn) {
+      searchBtn.disabled = false;
+      searchBtn.textContent = 'Buscar';
+    }
+  }
+}
+
+function removeDeck() {
+  state.report.deckName = null;
+  state.report.deckSas = null;
+  state.report.deckSet = null;
+  state.report.deckHouses = null;
+  state.report.deckUrl = null;
+  state.selectedHouseCodes = [];
+  state.selectedPickIds = [];
+  render();
+}
+
+function toggleReportPick(stickerId) {
+  if (!state.selectedPickIds) state.selectedPickIds = [];
+  const index = state.selectedPickIds.indexOf(stickerId);
   const selectedCodes = state.selectedHouseCodes || [];
+  
   const eligible = PLAYER_STICKERS
     .filter(s => selectedCodes.includes(s.house))
     .filter(s => state.opponentCollection[s.id])
     .filter(s => !state.collection[s.id] || state.collection[s.id].quantity === 0);
 
   const isFallback = eligible.length === 0;
-  const maxPicks = isFallback ? 3 : Math.min(state.report.playerAKeys, eligible.length);
-  const finalMaxPicks = state.report.playerAKeys > 0 ? maxPicks : 0;
+  const maxPicks = isFallback ? state.report.playerAKeys : Math.min(state.report.playerAKeys, eligible.length);
 
   if (index > -1) {
     state.selectedPickIds.splice(index, 1);
   } else {
-    if (state.selectedPickIds.length < finalMaxPicks) {
+    if (state.selectedPickIds.length < maxPicks) {
       state.selectedPickIds.push(stickerId);
     }
   }
@@ -278,66 +374,57 @@ function toggleReportPick(stickerId) {
 }
 
 async function submitSingleReport() {
-  if (state.selectedHouseCodes.length !== 3) return;
+  const report = state.report;
+  if (!report.deckHouses) return;
   const pickedIds = state.selectedPickIds || [];
-  const matchId = state.report.matchId;
+  const matchId = report.matchId;
 
   if (hasSupabaseConfig) {
-    await dbSubmitSingleReport(
-      matchId,
-      state.selectedHouseCodes,
-      state.report.playerAKeys,
-      state.report.playerBKeys,
-      pickedIds
-    );
-    const fetched = await fetchFullState(state.user.id);
-    if (fetched) state = fetched;
+    const btn = document.querySelector('[data-action="submitSingleReport"]');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Enviando...';
+    }
+    try {
+      await dbSubmitSingleReport(
+        matchId,
+        report.deckHouses.split(','),
+        report.playerAKeys,
+        report.playerBKeys,
+        pickedIds,
+        report.deckName,
+        report.deckSas,
+        report.deckSet,
+        report.deckUrl
+      );
+      
+      const fetched = await fetchFullState(state.user.id);
+      if (fetched) {
+        state = fetched;
+        state.report.reported = true;
+        state.report.completed = true;
+        state.showSuccessModal = true;
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao submeter o reporte.');
+    }
   } else {
-    // offline simulation
+    // Offline Simulation
     state.report.housesSubmitted = true;
     state.report.reported = true;
     state.report.completed = true;
     
-    // Add picked stickers to collection in memory
-    pickedIds.forEach((stickerId) => {
-      if (state.collection[stickerId]) {
-        state.collection[stickerId].quantity += 1;
-        state.collection[stickerId].isNew = true;
-        state.collection[stickerId].source = 'pick';
+    pickedIds.forEach(id => {
+      if (state.collection[id]) {
+        state.collection[id].quantity += 1;
       } else {
-        state.collection[stickerId] = { quantity: 1, isNew: true, source: 'pick' };
+        state.collection[id] = { quantity: 1, source: 'pick', isNew: true };
       }
-      if (!state.stickersLog) state.stickersLog = [];
-      state.stickersLog.push({
-        round: state.activeRound.number,
-        timestamp: new Date().toISOString(),
-        message: `${state.user.name} obteve a figurinha ${stickerId} via Pick pós-partida`,
-        type: 'pick'
-      });
     });
+    
+    state.showSuccessModal = true;
   }
-
-  // Trigger pack reveal for the picked stickers if any
-  if (pickedIds.length) {
-    state.reveal = {
-      pack: {
-        id: `pick-${matchId}`,
-        type: 'player',
-        title: 'Pacotinho de picks',
-        subtitle: `${pickedIds.length} figurinhas`,
-        image: '/assets/pack/player_pack.webp',
-        opened: true,
-        stickerIds: pickedIds,
-      },
-      newIds: pickedIds,
-      duplicateIds: [],
-      ripped: false,
-      flippedIndexes: [],
-    };
-    state.currentRoute = 'packs';
-    window.history.replaceState(null, '', '#packs');
-  }
-
   render();
 }
 
@@ -473,7 +560,7 @@ async function approveChallenge(challengeId, playerUsername) {
     const stickerId = challenge.pickedId;
     const playerName = challenge.playerName;
     
-    await dbApproveChallenge(playerUsername, challengeId, stickerId, state.activeRound.number, playerName);
+    await dbApproveChallenge(playerUsername, challengeId, stickerId, state.activeRound.number, playerName, state.user.id);
     const fetched = await fetchFullState(state.user.id);
     if (fetched) state = fetched;
   } else {
@@ -529,9 +616,83 @@ async function pickChallengeSticker(challengeId, stickerId) {
   render();
 }
 
+async function releasePacks(matchId) {
+  const match = state.matches.find(m => m.id === matchId);
+  if (!match) return;
+
+  if (hasSupabaseConfig) {
+    const btn = document.querySelector(`[data-action="releasePacks"][data-match="${matchId}"]`);
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Liberando...';
+    }
+    try {
+      await dbReleaseMatchPacks(
+        matchId,
+        match.player_a_username,
+        match.player_b_username,
+        match.round_number,
+        match.playerA,
+        match.playerB,
+        match.player_a_picks,
+        match.player_b_picks,
+        state.user.id
+      );
+      const fetched = await fetchFullState(state.user.id);
+      if (fetched) state = fetched;
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao liberar as figurinhas.');
+    }
+  } else {
+    // Offline Simulation
+    match.packs_released = true;
+    match.completed = true;
+    
+    // Simular a criação de pending packs offline na lista de pacotes
+    if (match.player_a_picks) {
+      const stickerIds = match.player_a_picks.split(',').filter(Boolean);
+      if (stickerIds.length > 0) {
+        state.packs.push({
+          id: `pending-pack-sim-a-${match.id}`,
+          type: 'player',
+          title: `Pacotinho Rodada ${match.round_number}`,
+          subtitle: `vs ${match.playerB}`,
+          image: '/assets/pack/player_pack.webp',
+          opened: false,
+          stickerIds,
+          isPendingPack: true
+        });
+      }
+    }
+    if (match.player_b_picks) {
+      const stickerIds = match.player_b_picks.split(',').filter(Boolean);
+      if (stickerIds.length > 0) {
+        state.packs.push({
+          id: `pending-pack-sim-b-${match.id}`,
+          type: 'player',
+          title: `Pacotinho Rodada ${match.round_number}`,
+          subtitle: `vs ${match.playerA}`,
+          image: '/assets/pack/player_pack.webp',
+          opened: false,
+          stickerIds,
+          isPendingPack: true
+        });
+      }
+    }
+    
+    if (!state.adminLogs) state.adminLogs = [];
+    state.adminLogs.push({
+      timestamp: new Date().toISOString(),
+      message: `Admin liberou pacotinhos para ${match.playerA} e ${match.playerB} (Partida: ${matchId})`
+    });
+  }
+  render();
+}
+
 async function confirmWO(matchId) {
   if (hasSupabaseConfig) {
-    await dbConfirmWO(matchId);
+    await dbConfirmWO(matchId, state.user.id);
     const fetched = await fetchFullState(state.user.id);
     if (fetched) state = fetched;
   } else {
@@ -555,7 +716,7 @@ async function confirmWO(matchId) {
 
 async function unfreezeMatch(matchId) {
   if (hasSupabaseConfig) {
-    await dbUnfreezeMatch(matchId, state.activeRound.number);
+    await dbUnfreezeMatch(matchId, state.activeRound.number, state.user.id);
     const fetched = await fetchFullState(state.user.id);
     if (fetched) state = fetched;
   } else {
@@ -627,7 +788,7 @@ async function adminConfirmStickers(playerId) {
   if (hasSupabaseConfig) {
     try {
       await Promise.all(changes.map(c => 
-        dbAdminEditSticker(playerId, c.id, c.diff, player.name)
+        dbAdminEditSticker(playerId, c.id, c.diff, player.name, state.user.id)
       ));
       
       const fetched = await fetchFullState(state.user.id);
@@ -687,7 +848,7 @@ async function saveRoundDeadline(roundNumber, deadlineVal) {
   const deadline = new Date(deadlineVal + 'T23:59:59').toISOString();
 
   if (hasSupabaseConfig) {
-    await dbSaveRoundDeadline(roundNumber, deadline);
+    await dbSaveRoundDeadline(roundNumber, deadline, state.user.id);
     const fetched = await fetchFullState(state.user.id);
     if (fetched) {
       const currentAdminTab = state.adminTab;
@@ -706,7 +867,7 @@ async function saveRoundDeadline(roundNumber, deadlineVal) {
 
 async function activateRound(roundNumber) {
   if (hasSupabaseConfig) {
-    await dbActivateRound(roundNumber);
+    await dbActivateRound(roundNumber, state.user.id);
     const fetched = await fetchFullState(state.user.id);
     if (fetched) {
       const currentAdminTab = state.adminTab;
@@ -736,7 +897,7 @@ async function activateRound(roundNumber) {
 
 async function deactivateRound(roundNumber) {
   if (hasSupabaseConfig) {
-    await dbDeactivateRound(roundNumber);
+    await dbDeactivateRound(roundNumber, state.user.id);
     const fetched = await fetchFullState(state.user.id);
     if (fetched) {
       const currentAdminTab = state.adminTab;
@@ -940,7 +1101,7 @@ function render() {
   });
 
   app.querySelectorAll('[data-action]').forEach((element) => {
-    element.addEventListener('click', () => {
+    element.addEventListener('click', async () => {
       const action = element.dataset.action;
       const value = element.dataset.value;
       if (action === 'setReportTab') {
@@ -1000,10 +1161,27 @@ function render() {
       if (action === 'editReport') editReport();
       if (action === 'toggleReportPick') toggleReportPick(value);
       if (action === 'submitSingleReport') submitSingleReport();
+      if (action === 'pasteDeckLink') pasteDeckLink();
+      if (action === 'fetchDeck') fetchDeck();
+      if (action === 'removeDeck') removeDeck();
       if (action === 'pickSticker') pickSticker(value);
       if (action === 'completePicks') completePicks();
       if (action === 'resetMatch') resetMatch();
       if (action === 'goAlbum') {
+        const reveal = state.reveal;
+        if (reveal && reveal.pack && reveal.pack.isPendingPack) {
+          if (hasSupabaseConfig) {
+            await dbOpenPendingPack(reveal.pack.id);
+            const fetched = await fetchFullState(state.user.id);
+            if (fetched) {
+              state = fetched;
+            }
+          } else {
+            reveal.pack.stickerIds.forEach(id => {
+              state.collection[id] = { quantity: 1, isNew: true, source: 'pack' };
+            });
+          }
+        }
         state.reveal = null;
         setRoute('album');
       }
@@ -1021,6 +1199,10 @@ function render() {
       }
       if (action === 'setAdminTab') setAdminTab(value);
       if (action === 'confirmWO') confirmWO(value);
+      if (action === 'releasePacks') {
+        const matchId = element.dataset.match;
+        releasePacks(matchId);
+      }
       if (action === 'unfreezeMatch') unfreezeMatch(value);
       if (action === 'adminAddSticker') {
         const playerId = element.dataset.player;

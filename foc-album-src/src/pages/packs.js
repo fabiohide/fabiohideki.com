@@ -17,7 +17,7 @@ export function renderPacks(state) {
         </div>
       </div>
 
-      ${reveal ? renderReveal(reveal, state.collection) : ''}
+      ${reveal ? renderReveal(reveal, state.collection, state) : ''}
     </section>
   `;
 }
@@ -39,7 +39,7 @@ function renderPack(pack) {
   `;
 }
 
-function renderReveal(reveal, collection) {
+function renderReveal(reveal, collection, state) {
   // Inicializa estados do reveal se não definidos
   reveal.flippedIndexes = reveal.flippedIndexes || [];
   reveal.ripped = reveal.ripped || false;
@@ -57,7 +57,7 @@ function renderReveal(reveal, collection) {
             <img src="${getAssetUrl('/assets/sticker_back.webp')}" alt="Verso" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
           </div>
           <div class="flip-card-front">
-            ${stickerCard(id, collection, { small: true, forceOwned: true })}
+            ${stickerCard(id, collection, { small: true, forceOwned: true, noAction: true })}
           </div>
         </div>
       </div>
@@ -67,6 +67,16 @@ function renderReveal(reveal, collection) {
   const stateClass = reveal.ripped ? 'state-revealing' : 'state-unopened';
   const allFlipped = reveal.flippedIndexes.length === reveal.pack.stickerIds.length;
   const actionsStyle = allFlipped ? 'opacity: 1; pointer-events: auto;' : 'opacity: 0; pointer-events: none;';
+
+  const isPending = reveal.pack.isPendingPack;
+  const eyebrowText = isPending ? 'Pacotinho de Match' : (reveal.pack.type === 'crest' ? 'Pacotinho dourado' : 'Pacotinho inicial');
+  
+  let h2Text = `${reveal.newIds.length} novas figurinhas!`;
+  if (isPending && state) {
+    const opp = reveal.pack.subtitle || 'Adversário';
+    const roundPart = reveal.pack.title.replace('Pacotinho ', '');
+    h2Text = `${roundPart} - ${state.user.name} ${opp}`;
+  }
 
   return `
     <div class="reveal-overlay ${stateClass}" id="revealOverlay">
@@ -94,8 +104,8 @@ function renderReveal(reveal, collection) {
       <!-- Fase 2: Figurinhas Reveladas Uma a Uma -->
       <div class="cards-reveal-stage">
         <div class="reveal-header">
-          <p class="eyebrow">${reveal.pack.type === 'crest' ? 'Pacotinho dourado' : 'Pacotinho inicial'}</p>
-          <h2>${reveal.newIds.length} novas figurinhas!</h2>
+          <p class="eyebrow">${eyebrowText}</p>
+          <h2>${h2Text}</h2>
           <p class="reveal-hint">Clique nas figurinhas para revelá-las</p>
         </div>
         <div class="reveal-cards-grid" id="revealCardsGrid">
@@ -165,11 +175,13 @@ function setupCardsReveal(overlay, reveal, state) {
   overlay._cardsInitialized = true;
 
   const cards = overlay.querySelectorAll('.flip-card');
+  console.log('cards queried:', cards.length);
   const actionsContainer = overlay.querySelector('.reveal-actions');
 
   cards.forEach(card => {
     card.addEventListener('click', () => {
       const index = parseInt(card.dataset.index, 10);
+      console.log('card clicked', index);
       if (reveal.flippedIndexes.includes(index) || card.classList.contains('is-charging')) return;
 
       const stickerId = reveal.pack.stickerIds[index];
