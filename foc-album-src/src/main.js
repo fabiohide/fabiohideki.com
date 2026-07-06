@@ -285,11 +285,11 @@ async function fetchDeck() {
   const input = document.getElementById('deck-link-input');
   const errorEl = document.getElementById('deck-fetch-error');
   if (!input) return;
-  
+
   const url = input.value.trim();
   if (errorEl) errorEl.style.display = 'none';
 
-  const matchUuid = url.match(/decks\/([^/]+)/);
+  const matchUuid = url.match(/decks\/([^/?]+)/);
   if (!matchUuid) {
     if (errorEl) {
       errorEl.textContent = 'URL do Decks of KeyForge inválida.';
@@ -297,7 +297,7 @@ async function fetchDeck() {
     }
     return;
   }
-  
+
   const uuid = matchUuid[1];
   const searchBtn = document.querySelector('[data-action="fetchDeck"]');
   if (searchBtn) {
@@ -305,38 +305,65 @@ async function fetchDeck() {
     searchBtn.textContent = 'Buscando...';
   }
 
-  try {
-    const proxy = 'https://corsproxy.io/?';
-    const apiUrl = `https://www.decksofkeyforge.com/api/decks/${uuid}`;
-    const response = await fetch(`${proxy}${encodeURIComponent(apiUrl)}`);
-    if (!response.ok) throw new Error('Falha no proxy ou API do DoK.');
-    
-    const data = await response.json();
-    const deckInfo = parseDokResponse(data);
+  const apiUrl = `https://decksofkeyforge.com/api/decks/${uuid}`;
 
-    state.report.deckName = deckInfo.name;
-    state.report.deckSas = deckInfo.sas;
-    state.report.deckSet = deckInfo.expansion;
-    state.report.deckHouses = deckInfo.houses.join(',');
-    state.report.deckUrl = url;
-
-    // Prefill houses in player selection
-    state.selectedHouseCodes = deckInfo.houses;
-    state.selectedPickIds = []; // clear previous picks
-
-    render();
-  } catch (err) {
-    console.error(err);
-    if (errorEl) {
-      errorEl.textContent = 'Erro ao buscar o deck. Verifique a conexão.';
-      errorEl.style.display = 'block';
+  const proxies = [
+    {
+      name: 'corsfix',
+      buildUrl: (t) => `https://proxy.corsfix.com/?url=${encodeURIComponent(t)}`,
+      extractJson: async (res) => res.json()
+    },
+    {
+      name: 'corsproxy.io',
+      buildUrl: (t) => `https://corsproxy.io/?${encodeURIComponent(t)}`,
+      extractJson: async (res) => res.json()
+    },
+    {
+      name: 'allorigins',
+      buildUrl: (t) => `https://api.allorigins.win/get?url=${encodeURIComponent(t)}`,
+      extractJson: async (res) => { const w = await res.json(); return JSON.parse(w.contents); }
+    },
+    {
+      name: 'thingproxy',
+      buildUrl: (t) => `https://thingproxy.freeboard.io/fetch/${t}`,
+      extractJson: async (res) => res.json()
     }
-  } finally {
-    if (searchBtn) {
-      searchBtn.disabled = false;
-      searchBtn.textContent = 'Buscar';
+  ];
+
+  let lastError = null;
+
+  for (const proxy of proxies) {
+    try {
+      if (searchBtn) searchBtn.textContent = `Buscando...`;
+      const response = await fetch(proxy.buildUrl(apiUrl), { signal: AbortSignal.timeout(8000) });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await proxy.extractJson(response);
+      const deckInfo = parseDokResponse(data);
+
+      state.report.deckName = deckInfo.name;
+      state.report.deckSas = deckInfo.sas;
+      state.report.deckSet = deckInfo.expansion;
+      state.report.deckHouses = deckInfo.houses.join(',');
+      state.report.deckUrl = url;
+
+      state.selectedHouseCodes = deckInfo.houses;
+      state.selectedPickIds = [];
+
+      render();
+      if (searchBtn) { searchBtn.disabled = false; searchBtn.textContent = 'Buscar'; }
+      return;
+    } catch (err) {
+      console.warn(`[fetchDeck] Proxy "${proxy.name}" falhou:`, err.message);
+      lastError = err;
     }
   }
+
+  console.error('[fetchDeck] Todos os proxies falharam:', lastError);
+  if (errorEl) {
+    errorEl.textContent = 'Erro ao buscar o deck. Tente novamente em alguns segundos.';
+    errorEl.style.display = 'block';
+  }
+  if (searchBtn) { searchBtn.disabled = false; searchBtn.textContent = 'Buscar'; }
 }
 
 function removeDeck() {

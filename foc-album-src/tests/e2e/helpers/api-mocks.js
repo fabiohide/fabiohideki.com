@@ -289,7 +289,7 @@ export async function setupMocks(page, customState = {}) {
   });
 
   // Intercept CORS Proxy to Decks of Keyforge API
-  await page.route(/.*corsproxy\.io.*/, async (route) => {
+  await page.route(/.*(corsproxy\.io|corsfix\.com|allorigins|thingproxy).*/, async (route) => {
     const urlString = route.request().url();
     const queryParamIndex = urlString.indexOf('?');
     const targetUrl = queryParamIndex !== -1 ? decodeURIComponent(urlString.substring(queryParamIndex + 1)) : '';
