@@ -305,7 +305,8 @@ async function fetchDeck() {
     searchBtn.textContent = 'Buscando...';
   }
 
-  const apiUrl = `https://decksofkeyforge.com/api/decks/${uuid}`;
+  const apiUrl = `https://decksofkeyforge.com/public-api/v3/decks/${uuid}`;
+  const apiKey = import.meta.env.VITE_DOK_API_KEY || '0c706f43-10a9-4800-9676-f36a2adc1973';
 
   const proxies = [
     {
@@ -335,7 +336,12 @@ async function fetchDeck() {
   for (const proxy of proxies) {
     try {
       if (searchBtn) searchBtn.textContent = `Buscando...`;
-      const response = await fetch(proxy.buildUrl(apiUrl), { signal: AbortSignal.timeout(8000) });
+      const response = await fetch(proxy.buildUrl(apiUrl), {
+        headers: {
+          'Api-Key': apiKey
+        },
+        signal: AbortSignal.timeout(8000)
+      });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await proxy.extractJson(response);
       const deckInfo = parseDokResponse(data);
