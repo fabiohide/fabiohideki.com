@@ -306,7 +306,7 @@ async function fetchDeck() {
   }
 
   const apiUrl = `https://decksofkeyforge.com/public-api/v3/decks/${uuid}`;
-  const apiKey = import.meta.env.VITE_DOK_API_KEY || '0c706f43-10a9-4800-9676-f36a2adc1973';
+  const apiKey = import.meta.env.VITE_DOK_API_KEY || '683e90ac-3321-437b-bc8a-e40ee2c248eb';
 
   const proxies = [
     {

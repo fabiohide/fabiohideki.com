@@ -9,6 +9,7 @@ export const HOUSE_NAME_TO_CODE = {
   'untamed': 'UNT',
   'saurian': 'SAU',
   'star alliance': 'STA',
+  'staralliance': 'STA',
   'unfathomable': 'UNF',
   'ekwidon': 'EKW',
   'geistoid': 'GST',

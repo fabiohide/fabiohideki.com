@@ -1,5 +1,22 @@
 import { HOUSE_NAME_TO_CODE } from './validation.js';
 
+const EXPANSION_MAP = {
+  'CALL_OF_THE_ARCHONS': 'COTA',
+  'AGE_OF_ASCENSION': 'AOA',
+  'WORLDS_COLLIDE': 'WC',
+  'MASS_MUTATION': 'MM',
+  'DARK_TIDINGS': 'DT',
+  'WINDS_OF_EXCHANGE': 'WOE',
+  'GRIM_REMINDERS': 'GR',
+  'AEMBER_SKIES': 'AS',
+  'MORE_MUTATION': 'MOM',
+  'TOKENS_OF_CHANGE': 'TOC',
+  'UNCHAINED_2022': 'UNC',
+  'VAULT_MASTERS_2023': 'VM23',
+  'VAULT_MASTERS_2024': 'VM24',
+  'VAULT_MASTERS_2025': 'VM25'
+};
+
 export function parseDokResponse(data) {
   if (!data || !data.deck) {
     throw new Error('Formato de resposta inválido do DoK.');
@@ -7,7 +24,10 @@ export function parseDokResponse(data) {
   const deck = data.deck;
   const name = deck.name;
   const sas = Number(deck.sasRating);
-  const expansion = deck.expansion || 'COTA';
+  
+  // Map verbose expansion name (e.g., MORE_MUTATION) to standard code (e.g., MOM)
+  const rawExpansion = deck.expansion || 'COTA';
+  const expansion = EXPANSION_MAP[rawExpansion.toUpperCase()] || rawExpansion;
   
   let houses = [];
   if (Array.isArray(deck.houses)) {
@@ -16,10 +36,12 @@ export function parseDokResponse(data) {
       if (h && typeof h === 'object') return h.name || h.house || '';
       return '';
     }).filter(Boolean);
+  } else if (Array.isArray(deck.housesAndCards)) {
+    houses = deck.housesAndCards.map(hc => hc.house).filter(Boolean);
   }
   
   const houseCodes = houses.map(name => {
-    const clean = name.toLowerCase().trim();
+    const clean = name.toLowerCase().replace(/\s+/g, '').trim();
     return HOUSE_NAME_TO_CODE[clean] || null;
   }).filter(Boolean);
 
