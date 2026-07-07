@@ -304,8 +304,6 @@ function renderSingleReportForm(state) {
       );
       
       const oppEligibleInSelected = oppEligible.filter(s => selectedCodes.includes(s.house));
-      const oppHousesWithStickers = [...new Set(oppEligible.map(s => s.house))];
-      const sharedCount = selectedCodes.filter(h => oppHousesWithStickers.includes(h)).length;
       
       let pool = [];
       let maxPicks = myKeys;
@@ -313,11 +311,10 @@ function renderSingleReportForm(state) {
       let ruleLabelText = '';
       
       if (oppEligible.length >= 3) {
-        maxPicks = Math.min(myKeys, sharedCount);
         pool = oppEligibleInSelected.map(s => ({ ...s, source: 'opponent' }));
-        ruleLabelText = `O oponente possui pelo menos 3 figurinhas inéditas. Como você selecionou ${sharedCount} casa(s) que ele tem stickers, você pode escolher até ${maxPicks} figurinha(s).`;
+        maxPicks = Math.min(myKeys, pool.length);
+        ruleLabelText = `O oponente possui pelo menos 3 figurinhas inéditas. Você pode escolher até ${maxPicks} figurinha(s) inédita(s) dele nas casas selecionadas.`;
       } else {
-        maxPicks = myKeys;
         const playerMissing = PLAYER_STICKERS.filter(s => 
           selectedCodes.includes(s.house) && 
           (!state.collection[s.id] || state.collection[s.id].quantity === 0)
@@ -334,8 +331,9 @@ function renderSingleReportForm(state) {
         });
         
         pool = Array.from(poolMap.values());
+        maxPicks = Math.min(myKeys, pool.length);
         isFallback = true;
-        ruleLabelText = `O oponente possui apenas ${oppEligible.length} figurinha(s) inédita(s). Você pode pegar as dele mais figurinhas da(s) casa(s) restante(s) do seu deck (fallback) para somar ${maxPicks}.`;
+        ruleLabelText = `O oponente possui apenas ${oppEligible.length} figurinha(s) inédita(s). Você pode pegar as dele mais figurinhas da(s) casa(s) restante(s) do seu deck (fallback) para somar até ${maxPicks}.`;
       }
 
       picksSectionHtml = `
@@ -397,12 +395,30 @@ function renderSingleReportForm(state) {
       state.opponentCollection[s.id] && 
       (!state.collection[s.id] || state.collection[s.id].quantity === 0)
     );
-    const oppHousesWithStickers = [...new Set(oppEligible.map(s => s.house))];
-    const sharedCount = selectedCodes.filter(h => oppHousesWithStickers.includes(h)).length;
+    const oppEligibleInSelected = oppEligible.filter(s => selectedCodes.includes(s.house));
     
+    let pool = [];
     let maxPicks = myKeys;
     if (oppEligible.length >= 3) {
-      maxPicks = Math.min(myKeys, sharedCount);
+      pool = oppEligibleInSelected;
+      maxPicks = Math.min(myKeys, pool.length);
+    } else {
+      const playerMissing = PLAYER_STICKERS.filter(s => 
+        selectedCodes.includes(s.house) && 
+        (!state.collection[s.id] || state.collection[s.id].quantity === 0)
+      );
+      
+      const poolMap = new Map();
+      oppEligibleInSelected.forEach(s => {
+        poolMap.set(s.id, s);
+      });
+      playerMissing.forEach(s => {
+        if (!poolMap.has(s.id)) {
+          poolMap.set(s.id, s);
+        }
+      });
+      pool = Array.from(poolMap.values());
+      maxPicks = Math.min(myKeys, pool.length);
     }
     correctPicks = myKeys === 0 || state.selectedPickIds.length === maxPicks;
   }

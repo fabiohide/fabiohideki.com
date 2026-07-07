@@ -284,14 +284,39 @@ function toggleReportPick(stickerId) {
   if (!state.selectedPickIds) state.selectedPickIds = [];
   const index = state.selectedPickIds.indexOf(stickerId);
   const selectedCodes = state.selectedHouseCodes || [];
+  const myKeys = state.report.playerAKeys;
 
-  const eligible = PLAYER_STICKERS
-    .filter(s => selectedCodes.includes(s.house))
-    .filter(s => state.opponentCollection[s.id])
-    .filter(s => !state.collection[s.id] || state.collection[s.id].quantity === 0);
-
-  const isFallback = eligible.length === 0;
-  const maxPicks = isFallback ? state.report.playerAKeys : Math.min(state.report.playerAKeys, eligible.length);
+  const oppEligible = PLAYER_STICKERS.filter(s => 
+    state.opponentCollection[s.id] && 
+    (!state.collection[s.id] || state.collection[s.id].quantity === 0)
+  );
+  
+  const oppEligibleInSelected = oppEligible.filter(s => selectedCodes.includes(s.house));
+  
+  let pool = [];
+  let maxPicks = myKeys;
+  
+  if (oppEligible.length >= 3) {
+    pool = oppEligibleInSelected;
+    maxPicks = Math.min(myKeys, pool.length);
+  } else {
+    const playerMissing = PLAYER_STICKERS.filter(s => 
+      selectedCodes.includes(s.house) && 
+      (!state.collection[s.id] || state.collection[s.id].quantity === 0)
+    );
+    
+    const poolMap = new Map();
+    oppEligibleInSelected.forEach(s => {
+      poolMap.set(s.id, s);
+    });
+    playerMissing.forEach(s => {
+      if (!poolMap.has(s.id)) {
+        poolMap.set(s.id, s);
+      }
+    });
+    pool = Array.from(poolMap.values());
+    maxPicks = Math.min(myKeys, pool.length);
+  }
 
   if (index > -1) {
     state.selectedPickIds.splice(index, 1);
@@ -1243,12 +1268,30 @@ function render() {
             state.opponentCollection[s.id] &&
             (!state.collection[s.id] || state.collection[s.id].quantity === 0)
           );
-          const oppHousesWithStickers = [...new Set(oppEligible.map(s => s.house))];
-          const sharedCount = selectedCodes.filter(h => oppHousesWithStickers.includes(h)).length;
+          const oppEligibleInSelected = oppEligible.filter(s => selectedCodes.includes(s.house));
 
+          let pool = [];
           let maxPicks = myKeys;
           if (oppEligible.length >= 3) {
-            maxPicks = Math.min(myKeys, sharedCount);
+            pool = oppEligibleInSelected;
+            maxPicks = Math.min(myKeys, pool.length);
+          } else {
+            const playerMissing = PLAYER_STICKERS.filter(s =>
+              selectedCodes.includes(s.house) &&
+              (!state.collection[s.id] || state.collection[s.id].quantity === 0)
+            );
+
+            const poolMap = new Map();
+            oppEligibleInSelected.forEach(s => {
+              poolMap.set(s.id, s);
+            });
+            playerMissing.forEach(s => {
+              if (!poolMap.has(s.id)) {
+                poolMap.set(s.id, s);
+              }
+            });
+            pool = Array.from(poolMap.values());
+            maxPicks = Math.min(myKeys, pool.length);
           }
           correctPicks = myKeys === 0 || state.selectedPickIds.length === maxPicks;
         }
