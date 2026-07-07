@@ -309,11 +309,21 @@ async function submitSingleReport() {
   report.deckHouses = state.selectedHouseCodes.join(',');
 
   if (state.selectedHouseCodes.length !== 3) {
-    alert('Por favor, selecione as 3 casas do seu deck.');
+    state.reportModal = {
+      type: 'error',
+      title: 'Seleção Incompleta',
+      message: 'Por favor, selecione exatamente 3 casas para o seu deck.'
+    };
+    render();
     return;
   }
   if (!report.deckUrl) {
-    alert('Por favor, insira o link do seu deck.');
+    state.reportModal = {
+      type: 'error',
+      title: 'Link Ausente',
+      message: 'Por favor, insira o link do seu deck.'
+    };
+    render();
     return;
   }
 
@@ -341,11 +351,23 @@ async function submitSingleReport() {
         state = fetched;
         state.report.reported = true;
         state.report.completed = true;
-        state.showSuccessModal = true;
+        state.reportModal = {
+          type: 'success',
+          title: 'Reporte Enviado!',
+          message: 'Seu reporte de partida foi salvo com sucesso.'
+        };
       }
     } catch (err) {
       console.error(err);
-      alert('Erro ao submeter o reporte.');
+      state.reportModal = {
+        type: 'error',
+        title: 'Falha no Reporte',
+        message: err.message || 'Ocorreu um erro ao enviar o reporte. Verifique sua conexão ou se a assinatura da função no banco de dados está atualizada.'
+      };
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Reportar Partida';
+      }
     }
   } else {
     // Offline Simulation
@@ -361,8 +383,17 @@ async function submitSingleReport() {
       }
     });
     
-    state.showSuccessModal = true;
+    state.reportModal = {
+      type: 'success',
+      title: 'Reporte Simulado!',
+      message: 'Seu reporte foi simulado com sucesso no modo offline.'
+    };
   }
+  render();
+}
+
+function closeReportModal() {
+  state.reportModal = null;
   render();
 }
 
@@ -1099,6 +1130,7 @@ function render() {
       if (action === 'editReport') editReport();
       if (action === 'toggleReportPick') toggleReportPick(value);
       if (action === 'submitSingleReport') submitSingleReport();
+      if (action === 'closeReportModal') closeReportModal();
       if (action === 'pasteDeckLink') pasteDeckLink();
       if (action === 'fetchDeck') fetchDeck();
       if (action === 'removeDeck') removeDeck();

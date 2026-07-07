@@ -418,22 +418,35 @@ function renderSingleReportForm(state) {
       </button>
     </div>
     
-    ${state.showSuccessModal ? renderSuccessModal() : ''}
+    ${renderReportModal(state)}
   `;
 }
 
-function renderSuccessModal() {
+function renderReportModal(state) {
+  if (!state.reportModal) return '';
+  const m = state.reportModal;
+  const isSuccess = m.type === 'success';
+  const icon = isSuccess ? '✓' : '✕';
+  const iconColor = isSuccess ? 'var(--color-green)' : '#ff4d4d';
+  
   return `
-    <div class="highlight-overlay" id="successReportModal">
-      <div class="highlight-overlay-bg"></div>
-      <div class="highlight-content" style="background: var(--color-carbon); padding: 28px; border-radius: var(--radius-lg); border: 1.5px solid rgba(255,255,255,0.08); text-align: center; max-width: 360px; box-shadow: var(--shadow-deep); z-index: 2001;">
-        <span style="font-size: 2.8rem; color: var(--color-green); display: block; margin-bottom: 8px;">✓</span>
-        <h3 style="font-family: var(--font-display); color: var(--color-paper); margin: 0 0 6px; font-size: 1.25rem;">Reporte Enviado!</h3>
-        <p style="font-size: 0.85rem; color: var(--color-ash); margin: 0 0 20px; line-height: 1.4;">Seu reporte de partida foi salvo com sucesso.</p>
+    <div class="highlight-overlay" id="reportResultModal">
+      <div class="highlight-overlay-bg" data-action="closeReportModal"></div>
+      <div class="highlight-content" style="background: var(--color-carbon); padding: 28px; border-radius: var(--radius-lg); border: 1.5px solid rgba(255, 255, 255, 0.08); text-align: center; max-width: 360px; box-shadow: var(--shadow-deep); z-index: 2001; display: flex; flex-direction: column; align-items: center;">
+        <span style="font-size: 2.8rem; color: ${iconColor}; display: block; margin-bottom: 8px; font-weight: bold; line-height: 1;">${icon}</span>
+        <h3 style="font-family: var(--font-display); color: var(--color-paper); margin: 0 0 8px; font-size: 1.25rem; font-weight: 700; text-transform: uppercase;">${m.title}</h3>
+        <p style="font-size: 0.85rem; color: var(--color-ash); margin: 0 0 20px; line-height: 1.4; text-align: center;">${m.message}</p>
         
         <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
-          <button class="button button-primary" data-action="goAlbum" style="width: 100%; margin: 0; height: 36px; font-size: 0.82rem; font-weight: bold;">Ver Álbum</button>
-          <button class="button button-secondary" data-action="setRoute" data-value="table" style="width: 100%; margin: 0; height: 36px; font-size: 0.82rem; font-weight: bold;">Ver Classificação (Tabela)</button>
+          ${isSuccess 
+            ? `
+              <button class="button button-primary" data-action="goAlbum" style="width: 100%; margin: 0; height: 36px; font-size: 0.82rem; font-weight: bold; font-family: 'Fixture', sans-serif; text-transform: uppercase;">Ver Álbum</button>
+              <button class="button button-secondary" data-action="closeReportModal" style="width: 100%; margin: 0; height: 36px; font-size: 0.82rem; font-weight: bold; font-family: 'Fixture', sans-serif; text-transform: uppercase;">Fechar</button>
+            `
+            : `
+              <button class="button button-primary" data-action="closeReportModal" style="width: 100%; margin: 0; height: 36px; font-size: 0.82rem; font-weight: bold; font-family: 'Fixture', sans-serif; text-transform: uppercase;">Tentar Novamente</button>
+            `
+          }
         </div>
       </div>
     </div>
