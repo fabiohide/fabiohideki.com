@@ -306,11 +306,7 @@ function toggleReportPick(stickerId) {
 async function submitSingleReport() {
   const report = state.report;
   
-  // Save selected houses and placeholder details
   report.deckHouses = state.selectedHouseCodes.join(',');
-  report.deckName = report.deckName || 'Deck do Jogador';
-  report.deckSas = report.deckSas || 0;
-  report.deckSet = report.deckSet || 'FOC';
 
   if (state.selectedHouseCodes.length !== 3) {
     alert('Por favor, selecione as 3 casas do seu deck.');
@@ -337,9 +333,6 @@ async function submitSingleReport() {
         report.playerAKeys,
         report.playerBKeys,
         pickedIds,
-        report.deckName,
-        report.deckSas,
-        report.deckSet,
         report.deckUrl
       );
       

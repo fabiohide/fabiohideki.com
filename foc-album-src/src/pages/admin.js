@@ -105,7 +105,7 @@ function renderValidationTab(state) {
                       ${m.player_a_reported ? `
                         <div style="margin-top: 4px; color: var(--color-paper);">
                           Placar: <strong>${m.player_a_keys}</strong> (suas) x <strong>${m.player_a_opp_keys}</strong> (oponente)<br/>
-                          Deck: ${m.player_a_deck_name || 'N/A'} (SAS: ${m.player_a_deck_sas || 'N/A'})<br/>
+                          Deck: ${m.player_a_deck_url ? `<a href="${m.player_a_deck_url}" target="_blank" style="color: var(--color-gold); text-decoration: underline; font-size: 0.8rem;">Link do Deck</a>` : 'N/A'}<br/>
                           Picks: <code style="color: var(--color-gold);">${m.player_a_picks || 'Nenhum'}</code>
                         </div>
                       ` : '<div style="color: var(--color-ash); font-style: italic; margin-top: 4px;">Não reportou ainda</div>'}
@@ -117,7 +117,7 @@ function renderValidationTab(state) {
                       ${m.player_b_reported ? `
                         <div style="margin-top: 4px; color: var(--color-paper);">
                           Placar: <strong>${m.player_b_keys}</strong> (suas) x <strong>${m.player_b_opp_keys}</strong> (oponente)<br/>
-                          Deck: ${m.player_b_deck_name || 'N/A'} (SAS: ${m.player_b_deck_sas || 'N/A'})<br/>
+                          Deck: ${m.player_b_deck_url ? `<a href="${m.player_b_deck_url}" target="_blank" style="color: var(--color-gold); text-decoration: underline; font-size: 0.8rem;">Link do Deck</a>` : 'N/A'}<br/>
                           Picks: <code style="color: var(--color-gold);">${m.player_b_picks || 'Nenhum'}</code>
                         </div>
                       ` : '<div style="color: var(--color-ash); font-style: italic; margin-top: 4px;">Não reportou ainda</div>'}

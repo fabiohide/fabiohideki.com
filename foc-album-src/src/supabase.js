@@ -462,7 +462,7 @@ export async function dbOpenPack(username, stickerIds, packType, roundNumber, pl
 }
 
 // 3. Submete o reporte de etapa única (incluindo deck e picks)
-export async function dbSubmitSingleReport(matchId, houses, myKeys, oppKeys, picks, deckName, deckSas, deckSet, deckUrl) {
+export async function dbSubmitSingleReport(matchId, houses, myKeys, oppKeys, picks, deckUrl) {
   if (!supabase) return;
 
   const housesStr = Array.isArray(houses) ? houses.join(',') : houses;
@@ -474,9 +474,6 @@ export async function dbSubmitSingleReport(matchId, houses, myKeys, oppKeys, pic
     p_my_keys: myKeys,
     p_opp_keys: oppKeys,
     p_picks: picksStr,
-    p_deck_name: deckName,
-    p_deck_sas: deckSas,
-    p_deck_set: deckSet,
     p_deck_url: deckUrl
   });
 }

@@ -104,9 +104,6 @@ export async function setupMocks(page, customState = {}) {
             match.player_a_keys = body.p_my_keys;
             match.player_a_opp_keys = body.p_opp_keys;
             match.player_a_picks = body.p_picks;
-            match.player_a_deck_name = body.p_deck_name;
-            match.player_a_deck_sas = body.p_deck_sas;
-            match.player_a_deck_set = body.p_deck_set;
             match.player_a_deck_url = body.p_deck_url;
             match.player_a_reported = true;
           } else {
@@ -114,9 +111,6 @@ export async function setupMocks(page, customState = {}) {
             match.player_b_keys = body.p_my_keys;
             match.player_b_opp_keys = body.p_opp_keys;
             match.player_b_picks = body.p_picks;
-            match.player_b_deck_name = body.p_deck_name;
-            match.player_b_deck_sas = body.p_deck_sas;
-            match.player_b_deck_set = body.p_deck_set;
             match.player_b_deck_url = body.p_deck_url;
             match.player_b_reported = true;
           }
