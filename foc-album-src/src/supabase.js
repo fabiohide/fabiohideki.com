@@ -468,7 +468,7 @@ export async function dbSubmitSingleReport(matchId, houses, myKeys, oppKeys, pic
   const housesStr = Array.isArray(houses) ? houses.join(',') : houses;
   const picksStr = Array.isArray(picks) ? picks.join(',') : (picks || '');
 
-  await supabase.rpc('foc2026_submit_single_report', {
+  const { error } = await supabase.rpc('foc2026_submit_single_report', {
     p_match_id: matchId,
     p_houses: housesStr,
     p_my_keys: myKeys,
@@ -476,6 +476,10 @@ export async function dbSubmitSingleReport(matchId, houses, myKeys, oppKeys, pic
     p_picks: picksStr,
     p_deck_url: deckUrl
   });
+
+  if (error) {
+    throw new Error(error.message || 'Erro ao submeter o reporte.');
+  }
 }
 
 // Deprecated stubs to prevent build errors
@@ -506,9 +510,12 @@ export async function dbCreatePendingPack(playerUsername, roundNumber, opponentN
 // 5. Abre o pacote pendente na coleção (chamado ao clicar em Ver Álbum)
 export async function dbOpenPendingPack(packId) {
   if (!supabase) return;
-  await supabase.rpc('foc2026_open_pending_pack', {
+  const { error } = await supabase.rpc('foc2026_open_pending_pack', {
     p_pack_id: packId
   });
+  if (error) {
+    throw new Error(error.message || 'Erro ao abrir o pacote.');
+  }
 }
 
 // 5b. Libera os pacotes da rodada para ambos os jogadores
@@ -518,7 +525,7 @@ export async function dbReleaseMatchPacks(matchId, playerA, playerB, roundNumber
   const aPicksArr = Array.isArray(aPicks) ? aPicks : (aPicks ? aPicks.split(',').filter(Boolean) : []);
   const bPicksArr = Array.isArray(bPicks) ? bPicks : (bPicks ? bPicks.split(',').filter(Boolean) : []);
 
-  await supabase.rpc('foc2026_release_match_packs', {
+  const { error } = await supabase.rpc('foc2026_release_match_packs', {
     p_match_id: matchId,
     p_player_a: playerA,
     p_player_b: playerB,
@@ -528,6 +535,10 @@ export async function dbReleaseMatchPacks(matchId, playerA, playerB, roundNumber
     p_player_a_picks: aPicksArr,
     p_player_b_picks: bPicksArr
   });
+
+  if (error) {
+    throw new Error(error.message || 'Erro ao liberar pacotes.');
+  }
 
   await supabase.from('foc2026_admin_logs').insert({
     message: `Admin confirmou a partida ${matchId} (${aName} vs ${bName}) e liberou os pacotes de figurinhas`,

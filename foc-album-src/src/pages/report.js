@@ -51,6 +51,8 @@ export function renderReport(state) {
       </div>
 
       ${activeTab === 'challenges' ? renderChallengesContent(state) : renderMatchReportContent(state)}
+      
+      ${renderReportModal(state)}
     </section>
   `;
 }
@@ -417,8 +419,6 @@ function renderSingleReportForm(state) {
         Reportar Partida
       </button>
     </div>
-    
-    ${renderReportModal(state)}
   `;
 }
 

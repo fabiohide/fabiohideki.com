@@ -127,7 +127,7 @@ async function openPack(packId) {
     pack.stickerIds.forEach((id) => {
       state.collection[id] = { quantity: 1, isNew: true, source: 'pack' };
       newIds.push(id);
-      
+
       if (!state.stickersLog) state.stickersLog = [];
       state.stickersLog.push({
         round: state.activeRound.number,
@@ -238,7 +238,7 @@ async function reportMatch() {
     state.report.confirmedAt = new Date().toISOString();
   }
   render();
-  
+
   if (hasSupabaseConfig) {
     await dbReportMatch(state.report.matchId, state.user.id, state.report.playerAKeys, state.report.isPlayerA);
     const fetched = await fetchFullState(state.user.id);
@@ -284,7 +284,7 @@ function toggleReportPick(stickerId) {
   if (!state.selectedPickIds) state.selectedPickIds = [];
   const index = state.selectedPickIds.indexOf(stickerId);
   const selectedCodes = state.selectedHouseCodes || [];
-  
+
   const eligible = PLAYER_STICKERS
     .filter(s => selectedCodes.includes(s.house))
     .filter(s => state.opponentCollection[s.id])
@@ -305,7 +305,7 @@ function toggleReportPick(stickerId) {
 
 async function submitSingleReport() {
   const report = state.report;
-  
+
   report.deckHouses = state.selectedHouseCodes.join(',');
 
   if (state.selectedHouseCodes.length !== 3) {
@@ -345,7 +345,7 @@ async function submitSingleReport() {
         pickedIds,
         report.deckUrl
       );
-      
+
       const fetched = await fetchFullState(state.user.id);
       if (fetched) {
         state = fetched;
@@ -374,7 +374,7 @@ async function submitSingleReport() {
     state.report.housesSubmitted = true;
     state.report.reported = true;
     state.report.completed = true;
-    
+
     pickedIds.forEach(id => {
       if (state.collection[id]) {
         state.collection[id].quantity += 1;
@@ -382,7 +382,7 @@ async function submitSingleReport() {
         state.collection[id] = { quantity: 1, source: 'pick', isNew: true };
       }
     });
-    
+
     state.reportModal = {
       type: 'success',
       title: 'Reporte Simulado!',
@@ -503,7 +503,7 @@ function claimChallenge(challengeId) {
   if (!challenge || challenge.completed || challenge.pendingValidation) return;
   const usedChallengeSlots = state.challenges.filter(c => c.completed || c.pendingValidation).length;
   if (usedChallengeSlots >= 4) return;
-  
+
   // Abre o modal de confirmação do desafio
   state.confirmChallengeId = challengeId;
   render();
@@ -525,10 +525,10 @@ async function approveChallenge(challengeId, playerUsername) {
     const pending = state.pendingChallenges || [];
     const challenge = pending.find(c => c.id === challengeId && c.playerUsername === playerUsername);
     if (!challenge) return;
-    
+
     const stickerId = challenge.pickedId;
     const playerName = challenge.playerName;
-    
+
     await dbApproveChallenge(playerUsername, challengeId, stickerId, state.activeRound.number, playerName, state.user.id);
     const fetched = await fetchFullState(state.user.id);
     if (fetched) state = fetched;
@@ -617,7 +617,7 @@ async function releasePacks(matchId) {
     // Offline Simulation
     match.packs_released = true;
     match.completed = true;
-    
+
     // Simular a criação de pending packs offline na lista de pacotes
     if (match.player_a_picks) {
       const stickerIds = match.player_a_picks.split(',').filter(Boolean);
@@ -649,7 +649,7 @@ async function releasePacks(matchId) {
         });
       }
     }
-    
+
     if (!state.adminLogs) state.adminLogs = [];
     state.adminLogs.push({
       timestamp: new Date().toISOString(),
@@ -672,14 +672,14 @@ async function confirmWO(matchId) {
     state.report.confirmed = true;
     state.report.completed = true;
     state.report.confirmedAt = new Date().toISOString();
-    
+
     if (!state.adminLogs) state.adminLogs = [];
     state.adminLogs.push({
       timestamp: new Date().toISOString(),
       message: `Confirmado W.O. (0 a 0) para a partida ${matchId}`
     });
   }
-  
+
   render();
 }
 
@@ -690,14 +690,14 @@ async function unfreezeMatch(matchId) {
     if (fetched) state = fetched;
   } else {
     state.activeRound.deadline = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-    
+
     if (!state.adminLogs) state.adminLogs = [];
     state.adminLogs.push({
       timestamp: new Date().toISOString(),
       message: `Partida ${matchId} descongelada. Prazo estendido por 24h.`
     });
   }
-  
+
   render();
 }
 
@@ -756,10 +756,10 @@ async function adminConfirmStickers(playerId) {
 
   if (hasSupabaseConfig) {
     try {
-      await Promise.all(changes.map(c => 
+      await Promise.all(changes.map(c =>
         dbAdminEditSticker(playerId, c.id, c.diff, player.name, state.user.id)
       ));
-      
+
       const fetched = await fetchFullState(state.user.id);
       if (fetched) {
         const currentAdminTab = state.adminTab;
@@ -785,7 +785,7 @@ async function adminConfirmStickers(playerId) {
 
       const label = c.diff > 0 ? 'adicionou' : 'removeu';
       const logMessage = `Admin ${label} a figurinha ${c.id} ${c.diff > 0 ? 'para' : 'de'} ${player.name}`;
-      
+
       if (!state.adminLogs) state.adminLogs = [];
       state.adminLogs.push({
         timestamp: new Date().toISOString(),
@@ -961,7 +961,7 @@ function renderLoginView() {
 function initLoginEvents() {
   const form = document.getElementById('loginForm');
   if (!form) return;
-  
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const usernameInput = document.getElementById('usernameInput');
@@ -969,15 +969,15 @@ function initLoginEvents() {
     const spinner = document.getElementById('loginSpinner');
     const btnText = submitBtn.querySelector('.btn-text');
     const errorEl = document.getElementById('loginError');
-    
+
     const username = usernameInput.value.trim().toLowerCase();
     if (!username) return;
-    
+
     submitBtn.disabled = true;
     spinner.style.display = 'block';
     if (btnText) btnText.style.display = 'none';
     errorEl.style.display = 'none';
-    
+
     try {
       const fetchedState = await fetchFullState(username);
       if (fetchedState) {
@@ -1223,32 +1223,32 @@ function render() {
   if (deckInput) {
     deckInput.addEventListener('input', () => {
       state.report.deckUrl = deckInput.value.trim();
-      
+
       const submitBtn = app.querySelector('[data-action="submitSingleReport"]');
       if (submitBtn) {
         const hasDeckLink = Boolean(state.report.deckUrl);
         const hasThreeHouses = state.selectedHouseCodes && state.selectedHouseCodes.length === 3;
         const validation = validateScore(state.report.playerAKeys, state.report.playerBKeys, state.user.isAdmin);
         const isScoreValid = validation.valid;
-        
+
         let correctPicks = false;
         const myKeys = state.report.playerAKeys;
         if (isScoreValid && hasThreeHouses) {
           const selectedCodes = state.selectedHouseCodes || [];
-          const oppEligible = PLAYER_STICKERS.filter(s => 
-            state.opponentCollection[s.id] && 
+          const oppEligible = PLAYER_STICKERS.filter(s =>
+            state.opponentCollection[s.id] &&
             (!state.collection[s.id] || state.collection[s.id].quantity === 0)
           );
           const oppHousesWithStickers = [...new Set(oppEligible.map(s => s.house))];
           const sharedCount = selectedCodes.filter(h => oppHousesWithStickers.includes(h)).length;
-          
+
           let maxPicks = myKeys;
           if (oppEligible.length >= 3) {
             maxPicks = Math.min(myKeys, sharedCount);
           }
           correctPicks = myKeys === 0 || state.selectedPickIds.length === maxPicks;
         }
-        
+
         const canSubmit = hasDeckLink && hasThreeHouses && isScoreValid && correctPicks;
         submitBtn.disabled = !canSubmit;
       }
@@ -1274,20 +1274,20 @@ function render() {
 
   // Inicializa efeito 3D drag na figurinha em destaque + animação FLIP de entrada
   if (state.highlightedStickerId) {
-    const overlay     = document.getElementById('highlightOverlay');
+    const overlay = document.getElementById('highlightOverlay');
     const highlightCard = document.getElementById('highlightCard3D');
     if (highlightCard && _highlightOriginRect && overlay) {
-      const destRect   = highlightCard.getBoundingClientRect();
+      const destRect = highlightCard.getBoundingClientRect();
       const originRect = _highlightOriginRect;
-      const scaleX = originRect.width  / destRect.width;
+      const scaleX = originRect.width / destRect.width;
       const scaleY = originRect.height / destRect.height;
-      const tx = originRect.left + originRect.width  / 2 - (destRect.left + destRect.width  / 2);
-      const ty = originRect.top  + originRect.height / 2 - (destRect.top  + destRect.height / 2);
+      const tx = originRect.left + originRect.width / 2 - (destRect.left + destRect.width / 2);
+      const ty = originRect.top + originRect.height / 2 - (destRect.top + destRect.height / 2);
 
       // Estado inicial: card na posição de origem, overlay invisível
-      overlay.style.opacity        = '0';
+      overlay.style.opacity = '0';
       highlightCard.style.transform = `translate(${tx}px, ${ty}px) scale(${scaleX}, ${scaleY})`;
-      highlightCard.style.opacity   = '0';
+      highlightCard.style.opacity = '0';
       highlightCard.style.transition = 'none';
 
       // Força reflow para que o estado inicial seja aplicado antes do PLAY
@@ -1295,11 +1295,11 @@ function render() {
 
       // PLAY — anima para o destino (centro da tela)
       requestAnimationFrame(() => {
-        overlay.style.transition   = 'opacity 0.28s ease';
-        overlay.style.opacity      = '1';
+        overlay.style.transition = 'opacity 0.28s ease';
+        overlay.style.opacity = '1';
         highlightCard.style.transition = 'transform 0.42s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.28s ease';
-        highlightCard.style.transform  = 'translate(0,0) scale(1)';
-        highlightCard.style.opacity    = '1';
+        highlightCard.style.transform = 'translate(0,0) scale(1)';
+        highlightCard.style.opacity = '1';
       });
 
       const cardNode = highlightCard.querySelector('.sticker-card');
@@ -1336,18 +1336,18 @@ function closeHighlight() {
   const wrapper = document.getElementById('highlightCard3D');
   if (overlay && wrapper && _highlightOriginRect) {
     // Anima de volta para a origem
-    const destRect   = wrapper.getBoundingClientRect();
+    const destRect = wrapper.getBoundingClientRect();
     const originRect = _highlightOriginRect;
-    const scaleX = originRect.width  / destRect.width;
+    const scaleX = originRect.width / destRect.width;
     const scaleY = originRect.height / destRect.height;
-    const tx = originRect.left + originRect.width  / 2 - (destRect.left + destRect.width  / 2);
-    const ty = originRect.top  + originRect.height / 2 - (destRect.top  + destRect.height / 2);
+    const tx = originRect.left + originRect.width / 2 - (destRect.left + destRect.width / 2);
+    const ty = originRect.top + originRect.height / 2 - (destRect.top + destRect.height / 2);
     overlay.classList.add('is-leaving');
     wrapper.style.transition = 'transform 0.32s cubic-bezier(0.4, 0, 1, 1), opacity 0.28s ease';
-    wrapper.style.transform  = `translate(${tx}px, ${ty}px) scale(${scaleX}, ${scaleY})`;
-    wrapper.style.opacity    = '0';
+    wrapper.style.transform = `translate(${tx}px, ${ty}px) scale(${scaleX}, ${scaleY})`;
+    wrapper.style.opacity = '0';
     overlay.style.transition = 'opacity 0.32s ease';
-    overlay.style.opacity    = '0';
+    overlay.style.opacity = '0';
     setTimeout(() => {
       state.highlightedStickerId = null;
       _highlightOriginRect = null;
@@ -1414,7 +1414,7 @@ function init3DCard(cardElement) {
   let isInteracting = false;
 
   const SPRING_STIFFNESS = 0.12;
-  const SPRING_DAMPING   = 0.8;
+  const SPRING_DAMPING = 0.8;
   const MAX_ROT = 20;
 
   function clamp(v, min, max) { return Math.min(Math.max(v, min), max); }
@@ -1462,16 +1462,16 @@ function init3DCard(cardElement) {
     const absY = clientY - rect.top;
 
     // 0–100 percent position of pointer inside card
-    const px = clamp(round((100 / rect.width)  * absX), 0, 100);
+    const px = clamp(round((100 / rect.width) * absX), 0, 100);
     const py = clamp(round((100 / rect.height) * absY), 0, 100);
 
     // Normalized -0.5 to 0.5 from center
-    const fromLeft   = clamp(absX / rect.width,  0, 1);
-    const fromTop    = clamp(absY / rect.height, 0, 1);
+    const fromLeft = clamp(absX / rect.width, 0, 1);
+    const fromTop = clamp(absY / rect.height, 0, 1);
     const fromCenter = Math.sqrt((fromLeft - 0.5) ** 2 + (fromTop - 0.5) ** 2) * 2;
 
-    targetRotY = round(clamp((fromLeft  - 0.5) * MAX_ROT * 2, -MAX_ROT, MAX_ROT));
-    targetRotX = round(clamp((fromTop   - 0.5) * -MAX_ROT * 2, -MAX_ROT, MAX_ROT));
+    targetRotY = round(clamp((fromLeft - 0.5) * MAX_ROT * 2, -MAX_ROT, MAX_ROT));
+    targetRotX = round(clamp((fromTop - 0.5) * -MAX_ROT * 2, -MAX_ROT, MAX_ROT));
 
     setCardVars(currentRotX, currentRotY, px, py, fromLeft, fromTop, fromCenter, Math.min(1, fromCenter + 0.1));
 
@@ -1501,13 +1501,13 @@ function init3DCard(cardElement) {
 
   // Mouse events — react to move anywhere inside card (no drag needed)
   cardElement.addEventListener('mouseenter', handleEnter);
-  cardElement.addEventListener('mousemove',  handleMove);
+  cardElement.addEventListener('mousemove', handleMove);
   cardElement.addEventListener('mouseleave', handleLeave);
 
   // Touch events
-  cardElement.addEventListener('touchstart',  handleEnter, { passive: false });
-  cardElement.addEventListener('touchmove',   handleMove,  { passive: false });
-  cardElement.addEventListener('touchend',    handleLeave);
+  cardElement.addEventListener('touchstart', handleEnter, { passive: false });
+  cardElement.addEventListener('touchmove', handleMove, { passive: false });
+  cardElement.addEventListener('touchend', handleLeave);
   cardElement.addEventListener('touchcancel', handleLeave);
 }
 
