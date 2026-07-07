@@ -69,13 +69,22 @@ function renderReveal(reveal, collection, state) {
   const actionsStyle = allFlipped ? 'opacity: 1; pointer-events: auto;' : 'opacity: 0; pointer-events: none;';
 
   const isPending = reveal.pack.isPendingPack;
-  const eyebrowText = isPending ? 'Pacotinho de Match' : (reveal.pack.type === 'crest' ? 'Pacotinho dourado' : 'Pacotinho inicial');
+  const isCrest = reveal.pack.type === 'crest';
   
+  let eyebrowText = isCrest ? 'Pacotinho dourado' : (isPending ? 'Pacotinho de Match' : 'Pacotinho inicial');
   let h2Text = `${reveal.newIds.length} novas figurinhas!`;
+  
   if (isPending && state) {
-    const opp = reveal.pack.subtitle || 'Adversário';
-    const roundPart = reveal.pack.title.replace('Pacotinho ', '');
-    h2Text = `${roundPart} - ${state.user.name} ${opp}`;
+    if (isCrest && reveal.pack.challengeName) {
+      h2Text = reveal.pack.challengeName;
+      const oppPart = reveal.pack.subtitle && reveal.pack.subtitle !== 'Desafio' ? ` · vs ${reveal.pack.opponentName || reveal.pack.subtitle.replace('vs ', '')}` : '';
+      const roundNum = reveal.pack.roundNumber || 1;
+      eyebrowText = `Desafio Completado · Rodada ${roundNum}${oppPart}`;
+    } else {
+      const opp = reveal.pack.subtitle || 'Adversário';
+      const roundPart = reveal.pack.title.replace('Pacotinho ', '');
+      h2Text = `${roundPart} - ${state.user.name} ${opp}`;
+    }
   }
 
   return `

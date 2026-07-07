@@ -112,7 +112,10 @@ export async function fetchFullState(username) {
       collection[c.sticker_id] = {
         quantity: c.quantity,
         source: c.source,
-        isNew: c.is_new
+        isNew: c.is_new,
+        acquiredRound: c.acquired_round,
+        acquiredOpponent: c.acquired_opponent,
+        acquiredChallenge: c.acquired_challenge
       };
     });
   }
@@ -378,13 +381,15 @@ export async function fetchFullState(username) {
       if (!p.opened) {
         packs.push({
           id: p.id,
-          type: 'player',
-          title: `Pacotinho Rodada ${p.round_number}`,
-          subtitle: `vs ${p.opponent_name || 'Adversário'}`,
-          image: '/assets/pack/player_pack.webp',
+          type: p.pack_type || 'player',
+          title: p.pack_type === 'crest' ? 'Pacotinho dourado' : `Pacotinho Rodada ${p.round_number}`,
+          subtitle: p.pack_type === 'crest' ? (p.challenge_name || 'Desafio') : `vs ${p.opponent_name || 'Adversário'}`,
+          image: p.pack_type === 'crest' ? '/assets/pack/golden_pack.webp' : '/assets/pack/player_pack.webp',
           opened: false,
           stickerIds: Array.isArray(p.sticker_ids) ? p.sticker_ids : JSON.parse(p.sticker_ids || '[]'),
-          isPendingPack: true
+          isPendingPack: true,
+          roundNumber: p.round_number,
+          challengeName: p.challenge_name
         });
       }
     });
@@ -493,17 +498,18 @@ export async function dbReopenOwnReport(matchId, isPlayerA) {
   console.warn("dbReopenOwnReport is deprecated.");
 }
 
-
 // 4. Cria um pacote pendente de pós-partida para o jogador (chamado pelo Admin)
-export async function dbCreatePendingPack(playerUsername, roundNumber, opponentName, stickerIds) {
+export async function dbCreatePendingPack(playerUsername, roundNumber, opponentName, stickerIds, packType = 'player', challengeName = null) {
   if (!supabase) return;
   await supabase
     .from('foc2026_pending_packs')
     .insert({
       player_username: playerUsername,
       round_number: roundNumber,
-      opponent_name: opponentName,
-      sticker_ids: stickerIds
+      opponent_name: opponentName || '',
+      sticker_ids: stickerIds,
+      pack_type: packType,
+      challenge_name: challengeName
     });
 }
 
@@ -546,7 +552,7 @@ export async function dbReleaseMatchPacks(matchId, playerA, playerB, roundNumber
   });
 }
 
-// 5. Alega cumprimento de desafio
+// 5c. Alega cumprimento de desafio
 export async function dbClaimChallenge(username, challengeId, stickerId) {
   if (!supabase) return;
 
@@ -575,8 +581,6 @@ export async function dbApproveChallenge(playerUsername, challengeId, stickerId,
     .eq('player_username', playerUsername)
     .eq('id', challengeId);
 
-  // O admin apenas valida o desafio. Sem injeção automatizada na coleção.
-
   // Busca título do desafio para o log
   const { data: challenge } = await supabase
     .from('foc2026_challenges')
@@ -587,12 +591,36 @@ export async function dbApproveChallenge(playerUsername, challengeId, stickerId,
 
   const challengeTitle = challenge ? challenge.title : challengeId;
 
+  // Busca o adversário do jogador na rodada atual
+  const { data: matchData } = await supabase
+    .from('foc2026_matches')
+    .select('player_a_username, player_b_username')
+    .eq('round_number', roundNumber || 1)
+    .or(`player_a_username.eq.${playerUsername},player_b_username.eq.${playerUsername}`)
+    .maybeSingle();
+
+  let opponentName = '';
+  if (matchData) {
+    const isPlayerA = matchData.player_a_username === playerUsername;
+    const oppUsername = isPlayerA ? matchData.player_b_username : matchData.player_a_username;
+    
+    const { data: oppPlayer } = await supabase
+      .from('foc2026_players')
+      .select('name')
+      .eq('username', oppUsername)
+      .maybeSingle();
+    opponentName = oppPlayer ? oppPlayer.name : oppUsername;
+  }
+
+  // Cria um pacote pendente de tipo 'crest' (pacotinho dourado) contendo o brasão/figurinha do desafio
+  await dbCreatePendingPack(playerUsername, roundNumber || 1, opponentName, [stickerId], 'crest', challengeTitle);
+
   await supabase
     .from('foc2026_stickers_log')
     .insert({
       player_username: playerUsername,
       round_number: roundNumber,
-      message: `${playerName} obteve a figurinha ${stickerId} via Desafio: ${challengeTitle}`,
+      message: `${playerName} completou o desafio "${challengeTitle}" e liberou um Pacotinho Dourado contendo a figurinha ${stickerId}`,
       type: 'challenge'
     });
 

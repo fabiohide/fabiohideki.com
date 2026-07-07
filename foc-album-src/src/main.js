@@ -1140,6 +1140,10 @@ function render() {
       if (action === 'goAlbum') {
         const reveal = state.reveal;
         if (reveal && reveal.pack && reveal.pack.isPendingPack) {
+          // Marca o pacote como aberto imediatamente na lista local
+          const packInState = state.packs.find(p => p.id === reveal.pack.id);
+          if (packInState) packInState.opened = true;
+
           if (hasSupabaseConfig) {
             await dbOpenPendingPack(reveal.pack.id);
             const fetched = await fetchFullState(state.user.id);
@@ -1148,7 +1152,7 @@ function render() {
             }
           } else {
             reveal.pack.stickerIds.forEach(id => {
-              state.collection[id] = { quantity: 1, isNew: true, source: 'pack' };
+              state.collection[id] = { quantity: 1, isNew: true, source: reveal.pack.type === 'crest' ? 'challenge' : 'pick' };
             });
           }
         }
@@ -1371,19 +1375,33 @@ function renderHighlightOverlay() {
     if (owned.source === 'pack') {
       sourceText = 'Pacotinho inicial.';
     } else if (owned.source === 'pick') {
-      const match = state.matches.find(m => m.id === state.report.matchId);
-      const roundNum = state.activeRound.number;
-      if (match) {
-        sourceText = `Rodada ${roundNum}: ${match.playerA} x ${match.playerB}`;
+      const round = owned.acquiredRound;
+      const opp = owned.acquiredOpponent;
+      if (round && opp) {
+        sourceText = `Rodada ${round}: vs ${opp}`;
       } else {
-        sourceText = `Rodada ${roundNum}: Pick pós-partida.`;
+        const match = state.matches.find(m => m.id === state.report.matchId);
+        const roundNum = state.activeRound.number;
+        if (match) {
+          sourceText = `Rodada ${roundNum}: ${match.playerA} x ${match.playerB}`;
+        } else {
+          sourceText = `Rodada ${roundNum}: Pick pós-partida.`;
+        }
       }
     } else if (owned.source === 'challenge') {
-      const challenge = state.challenges.find(c => c.pickedId === stickerId);
-      if (challenge) {
-        sourceText = `Desafio: ${challenge.title}.`;
+      const challengeTitle = owned.acquiredChallenge || (() => {
+        const challenge = state.challenges.find(c => c.pickedId === stickerId);
+        return challenge ? challenge.title : 'Conclusão de Desafio';
+      })();
+      const round = owned.acquiredRound;
+      const opp = owned.acquiredOpponent;
+      
+      if (round && opp) {
+        sourceText = `${challengeTitle}<br/><span style="font-size: 0.78rem; color: var(--color-ash); font-weight: normal;">Rodada ${round} · vs ${opp}</span>`;
+      } else if (round) {
+        sourceText = `${challengeTitle}<br/><span style="font-size: 0.78rem; color: var(--color-ash); font-weight: normal;">Rodada ${round}</span>`;
       } else {
-        sourceText = 'Conclusão de Desafio.';
+        sourceText = challengeTitle;
       }
     } else if (owned.source === 'admin') {
       sourceText = 'Ajuste de Administrador.';
