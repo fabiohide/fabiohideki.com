@@ -39,6 +39,7 @@ import {
 import { stickerCard } from './components/sticker-card.js';
 import { getAssetUrl } from './utils/format.js';
 import { parseDokResponse } from './utils/sas.js';
+import { validateScore } from './utils/validation.js';
 import './style/login.css';
 
 import { ALBUM_PAGES, GOLDEN_CREST_IDS, INITIAL_PLAYER_IDS, PLAYER_STICKERS, STICKERS, getSticker } from './data/stickers.js';
@@ -272,115 +273,11 @@ async function editReport() {
 async function pasteDeckLink() {
   try {
     const text = await navigator.clipboard.readText();
-    const input = document.getElementById('deck-link-input');
-    if (input) {
-      input.value = text.trim();
-    }
+    state.report.deckUrl = text.trim();
+    render();
   } catch (err) {
     console.error('Falha ao acessar o clipboard:', err);
   }
-}
-
-async function fetchDeck() {
-  const input = document.getElementById('deck-link-input');
-  const errorEl = document.getElementById('deck-fetch-error');
-  if (!input) return;
-
-  const url = input.value.trim();
-  if (errorEl) errorEl.style.display = 'none';
-
-  const matchUuid = url.match(/decks\/([^/?]+)/);
-  if (!matchUuid) {
-    if (errorEl) {
-      errorEl.textContent = 'URL do Decks of KeyForge inválida.';
-      errorEl.style.display = 'block';
-    }
-    return;
-  }
-
-  const uuid = matchUuid[1];
-  const searchBtn = document.querySelector('[data-action="fetchDeck"]');
-  if (searchBtn) {
-    searchBtn.disabled = true;
-    searchBtn.textContent = 'Buscando...';
-  }
-
-  const apiUrl = `https://decksofkeyforge.com/public-api/v3/decks/${uuid}`;
-  const apiKey = import.meta.env.VITE_DOK_API_KEY || '683e90ac-3321-437b-bc8a-e40ee2c248eb';
-
-  const proxies = [
-    {
-      name: 'corsfix',
-      buildUrl: (t) => `https://proxy.corsfix.com/?url=${encodeURIComponent(t)}`,
-      extractJson: async (res) => res.json()
-    },
-    {
-      name: 'corsproxy.io',
-      buildUrl: (t) => `https://corsproxy.io/?${encodeURIComponent(t)}`,
-      extractJson: async (res) => res.json()
-    },
-    {
-      name: 'allorigins',
-      buildUrl: (t) => `https://api.allorigins.win/get?url=${encodeURIComponent(t)}`,
-      extractJson: async (res) => { const w = await res.json(); return JSON.parse(w.contents); }
-    },
-    {
-      name: 'thingproxy',
-      buildUrl: (t) => `https://thingproxy.freeboard.io/fetch/${t}`,
-      extractJson: async (res) => res.json()
-    }
-  ];
-
-  let lastError = null;
-
-  for (const proxy of proxies) {
-    try {
-      if (searchBtn) searchBtn.textContent = `Buscando...`;
-      const response = await fetch(proxy.buildUrl(apiUrl), {
-        headers: {
-          'Api-Key': apiKey
-        },
-        signal: AbortSignal.timeout(8000)
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await proxy.extractJson(response);
-      const deckInfo = parseDokResponse(data);
-
-      state.report.deckName = deckInfo.name;
-      state.report.deckSas = deckInfo.sas;
-      state.report.deckSet = deckInfo.expansion;
-      state.report.deckHouses = deckInfo.houses.join(',');
-      state.report.deckUrl = url;
-
-      state.selectedHouseCodes = deckInfo.houses;
-      state.selectedPickIds = [];
-
-      render();
-      if (searchBtn) { searchBtn.disabled = false; searchBtn.textContent = 'Buscar'; }
-      return;
-    } catch (err) {
-      console.warn(`[fetchDeck] Proxy "${proxy.name}" falhou:`, err.message);
-      lastError = err;
-    }
-  }
-
-  console.error('[fetchDeck] Todos os proxies falharam:', lastError);
-  if (errorEl) {
-    errorEl.textContent = 'Erro ao buscar o deck. Tente novamente em alguns segundos.';
-    errorEl.style.display = 'block';
-  }
-  if (searchBtn) { searchBtn.disabled = false; searchBtn.textContent = 'Buscar'; }
-}
-
-function removeDeck() {
-  state.report.deckName = null;
-  state.report.deckSas = null;
-  state.report.deckSet = null;
-  state.report.deckHouses = null;
-  state.report.deckUrl = null;
-  state.selectedHouseCodes = [];
-  state.selectedPickIds = [];
-  render();
 }
 
 function toggleReportPick(stickerId) {
@@ -408,7 +305,22 @@ function toggleReportPick(stickerId) {
 
 async function submitSingleReport() {
   const report = state.report;
-  if (!report.deckHouses) return;
+  
+  // Save selected houses and placeholder details
+  report.deckHouses = state.selectedHouseCodes.join(',');
+  report.deckName = report.deckName || 'Deck do Jogador';
+  report.deckSas = report.deckSas || 0;
+  report.deckSet = report.deckSet || 'FOC';
+
+  if (state.selectedHouseCodes.length !== 3) {
+    alert('Por favor, selecione as 3 casas do seu deck.');
+    return;
+  }
+  if (!report.deckUrl) {
+    alert('Por favor, insira o link do seu deck.');
+    return;
+  }
+
   const pickedIds = state.selectedPickIds || [];
   const matchId = report.matchId;
 
@@ -1281,6 +1193,36 @@ function render() {
   app.querySelectorAll('[data-keys]').forEach((input) => {
     input.addEventListener('change', () => setKeys(input.dataset.keys, input.value));
   });
+
+  const deckInput = app.querySelector('#deck-link-input');
+  if (deckInput) {
+    deckInput.addEventListener('input', () => {
+      state.report.deckUrl = deckInput.value.trim();
+      
+      const submitBtn = app.querySelector('[data-action="submitSingleReport"]');
+      if (submitBtn) {
+        const hasDeckLink = Boolean(state.report.deckUrl);
+        const hasThreeHouses = state.selectedHouseCodes && state.selectedHouseCodes.length === 3;
+        const validation = validateScore(state.report.playerAKeys, state.report.playerBKeys, state.user.isAdmin);
+        const isScoreValid = validation.valid;
+        
+        let correctPicks = false;
+        const myKeys = state.report.playerAKeys;
+        if (isScoreValid && hasThreeHouses) {
+          const selectedCodes = state.selectedHouseCodes || [];
+          const eligible = PLAYER_STICKERS
+            .filter(s => selectedCodes.includes(s.house))
+            .filter(s => state.opponentCollection[s.id])
+            .filter(s => !state.collection[s.id] || state.collection[s.id].quantity === 0);
+          const expectedCount = eligible.length === 0 ? myKeys : Math.min(myKeys, eligible.length);
+          correctPicks = myKeys === 0 || state.selectedPickIds.length === expectedCount;
+        }
+        
+        const canSubmit = hasDeckLink && hasThreeHouses && isScoreValid && correctPicks;
+        submitBtn.disabled = !canSubmit;
+      }
+    });
+  }
 
   if (state.currentRoute === 'album') {
     initAlbumBook(state, actions);

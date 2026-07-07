@@ -207,56 +207,39 @@ function renderSingleReportForm(state) {
   const report = state.report;
   
   // 1. Seu deck view
-  let deckSectionHtml = '';
-  if (report.deckName) {
-    const badge = getSasBadgeData(report.deckSas);
-    const deckHousesArray = report.deckHouses ? report.deckHouses.split(',') : [];
-    
-    deckSectionHtml = `
-      <div class="deck-card" style="background: var(--color-graphite); border: 1.5px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 20px;">
-        <div class="deck-card-header">
-          <div class="deck-name">
-            <h4 style="margin: 0; font-family: var(--font-display); font-size: 1.1rem; color: var(--color-paper);">${report.deckName}</h4>
-            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--color-ash); margin-top: 6px;">
-              <img src="${getAssetUrl(`/assets/sets/${report.deckSet.toLowerCase()}.svg`)}" alt="${report.deckSet}" style="width: 18px; height: 18px; filter: brightness(0) invert(1);" onerror="this.style.display='none'" />
-              <span>Set: <strong>${report.deckSet}</strong></span>
-            </div>
-          </div>
-          <span class="status-pill ${badge.colorClass}" style="font-size: 0.78rem; padding: 4px 10px; flex-shrink: 0;">SAS ${report.deckSas} (${badge.diffStr})</span>
-        </div>
-        <div style="display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap;">
-          ${deckHousesArray.map(code => {
-            const h = HOUSE_META[code];
+  const deckSectionHtml = `
+    <div style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px;">
+      <h4 style="margin: 0;">Seu deck</h4>
+      <div class="deck-input-row" style="display: flex; gap: 8px; align-items: center; width: 100%;">
+        <input type="text" id="deck-link-input" placeholder="Link do Decks of KeyForge" 
+               style="margin: 0; background: var(--color-graphite); border: 1.5px solid rgba(255,255,255,0.08); color: var(--color-paper); border-radius: var(--radius-md); padding: 0 12px; font-size: 0.85rem; flex: 1; min-height: 44px;" 
+               value="${report.deckUrl || ''}" />
+        <button class="button button-secondary btn-paste" data-action="pasteDeckLink" 
+                style="margin: 0; padding: 0 14px; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 0.8rem; font-weight: bold; flex-shrink: 0;">
+          Colar
+        </button>
+      </div>
+      
+      <div style="margin-top: 12px;">
+        <span class="panel-label" style="font-size: 0.78rem; display: block; margin-bottom: 8px; color: var(--color-ash);">Selecione as 3 casas do seu deck:</span>
+        <div class="house-selector-grid" style="margin: 0;">
+          ${Object.values(HOUSE_META).map((house) => {
+            const isSelected = state.selectedHouseCodes.includes(house.code);
             return `
-              <span class="house-chip" style="min-height: auto; padding: 4px 10px; font-size: 0.75rem; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);">
-                ${h ? `<img src="${getAssetUrl(h.icon)}" alt="" style="width: 14px; height: 14px; filter: brightness(0) invert(1);" />` : ''}
-                <strong>${code}</strong>
-              </span>
+              <button class="house-selector-chip ${isSelected ? 'is-selected' : ''}" 
+                      data-action="toggleHouse" 
+                      data-value="${house.code}" 
+                      type="button"
+                      style="position: relative;">
+                <img src="${getAssetUrl(house.icon)}" alt="${house.name}" />
+                <span class="house-name">${house.name}</span>
+              </button>
             `;
           }).join('')}
         </div>
-        <button class="button button-secondary" data-action="removeDeck" style="width: 100%; margin: 12px 0 0 0; padding: 6px; font-size: 0.78rem; border-color: rgba(235, 87, 87, 0.3); color: #ff8c8c; height: 32px; min-height: auto;">
-          Remover Deck
-        </button>
       </div>
-    `;
-  } else {
-    deckSectionHtml = `
-      <div style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px;">
-        <h4 style="margin: 0;">Seu deck</h4>
-        <div class="deck-input-row">
-          <button class="button button-secondary btn-paste" data-action="pasteDeckLink" style="margin: 0; padding: 0 14px; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 0.8rem; font-weight: bold;">
-            Colar
-          </button>
-          <input type="text" id="deck-link-input" placeholder="Link do Decks of KeyForge" style="margin: 0; background: var(--color-graphite); border: 1.5px solid rgba(255,255,255,0.08); color: var(--color-paper); border-radius: var(--radius-md); padding: 0 12px; font-size: 0.85rem;" />
-          <button class="button button-primary btn-fetch" data-action="fetchDeck" style="margin: 0; padding: 0 16px; font-size: 0.8rem; font-weight: bold;">
-            Buscar
-          </button>
-        </div>
-        <div id="deck-fetch-error" style="color: #ff8c8c; font-size: 0.78rem; display: none; margin-top: 2px;"></div>
-      </div>
-    `;
-  }
+    </div>
+  `;
 
   // 2. Placar view — jogador reporta suas chaves forjadas E as do adversário
   const validation = validateScore(report.playerAKeys, report.playerBKeys, state.user.isAdmin);
@@ -295,8 +278,9 @@ function renderSingleReportForm(state) {
   // 3. Picks view — baseado nas próprias chaves forjadas
   let picksSectionHtml = '';
   const myKeys = report.playerAKeys;
+  const hasThreeHouses = state.selectedHouseCodes && state.selectedHouseCodes.length === 3;
 
-  if (isScoreValid && report.deckHouses) {
+  if (isScoreValid && hasThreeHouses) {
     if (myKeys === 0) {
       picksSectionHtml = `
         <div style="margin-bottom: 20px;">
@@ -309,7 +293,7 @@ function renderSingleReportForm(state) {
         </div>
       `;
     } else {
-      const selectedCodes = report.deckHouses.split(',');
+      const selectedCodes = state.selectedHouseCodes || [];
       const eligible = PLAYER_STICKERS
         .filter(s => selectedCodes.includes(s.house))
         .filter(s => state.opponentCollection[s.id])
@@ -369,10 +353,10 @@ function renderSingleReportForm(state) {
   }
 
   // 4. Submit button
-  const isDeckLoaded = Boolean(report.deckName);
+  const hasDeckLink = Boolean(report.deckUrl);
   let correctPicks = false;
-  if (isScoreValid && report.deckHouses) {
-    const selectedCodes = report.deckHouses.split(',');
+  if (isScoreValid && hasThreeHouses) {
+    const selectedCodes = state.selectedHouseCodes || [];
     const eligible = PLAYER_STICKERS
       .filter(s => selectedCodes.includes(s.house))
       .filter(s => state.opponentCollection[s.id])
@@ -381,10 +365,10 @@ function renderSingleReportForm(state) {
     correctPicks = myKeys === 0 || state.selectedPickIds.length === expectedCount;
   }
   
-  const canSubmit = isDeckLoaded && isScoreValid && correctPicks;
+  const canSubmit = hasDeckLink && hasThreeHouses && isScoreValid && correctPicks;
 
   return `
-    <div class="panel" style="margin-top: 16px; padding: 20px; background: var(--color-carbon); border-radius: var(--radius-lg); width: 100%; box-sizing: border-box;">
+    <div class="panel" style="grid-column: 1 / -1; margin-top: 16px; padding: 20px; background: var(--color-carbon); border-radius: var(--radius-lg); width: 100%; box-sizing: border-box;">
       ${deckSectionHtml}
       ${scoreSectionHtml}
       ${picksSectionHtml}
