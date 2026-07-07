@@ -1210,12 +1210,18 @@ function render() {
         const myKeys = state.report.playerAKeys;
         if (isScoreValid && hasThreeHouses) {
           const selectedCodes = state.selectedHouseCodes || [];
-          const eligible = PLAYER_STICKERS
-            .filter(s => selectedCodes.includes(s.house))
-            .filter(s => state.opponentCollection[s.id])
-            .filter(s => !state.collection[s.id] || state.collection[s.id].quantity === 0);
-          const expectedCount = eligible.length === 0 ? myKeys : Math.min(myKeys, eligible.length);
-          correctPicks = myKeys === 0 || state.selectedPickIds.length === expectedCount;
+          const oppEligible = PLAYER_STICKERS.filter(s => 
+            state.opponentCollection[s.id] && 
+            (!state.collection[s.id] || state.collection[s.id].quantity === 0)
+          );
+          const oppHousesWithStickers = [...new Set(oppEligible.map(s => s.house))];
+          const sharedCount = selectedCodes.filter(h => oppHousesWithStickers.includes(h)).length;
+          
+          let maxPicks = myKeys;
+          if (oppEligible.length >= 3) {
+            maxPicks = Math.min(myKeys, sharedCount);
+          }
+          correctPicks = myKeys === 0 || state.selectedPickIds.length === maxPicks;
         }
         
         const canSubmit = hasDeckLink && hasThreeHouses && isScoreValid && correctPicks;

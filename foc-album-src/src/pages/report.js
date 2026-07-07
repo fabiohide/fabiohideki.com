@@ -275,7 +275,7 @@ function renderSingleReportForm(state) {
     </div>
   `;
 
-  // 3. Picks view — baseado nas próprias chaves forjadas
+  // 3. Picks view — baseado nas próprias chaves forjadas e nas regras de elegibilidade
   let picksSectionHtml = '';
   const myKeys = report.playerAKeys;
   const hasThreeHouses = state.selectedHouseCodes && state.selectedHouseCodes.length === 3;
@@ -294,29 +294,56 @@ function renderSingleReportForm(state) {
       `;
     } else {
       const selectedCodes = state.selectedHouseCodes || [];
-      const eligible = PLAYER_STICKERS
-        .filter(s => selectedCodes.includes(s.house))
-        .filter(s => state.opponentCollection[s.id])
-        .filter(s => !state.collection[s.id] || state.collection[s.id].quantity === 0);
-
-      const isFallback = eligible.length === 0;
-      const pool = isFallback 
-        ? PLAYER_STICKERS.filter(s => selectedCodes.includes(s.house) && (!state.collection[s.id] || state.collection[s.id].quantity === 0))
-        : eligible;
-
-      const maxPicks = isFallback ? myKeys : Math.min(myKeys, eligible.length);
       
+      // Opponent eligible stickers (opponent has, player is missing)
+      const oppEligible = PLAYER_STICKERS.filter(s => 
+        state.opponentCollection[s.id] && 
+        (!state.collection[s.id] || state.collection[s.id].quantity === 0)
+      );
+      
+      const oppEligibleInSelected = oppEligible.filter(s => selectedCodes.includes(s.house));
+      const oppHousesWithStickers = [...new Set(oppEligible.map(s => s.house))];
+      const sharedCount = selectedCodes.filter(h => oppHousesWithStickers.includes(h)).length;
+      
+      let pool = [];
+      let maxPicks = myKeys;
+      let isFallback = false;
+      let ruleLabelText = '';
+      
+      if (oppEligible.length >= 3) {
+        maxPicks = Math.min(myKeys, sharedCount);
+        pool = oppEligibleInSelected.map(s => ({ ...s, source: 'opponent' }));
+        ruleLabelText = `O oponente possui pelo menos 3 figurinhas inéditas. Como você selecionou ${sharedCount} casa(s) que ele tem stickers, você pode escolher até ${maxPicks} figurinha(s).`;
+      } else {
+        maxPicks = myKeys;
+        const playerMissing = PLAYER_STICKERS.filter(s => 
+          selectedCodes.includes(s.house) && 
+          (!state.collection[s.id] || state.collection[s.id].quantity === 0)
+        );
+        
+        const poolMap = new Map();
+        oppEligibleInSelected.forEach(s => {
+          poolMap.set(s.id, { ...s, source: 'opponent' });
+        });
+        playerMissing.forEach(s => {
+          if (!poolMap.has(s.id)) {
+            poolMap.set(s.id, { ...s, source: 'fallback' });
+          }
+        });
+        
+        pool = Array.from(poolMap.values());
+        isFallback = true;
+        ruleLabelText = `O oponente possui apenas ${oppEligible.length} figurinha(s) inédita(s). Você pode pegar as dele mais figurinhas da(s) casa(s) restante(s) do seu deck (fallback) para somar ${maxPicks}.`;
+      }
+
       picksSectionHtml = `
         <div style="margin-bottom: 20px;">
           <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px;">
             <h4 style="margin: 0;">Figurinhas Solicitadas</h4>
             <span class="selection-counter">${state.selectedPickIds.length}/${maxPicks} selecionadas</span>
           </div>
-          <p class="picker-instruction" style="margin: 0 0 10px 0; font-size: 0.78rem;">
-            ${isFallback 
-              ? '<strong>Modo Fallback:</strong> Nenhuma figurinha inédita nas casas do seu deck no oponente. Selecione da coleção geral.' 
-              : `Escolha ${maxPicks} figurinha(s) inédita(s) nas casas do seu deck.`
-            }
+          <p class="picker-instruction" style="margin: 0 0 10px 0; font-size: 0.78rem; color: var(--color-ash);">
+            ${ruleLabelText}
           </p>
           
           ${pool.length === 0 
@@ -328,11 +355,18 @@ function renderSingleReportForm(state) {
                   const isLimitReached = state.selectedPickIds.length >= maxPicks;
                   const btnDisabled = !isSelected && isLimitReached;
                   
+                  const sourceBadge = sticker.source === 'opponent'
+                    ? `<span style="font-size: 0.65rem; background: rgba(76, 175, 80, 0.15); color: #81c784; padding: 2px 6px; border-radius: var(--radius-sm); font-weight: bold; margin-left: 8px; display: inline-block; border: 1px solid rgba(76, 175, 80, 0.2);">Oponente</span>`
+                    : `<span style="font-size: 0.65rem; background: rgba(255, 152, 0, 0.15); color: #ffb74d; padding: 2px 6px; border-radius: var(--radius-sm); font-weight: bold; margin-left: 8px; display: inline-block; border: 1px solid rgba(255, 152, 0, 0.2);">Fallback/Geral</span>`;
+
                   return `
                     <div class="picker-list-item" style="padding: 10px 12px; min-height: auto; ${isSelected ? 'border-color: var(--color-signal-blue); background: rgba(49, 133, 255, 0.04);' : ''}">
                       <div style="display: flex; flex-direction: column;">
-                        <strong style="font-size: 0.9rem;">${sticker.name}</strong>
-                        <span style="font-size: 0.75rem; margin-top: 1px; color: var(--color-ash);">ID: ${sticker.id} | Casa: ${sticker.house}</span>
+                        <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 4px;">
+                          <strong style="font-size: 0.9rem;">${sticker.name}</strong>
+                          ${sourceBadge}
+                        </div>
+                        <span style="font-size: 0.75rem; margin-top: 2px; color: var(--color-ash);">ID: ${sticker.id} | Casa: ${sticker.house}</span>
                       </div>
                       <button class="button ${isSelected ? 'button-primary' : 'button-secondary'}" 
                               data-action="toggleReportPick" 
@@ -357,12 +391,18 @@ function renderSingleReportForm(state) {
   let correctPicks = false;
   if (isScoreValid && hasThreeHouses) {
     const selectedCodes = state.selectedHouseCodes || [];
-    const eligible = PLAYER_STICKERS
-      .filter(s => selectedCodes.includes(s.house))
-      .filter(s => state.opponentCollection[s.id])
-      .filter(s => !state.collection[s.id] || state.collection[s.id].quantity === 0);
-    const expectedCount = eligible.length === 0 ? myKeys : Math.min(myKeys, eligible.length);
-    correctPicks = myKeys === 0 || state.selectedPickIds.length === expectedCount;
+    const oppEligible = PLAYER_STICKERS.filter(s => 
+      state.opponentCollection[s.id] && 
+      (!state.collection[s.id] || state.collection[s.id].quantity === 0)
+    );
+    const oppHousesWithStickers = [...new Set(oppEligible.map(s => s.house))];
+    const sharedCount = selectedCodes.filter(h => oppHousesWithStickers.includes(h)).length;
+    
+    let maxPicks = myKeys;
+    if (oppEligible.length >= 3) {
+      maxPicks = Math.min(myKeys, sharedCount);
+    }
+    correctPicks = myKeys === 0 || state.selectedPickIds.length === maxPicks;
   }
   
   const canSubmit = hasDeckLink && hasThreeHouses && isScoreValid && correctPicks;
