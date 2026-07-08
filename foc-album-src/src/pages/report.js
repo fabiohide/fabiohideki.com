@@ -310,10 +310,10 @@ function renderSingleReportForm(state) {
       let isFallback = false;
       let ruleLabelText = '';
       
-      if (oppEligible.length >= 3) {
+      if (oppEligibleInSelected.length >= myKeys) {
         pool = oppEligibleInSelected.map(s => ({ ...s, source: 'opponent' }));
-        maxPicks = Math.min(myKeys, pool.length);
-        ruleLabelText = `O oponente possui pelo menos 3 figurinhas inéditas. Você pode escolher até ${maxPicks} figurinha(s) inédita(s) dele nas casas selecionadas.`;
+        maxPicks = myKeys;
+        ruleLabelText = `O oponente possui pelo menos ${myKeys} figurinha(s) inédita(s) nas casas do seu deck. Você pode escolher até ${maxPicks} delas.`;
       } else {
         const playerMissing = PLAYER_STICKERS.filter(s => 
           selectedCodes.includes(s.house) && 
@@ -333,7 +333,7 @@ function renderSingleReportForm(state) {
         pool = Array.from(poolMap.values());
         maxPicks = Math.min(myKeys, pool.length);
         isFallback = true;
-        ruleLabelText = `O oponente possui apenas ${oppEligible.length} figurinha(s) inédita(s). Você pode pegar as dele mais figurinhas da(s) casa(s) restante(s) do seu deck (fallback) para somar até ${maxPicks}.`;
+        ruleLabelText = `O oponente possui apenas ${oppEligibleInSelected.length} figurinha(s) inédita(s) nas casas do seu deck. Você pode escolher as dele mais figurinhas do seu deck (fallback) até somar ${maxPicks}.`;
       }
 
       picksSectionHtml = `
@@ -399,9 +399,9 @@ function renderSingleReportForm(state) {
     
     let pool = [];
     let maxPicks = myKeys;
-    if (oppEligible.length >= 3) {
+    if (oppEligibleInSelected.length >= myKeys) {
       pool = oppEligibleInSelected;
-      maxPicks = Math.min(myKeys, pool.length);
+      maxPicks = myKeys;
     } else {
       const playerMissing = PLAYER_STICKERS.filter(s => 
         selectedCodes.includes(s.house) && 

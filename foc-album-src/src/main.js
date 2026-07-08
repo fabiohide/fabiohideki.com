@@ -296,9 +296,9 @@ function toggleReportPick(stickerId) {
   let pool = [];
   let maxPicks = myKeys;
   
-  if (oppEligible.length >= 3) {
+  if (oppEligibleInSelected.length >= myKeys) {
     pool = oppEligibleInSelected;
-    maxPicks = Math.min(myKeys, pool.length);
+    maxPicks = myKeys;
   } else {
     const playerMissing = PLAYER_STICKERS.filter(s => 
       selectedCodes.includes(s.house) && 
@@ -1272,9 +1272,9 @@ function render() {
 
           let pool = [];
           let maxPicks = myKeys;
-          if (oppEligible.length >= 3) {
+          if (oppEligibleInSelected.length >= myKeys) {
             pool = oppEligibleInSelected;
-            maxPicks = Math.min(myKeys, pool.length);
+            maxPicks = myKeys;
           } else {
             const playerMissing = PLAYER_STICKERS.filter(s =>
               selectedCodes.includes(s.house) &&
