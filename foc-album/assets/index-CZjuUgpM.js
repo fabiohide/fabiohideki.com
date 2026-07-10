@@ -251,7 +251,7 @@
         <h4 style="color: var(--color-paper); font-size: 1.05rem; margin: 0 0 6px;">Nenhuma partida nesta rodada</h4>
         <p style="font-size: 0.82rem; margin: 0; line-height: 1.4;">Você não possui confrontos agendados para a Rodada ${t.activeRound.number}.</p>
       </div>
-    `}function Gs(t){return t.reported?'<strong class="status-pill is-completed">Reporte Enviado</strong>':'<strong class="status-pill is-waiting">Pendente</strong>'}function Js(t){const e={},r={};Object.keys(he).forEach(o=>{const l=q.filter(c=>c.house===o);e[o]=l.filter(c=>t.collection[c.id]),r[o]=l.filter(c=>t.opponentCollection[c.id])});const s=q.filter(o=>t.opponentCollection[o.id]&&(!t.collection[o.id]||t.collection[o.id].quantity===0)),n=t.matches.find(o=>o.id===t.report.matchId),i=t.report.isPlayerA,a=n?i?n.playerB:n.playerA:"Adversário";return`
+    `}function Gs(t){return t.reported?'<strong class="status-pill is-completed">Reporte Enviado</strong>':'<strong class="status-pill is-waiting">Pendente</strong>'}function Js(t){const e={},r={};Object.keys(he).forEach(h=>{const p=q.filter(f=>f.house===h);e[h]=p.filter(f=>t.collection[f.id]),r[h]=p.filter(f=>t.opponentCollection[f.id])});const n=q.filter(h=>t.opponentCollection[h.id]&&(!t.collection[h.id]||t.collection[h.id].quantity===0)).length,i=n===2||n>=3?"diferentes":"diferente",a=n>=3?"rgba(0, 204, 102, 0.15)":"rgba(255, 140, 0, 0.15)",o=n>=3?"#00cc66":"#ff8c00",l=t.matches.find(h=>h.id===t.report.matchId),c=t.report.isPlayerA,u=l?c?l.playerB:l.playerA:"Adversário";return`
     <details class="panel pre-match-panel" style="grid-column: 1 / -1; width: 100%; margin-bottom: 16px;">
       <summary class="step-header" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; list-style: none;">
         <div style="display: flex; flex-direction: column;">
@@ -260,8 +260,8 @@
           <p style="margin: 4px 0 0 0; font-size: 0.8rem; color: var(--color-ash);">Veja o que cada jogador tem antes de escolher o deck.</p>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
-          <span class="pre-match-badge can-get" style="margin: 0; padding: 2px 8px; background: rgba(49, 133, 255, 0.15); color: #8db9ff; border-radius: var(--radius-sm); font-size: 0.72rem;">
-            ${s.length} obter
+          <span class="pre-match-badge can-get" style="margin: 0; padding: 2px 8px; background: ${a}; color: ${o}; border-radius: var(--radius-sm); font-size: 0.72rem;">
+            ${n} ${i}
           </span>
           <span class="chevron-icon" style="font-size: 0.8rem; transition: transform 0.2s;">▼</span>
         </div>
@@ -271,17 +271,17 @@
         <div class="pre-match-col">
           <span class="panel-label">Sua coleção</span>
           <div class="pre-match-houses">
-            ${Object.keys(he).map(o=>{const l=he[o],c=q.filter(h=>h.house===o).length,u=e[o].length;return`
-                <details class="pre-match-accordion-item ${u>0?"has-some":"has-none"} ${u===c?"has-all":""}">
+            ${Object.keys(he).map(h=>{const p=he[h],f=q.filter(y=>y.house===h).length,g=e[h].length;return`
+                <details class="pre-match-accordion-item ${g>0?"has-some":"has-none"} ${g===f?"has-all":""}">
                   <summary class="pre-match-accordion-header">
-                    ${l?`<img src="${W(l.icon)}" alt="" class="house-mini-icon"/>`:""}
-                    <span class="house-mini-name">${o}</span>
-                    <span class="house-mini-count">${u}/${c}</span>
+                    ${p?`<img src="${W(p.icon)}" alt="" class="house-mini-icon"/>`:""}
+                    <span class="house-mini-name">${h}</span>
+                    <span class="house-mini-count">${g}/${f}</span>
                     <span class="chevron-icon">▼</span>
                   </summary>
                   <div class="pre-match-accordion-content">
-                    ${e[o].length===0?'<p class="empty-text">Nenhuma obtida</p>':`<ul>
-                          ${e[o].map(h=>`<li><strong>${h.id}</strong> — ${h.name}</li>`).join("")}
+                    ${e[h].length===0?'<p class="empty-text">Nenhuma obtida</p>':`<ul>
+                          ${e[h].map(y=>`<li><strong>${y.id}</strong> — ${y.name}</li>`).join("")}
                          </ul>`}
                   </div>
                 </details>
@@ -289,19 +289,19 @@
           </div>
         </div>
         <div class="pre-match-col">
-          <span class="panel-label">${a}</span>
+          <span class="panel-label">${u}</span>
           <div class="pre-match-houses">
-            ${Object.keys(he).map(o=>{const l=he[o],c=q.filter(h=>h.house===o).length,u=r[o].length;return`
-                <details class="pre-match-accordion-item ${u>0?"has-some":"has-none"} ${u===c?"has-all":""}">
+            ${Object.keys(he).map(h=>{const p=he[h],f=q.filter(y=>y.house===h).length,g=r[h].length;return`
+                <details class="pre-match-accordion-item ${g>0?"has-some":"has-none"} ${g===f?"has-all":""}">
                   <summary class="pre-match-accordion-header">
-                    ${l?`<img src="${W(l.icon)}" alt="" class="house-mini-icon"/>`:""}
-                    <span class="house-mini-name">${o}</span>
-                    <span class="house-mini-count">${u}/${c}</span>
+                    ${p?`<img src="${W(p.icon)}" alt="" class="house-mini-icon"/>`:""}
+                    <span class="house-mini-name">${h}</span>
+                    <span class="house-mini-count">${g}/${f}</span>
                     <span class="chevron-icon">▼</span>
                   </summary>
                   <div class="pre-match-accordion-content">
-                    ${r[o].length===0?'<p class="empty-text">Nenhuma obtida</p>':`<ul>
-                          ${r[o].map(h=>`<li><strong>${h.id}</strong> — ${h.name}</li>`).join("")}
+                    ${r[h].length===0?'<p class="empty-text">Nenhuma obtida</p>':`<ul>
+                          ${r[h].map(y=>`<li><strong>${y.id}</strong> — ${y.name}</li>`).join("")}
                          </ul>`}
                   </div>
                 </details>

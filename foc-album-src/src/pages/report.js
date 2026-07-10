@@ -112,6 +112,11 @@ function renderPreMatch(state) {
     state.opponentCollection[s.id] && (!state.collection[s.id] || state.collection[s.id].quantity === 0)
   );
 
+  const count = iCanGet.length;
+  const label = (count === 2 || count >= 3) ? 'diferentes' : 'diferente';
+  const badgeBg = count >= 3 ? 'rgba(0, 204, 102, 0.15)' : 'rgba(255, 140, 0, 0.15)';
+  const badgeColor = count >= 3 ? '#00cc66' : '#ff8c00';
+
   const opponent = state.matches.find(m => m.id === state.report.matchId);
   const isPlayerA = state.report.isPlayerA;
   const opponentName = opponent ? (isPlayerA ? opponent.playerB : opponent.playerA) : 'Adversário';
@@ -125,8 +130,8 @@ function renderPreMatch(state) {
           <p style="margin: 4px 0 0 0; font-size: 0.8rem; color: var(--color-ash);">Veja o que cada jogador tem antes de escolher o deck.</p>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
-          <span class="pre-match-badge can-get" style="margin: 0; padding: 2px 8px; background: rgba(49, 133, 255, 0.15); color: #8db9ff; border-radius: var(--radius-sm); font-size: 0.72rem;">
-            ${iCanGet.length} obter
+          <span class="pre-match-badge can-get" style="margin: 0; padding: 2px 8px; background: ${badgeBg}; color: ${badgeColor}; border-radius: var(--radius-sm); font-size: 0.72rem;">
+            ${count} ${label}
           </span>
           <span class="chevron-icon" style="font-size: 0.8rem; transition: transform 0.2s;">▼</span>
         </div>
