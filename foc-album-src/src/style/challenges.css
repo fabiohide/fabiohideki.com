@@ -5,6 +5,12 @@
   gap: 16px;
 }
 
+.challenges-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
 /* Progress tracker */
 .challenges-progress-bar-wrapper {
   padding: 16px;
@@ -81,7 +87,7 @@
 .challenges-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
 .challenge-item {
@@ -234,4 +240,12 @@
 
 @media (min-width: 480px) {
   .challenge-item.is-completed .challenge-action { margin-top: 0; }
+}
+
+@media (min-width: 760px) {
+  .challenges-content-wrapper {
+    grid-column: 1 / -1;
+    max-width: 600px;
+    margin: 0 auto;
+  }
 }

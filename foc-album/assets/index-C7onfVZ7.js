@@ -215,8 +215,8 @@
         </button>
       </div>
 
-      <div class="section-heading" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 10px;">
-        <h2>${e==="match"?`Rodada ${t.activeRound.number}`:"Desafios"}</h2>
+      <div class="section-heading" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 10px; margin-bottom: 16px;">
+        <h2>${e==="match"?`Rodada ${t.activeRound.number} - SAS 86`:"Desafios"}</h2>
         ${e==="match"&&(t.user.isAdmin||["teste_1","teste_2"].includes(t.user.id))?`
           <button class="button button-secondary" data-action="resetMatch" style="margin: 0; padding: 6px 12px; font-size: 0.78rem; font-family: 'Fixture', sans-serif; text-transform: uppercase; font-weight: 700; height: 32px; min-height: auto;">
             Resetar Partida
