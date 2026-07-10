@@ -1,4 +1,4 @@
-import { HOUSE_META, PLAYER_STICKERS } from '../data/stickers.js';
+import { HOUSE_META, PLAYER_STICKERS, STICKERS } from '../data/stickers.js';
 import { renderChallengesContent } from './challenges.js';
 import { getAssetUrl } from '../utils/format.js';
 import { getSasBadgeData } from '../utils/sas.js';
@@ -145,8 +145,13 @@ function renderPreMatch(state) {
               const house = HOUSE_META[code];
               const total = PLAYER_STICKERS.filter(s => s.house === code).length;
               const owned = myHouses[code].length;
+              const hasDiffForOpponent = myHouses[code].some(s => !state.opponentCollection[s.id] || state.opponentCollection[s.id].quantity === 0);
+              const itemClass = hasDiffForOpponent
+                ? 'has-all'
+                : (owned > 0 ? 'opp-has-some' : 'has-none');
+
               return `
-                <details class="pre-match-accordion-item ${owned > 0 ? 'has-some' : 'has-none'} ${owned === total ? 'has-all' : ''}">
+                <details class="pre-match-accordion-item ${itemClass}">
                   <summary class="pre-match-accordion-header">
                     ${house ? `<img src="${getAssetUrl(house.icon)}" alt="" class="house-mini-icon"/>` : ''}
                     <span class="house-mini-name">${code}</span>
@@ -157,7 +162,7 @@ function renderPreMatch(state) {
                     ${myHouses[code].length === 0
                       ? '<p class="empty-text">Nenhuma obtida</p>'
                       : `<ul>
-                          ${myHouses[code].map(s => `<li class="my-sticker"><strong>${s.id}</strong> — ${s.name}</li>`).join('')}
+                          ${myHouses[code].map(s => `<li><strong>${s.id}</strong> — ${s.name}</li>`).join('')}
                          </ul>`
                     }
                   </div>
@@ -173,8 +178,13 @@ function renderPreMatch(state) {
               const house = HOUSE_META[code];
               const total = PLAYER_STICKERS.filter(s => s.house === code).length;
               const owned = opponentHouses[code].length;
+              const hasDiffForPlayer = opponentHouses[code].some(s => !state.collection[s.id] || state.collection[s.id].quantity === 0);
+              const itemClass = hasDiffForPlayer
+                ? 'has-missing'
+                : (owned > 0 ? 'opp-has-some' : 'has-none');
+
               return `
-                <details class="pre-match-accordion-item ${owned > 0 ? 'has-some' : 'has-none'} ${owned === total ? 'has-all' : ''}">
+                <details class="pre-match-accordion-item ${itemClass}">
                   <summary class="pre-match-accordion-header">
                     ${house ? `<img src="${getAssetUrl(house.icon)}" alt="" class="house-mini-icon"/>` : ''}
                     <span class="house-mini-name">${code}</span>
@@ -185,11 +195,7 @@ function renderPreMatch(state) {
                     ${opponentHouses[code].length === 0
                       ? '<p class="empty-text">Nenhuma obtida</p>'
                       : `<ul>
-                          ${opponentHouses[code].map(s => {
-                            const isMissing = !state.collection[s.id] || state.collection[s.id].quantity === 0;
-                            const itemClass = isMissing ? 'opp-sticker-missing' : 'opp-sticker-owned';
-                            return `<li class="${itemClass}"><strong>${s.id}</strong> — ${s.name}</li>`;
-                          }).join('')}
+                          ${opponentHouses[code].map(s => `<li><strong>${s.id}</strong> — ${s.name}</li>`).join('')}
                          </ul>`
                     }
                   </div>
@@ -236,12 +242,18 @@ function renderSingleReportForm(state) {
         <div class="house-selector-grid" style="margin: 0;">
           ${Object.values(HOUSE_META).map((house) => {
             const isSelected = state.selectedHouseCodes.includes(house.code);
+
+            const houseStickers = PLAYER_STICKERS.filter(s => s.house === house.code);
+            const hasOpponentUnique = houseStickers.some(s => state.opponentCollection[s.id] && (!state.collection[s.id] || state.collection[s.id].quantity === 0));
+            const showDot = hasOpponentUnique && !isSelected;
+
             return `
               <button class="house-selector-chip ${isSelected ? 'is-selected' : ''}" 
                       data-action="toggleHouse" 
                       data-value="${house.code}" 
                       type="button"
                       style="position: relative;">
+                ${showDot ? '<span class="house-green-dot"></span>' : ''}
                 <img src="${getAssetUrl(house.icon)}" alt="${house.name}" />
                 <span class="house-name">${house.name}</span>
               </button>

@@ -141,7 +141,7 @@
 /* House Selector Step 1 */
 .house-selector-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
   gap: 8px;
   margin: 16px 0;
 }
@@ -152,7 +152,7 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 12px 8px;
+  padding: 12px 4px;
   background: var(--color-graphite);
   box-shadow: var(--shadow-subtle);
   border-radius: var(--radius-lg);
@@ -161,6 +161,8 @@
   border: 0;
   outline: 0;
   transition: background 140ms ease, color 140ms ease, transform 140ms ease;
+  overflow: hidden;
+  width: 100%;
 }
 
 .house-selector-chip:hover {
@@ -187,9 +189,13 @@
 }
 
 .house-selector-chip .house-name {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 800;
   text-transform: uppercase;
+  text-align: center;
+  max-width: 100%;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .house-selector-chip .check-indicator {
@@ -919,14 +925,26 @@
   font-size: 0.78rem;
   overflow: hidden;
   transition: background 120ms;
+  border: 2.5px solid transparent;
 }
 
 .pre-match-accordion-item.has-some {
   background: var(--color-iron);
+  border: 2.5px solid var(--color-steel);
+}
+
+.pre-match-accordion-item.opp-has-some {
+  background: var(--color-iron);
 }
 
 .pre-match-accordion-item.has-all {
-  box-shadow: rgba(0, 99, 225, 0.5) 0 0 0 1px inset;
+  background: var(--color-iron);
+  border: 2.5px solid #3185ff;
+}
+
+.pre-match-accordion-item.has-missing {
+  border: 2.5px solid #00cc66;
+  background: rgba(0, 204, 102, 0.03);
 }
 
 .pre-match-accordion-header {
@@ -977,7 +995,7 @@
 
 .house-mini-count {
   font-size: var(--text-caption);
-  color: var(--color-steel);
+  color: var(--color-paper);
   font-weight: 600;
 }
 
@@ -993,32 +1011,12 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .pre-match-accordion-content li {
   font-size: 0.74rem;
-  padding: 6px 10px;
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.015);
-  display: block;
-}
-
-.pre-match-accordion-content li.my-sticker {
-  border: 2.5px solid var(--color-steel);
-  color: var(--color-paper);
-}
-
-.pre-match-accordion-content li.opp-sticker-owned {
-  border: 2.5px solid var(--color-steel);
   color: var(--color-ash);
-  opacity: 0.7;
-}
-
-.pre-match-accordion-content li.opp-sticker-missing {
-  border: 2.5px solid #00cc66; /* verde */
-  background: rgba(0, 204, 102, 0.06);
-  color: var(--color-paper);
 }
 
 .pre-match-accordion-content li strong {
@@ -1064,4 +1062,16 @@
 
 .pre-match-panel[open] .chevron-icon {
   transform: rotate(180deg);
+}
+
+.house-green-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  background-color: #00cc66;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(0, 204, 102, 0.6);
+  pointer-events: none;
 }
