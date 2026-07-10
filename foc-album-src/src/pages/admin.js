@@ -59,9 +59,14 @@ function renderValidationTab(state) {
                     Figurinha solicitada: <strong>${c.pickedId || '—'}</strong>
                   </span>
                 </div>
-                <button class="button button-primary" data-action="approveChallenge" data-value="${c.id}" data-player="${c.playerUsername || ''}" style="min-width: 100px; height: 36px; min-height: auto; padding: 0 16px;">
-                  Aprovar
-                </button>
+                <div style="display: flex; gap: 8px;">
+                  <button class="button button-secondary" data-action="rejectChallenge" data-value="${c.id}" data-player="${c.playerUsername || ''}" style="min-width: 80px; height: 36px; min-height: auto; padding: 0 12px; background: rgba(255, 77, 77, 0.1); color: #ff4d4d; border: 1.5px solid rgba(255, 77, 77, 0.2);">
+                    Rejeitar
+                  </button>
+                  <button class="button button-primary" data-action="approveChallenge" data-value="${c.id}" data-player="${c.playerUsername || ''}" style="min-width: 80px; height: 36px; min-height: auto; padding: 0 12px;">
+                    Aprovar
+                  </button>
+                </div>
               </div>
             `).join('')}
           </div>`
@@ -134,11 +139,14 @@ function renderValidationTab(state) {
                   <!-- Actions Footer -->
                   <div style="display: flex; gap: 10px; margin-top: 6px; justify-content: flex-end;">
                     ${!isResolved ? `
+                      <button class="button button-secondary" data-action="rejectMatch" data-value="${m.id}" style="height: 32px; min-height: auto; font-size: 0.75rem; padding: 0 10px; background: rgba(255, 77, 77, 0.1); color: #ff4d4d; border: 1.5px solid rgba(255, 77, 77, 0.2);" ${(m.player_a_reported || m.player_b_reported) ? '' : 'disabled'}>
+                        Rejeitar
+                      </button>
                       <button class="button button-secondary" data-action="confirmWO" data-value="${m.id}" style="height: 32px; min-height: auto; font-size: 0.75rem; padding: 0 10px;">
-                        Confirmar W.O. (0x0)
+                        W.O.
                       </button>
                       <button class="button button-primary" data-action="releasePacks" data-match="${m.id}" style="height: 32px; min-height: auto; font-size: 0.75rem; padding: 0 14px;" ${!canRelease ? 'disabled' : ''}>
-                        Liberar Figurinhas
+                        Aprovar
                       </button>
                     ` : `
                       <span style="font-size: 0.78rem; color: var(--color-ash); font-weight: 600; display: flex; align-items: center; gap: 4px;">

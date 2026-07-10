@@ -632,6 +632,47 @@ export async function dbApproveChallenge(playerUsername, challengeId, stickerId,
     });
 }
 
+// 6b. Rejeitar desafio
+export async function dbRejectChallenge(playerUsername, challengeId, adminUsername) {
+  if (!supabase) return;
+
+  await supabase
+    .from('foc2026_challenges')
+    .update({
+      picked_id: null,
+      pending_validation: false,
+      completed: false
+    })
+    .eq('player_username', playerUsername)
+    .eq('id', challengeId);
+
+  // Busca título do desafio para o log
+  const { data: challenge } = await supabase
+    .from('foc2026_challenges')
+    .select('title')
+    .eq('player_username', playerUsername)
+    .eq('id', challengeId)
+    .single();
+
+  const challengeTitle = challenge ? challenge.title : challengeId;
+
+  // Busca nome do jogador
+  const { data: player } = await supabase
+    .from('foc2026_players')
+    .select('name')
+    .eq('username', playerUsername)
+    .single();
+
+  const playerName = player ? player.name : playerUsername;
+
+  await supabase
+    .from('foc2026_admin_logs')
+    .insert({
+      message: `Admin rejeitou o desafio "${challengeTitle}" de ${playerName} (reporte resetado)`,
+      admin_username: adminUsername || null
+    });
+}
+
 // 7. Confirmar W.O. (0x0)
 export async function dbConfirmWO(matchId, adminUsername) {
   if (!supabase) return;
@@ -764,8 +805,8 @@ export async function dbCompletePicks(matchId, username, isPlayerA) {
   }
 }
 
-// 12. Reseta a partida entre teste_1 e teste_2 de volta ao estado inicial
-export async function dbResetMatch(matchId) {
+// 12. Reseta/Rejeita a partida de volta ao estado inicial
+export async function dbResetMatch(matchId, adminUsername) {
   if (!supabase) return;
 
   await supabase
@@ -784,7 +825,13 @@ export async function dbResetMatch(matchId) {
       player_a_houses: null,
       player_b_houses: null,
       player_a_picks_completed: false,
-      player_b_picks_completed: false
+      player_b_picks_completed: false,
+      player_a_deck_url: null,
+      player_b_deck_url: null,
+      player_a_deck_houses: null,
+      player_b_deck_houses: null,
+      player_a_reported_at: null,
+      player_b_reported_at: null
     })
     .eq('id', matchId);
 
@@ -794,6 +841,15 @@ export async function dbResetMatch(matchId) {
     .delete()
     .eq('source', 'pick')
     .in('player_username', ['teste_1', 'teste_2']);
+
+  if (adminUsername) {
+    await supabase
+      .from('foc2026_admin_logs')
+      .insert({
+        message: `Admin rejeitou e resetou os reportes da partida ${matchId}`,
+        admin_username: adminUsername
+      });
+  }
 }
 
 // 13. Salva o prazo da rodada manualmente

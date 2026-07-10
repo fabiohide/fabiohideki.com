@@ -21,6 +21,7 @@ import {
   dbPickStickers,
   dbClaimChallenge,
   dbApproveChallenge,
+  dbRejectChallenge,
   dbConfirmWO,
   dbUnfreezeMatch,
   dbAdminEditSticker,
@@ -590,6 +591,69 @@ async function approveChallenge(challengeId, playerUsername) {
   render();
 }
 
+async function rejectChallenge(challengeId, playerUsername) {
+  if (confirm("Tem certeza que deseja rejeitar o reporte deste desafio? Isso resetará a submissão do jogador.")) {
+    if (hasSupabaseConfig) {
+      await dbRejectChallenge(playerUsername, challengeId, state.user.id);
+      const fetched = await fetchFullState(state.user.id);
+      if (fetched) state = fetched;
+    } else {
+      const challenge = state.challenges.find(c => c.id === challengeId && c.playerUsername === playerUsername);
+      if (challenge) {
+        challenge.completed = false;
+        challenge.pendingValidation = false;
+        challenge.pickedId = null;
+      }
+      if (!state.adminLogs) state.adminLogs = [];
+      state.adminLogs.push({
+        timestamp: new Date().toISOString(),
+        message: `Admin rejeitou o desafio "${challengeId}" de ${playerUsername}`
+      });
+    }
+    render();
+  }
+}
+
+async function rejectMatch(matchId) {
+  if (confirm("Tem certeza que deseja rejeitar esta partida? Isso apagará os dados reportados por ambos os jogadores.")) {
+    if (hasSupabaseConfig) {
+      await dbResetMatch(matchId, state.user.id);
+      const fetched = await fetchFullState(state.user.id);
+      if (fetched) state = fetched;
+    } else {
+      const match = state.matches.find(m => m.id === matchId);
+      if (match) {
+        match.player_a_keys = 0;
+        match.player_b_keys = 0;
+        match.player_a_opp_keys = 0;
+        match.player_b_opp_keys = 0;
+        match.player_a_picks = '';
+        match.player_b_picks = '';
+        match.player_a_reported = false;
+        match.player_b_reported = false;
+        match.player_a_houses = null;
+        match.player_b_houses = null;
+        match.player_a_deck_url = null;
+        match.player_b_deck_url = null;
+        match.player_a_deck_houses = null;
+        match.player_b_deck_houses = null;
+        match.player_a_reported_at = null;
+        match.player_b_reported_at = null;
+        match.confirmed_at = null;
+        match.completed = false;
+        match.player_a_picks_completed = false;
+        match.player_b_picks_completed = false;
+      }
+      if (!state.adminLogs) state.adminLogs = [];
+      state.adminLogs.push({
+        timestamp: new Date().toISOString(),
+        message: `Admin rejeitou e resetou os reportes da partida ${matchId}`
+      });
+    }
+    render();
+  }
+}
+
 function closeChallengePicke() {
   state.activeChallengeId = null;
   render();
@@ -618,7 +682,7 @@ async function releasePacks(matchId) {
     const btn = document.querySelector(`[data-action="releasePacks"][data-match="${matchId}"]`);
     if (btn) {
       btn.disabled = true;
-      btn.textContent = 'Liberando...';
+      btn.textContent = 'Aprovando...';
     }
     try {
       await dbReleaseMatchPacks(
@@ -1188,9 +1252,16 @@ function render() {
       if (action === 'confirmChallenge') confirmChallenge(value);
       if (action === 'cancelChallenge') cancelChallenge();
       if (action === 'closeChallengePicke') closeChallengePicke();
+      if (action === 'rejectChallenge') {
+        const playerUsername = element.dataset.player;
+        rejectChallenge(value, playerUsername);
+      }
       if (action === 'approveChallenge') {
         const playerUsername = element.dataset.player;
         approveChallenge(value, playerUsername);
+      }
+      if (action === 'rejectMatch') {
+        rejectMatch(value);
       }
       if (action === 'pickChallengeSticker') {
         const challengeId = element.dataset.challenge;
