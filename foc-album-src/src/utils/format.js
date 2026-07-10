@@ -18,3 +18,25 @@ export function getAssetUrl(path) {
   return path;
 }
 
+export function parsePicksString(picksStr) {
+  if (!picksStr) return [];
+  let cleanStr = picksStr.replace(/^(Pick normal:\s*|Pick Quebra-Regra:\s*)/i, '');
+  return cleanStr.split(',')
+    .map(item => item.replace(/\s*\(.*?\)\s*/g, '').trim())
+    .filter(Boolean);
+}
+
+export function formatPicksForReport(pickedIds, state) {
+  if (!pickedIds || pickedIds.length === 0) return [];
+  if (!state.report.fallbackActive) {
+    return pickedIds.map((id, index) => index === 0 ? `Pick normal: ${id}` : id);
+  } else {
+    return pickedIds.map((id, index) => {
+      const isOpponent = state.opponentCollection[id] && (!state.collection[id] || state.collection[id].quantity === 0);
+      const suffix = isOpponent ? '(OPONENTE)' : '(QUEBRA-REGRA)';
+      const formattedId = `${id} ${suffix}`;
+      return index === 0 ? `Pick Quebra-Regra: ${formattedId}` : formattedId;
+    });
+  }
+}
+

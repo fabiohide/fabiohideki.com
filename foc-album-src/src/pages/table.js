@@ -7,14 +7,51 @@ export function renderTable(state) {
   // Filter players by active series tab
   const filteredPlayers = standings.filter(p => p.serie === activeTab);
 
-  // Sort players by: Wins -> Keys -> Challenges -> Stickers -> Name
-  const sortedPlayers = [...filteredPlayers].sort((a, b) => {
+  // Separate 'album' from active ranking list
+  const albumData = filteredPlayers.find(p => p.username === 'album');
+  const realPlayers = filteredPlayers.filter(p => p.username !== 'album');
+
+  // Sort real players by: Wins -> Keys -> Challenges -> Stickers -> Name
+  const sortedPlayers = [...realPlayers].sort((a, b) => {
     if (b.wins !== a.wins) return b.wins - a.wins;
     if (b.keys !== a.keys) return b.keys - a.keys;
     if (b.challengesCount !== a.challengesCount) return b.challengesCount - a.challengesCount;
     if (b.stickersCount !== a.stickersCount) return b.stickersCount - a.stickersCount;
     return formatPlayerNameFromLogin(a.username).localeCompare(formatPlayerNameFromLogin(b.username));
   });
+
+  let albumRowHtml = '';
+  if (activeTab === 'A' && albumData) {
+    const isCurrentUser = state.user.id === 'album';
+    const rowBg = isCurrentUser ? 'rgba(242, 193, 78, 0.06)' : 'rgba(255,255,255,0.01)';
+    const dimmedColor = 'rgba(255, 255, 255, 0.35)';
+    albumRowHtml = `
+      <tr style="border-top: 1.5px solid rgba(255,255,255,0.08); background: ${rowBg}; color: ${dimmedColor}; font-style: italic;">
+        <td style="padding: 12px 10px; text-align: center; font-weight: 700; color: ${dimmedColor};">-</td>
+        <td style="padding: 12px 24px 12px 14px; font-weight: 600; color: ${dimmedColor}; width: 1%; white-space: nowrap;">
+          ${formatPlayerNameFromLogin(albumData.username)}
+        </td>
+        <td style="padding: 12px 10px; text-align: center; font-weight: 600; color: ${dimmedColor};">
+          ${String(albumData.stickersCount).padStart(2, '0')}
+        </td>
+        <td style="padding: 12px 10px; text-align: center; font-weight: 700; color: ${dimmedColor};">
+          ${String(albumData.wins).padStart(2, '0')}
+        </td>
+        <td style="padding: 12px 10px; text-align: center; font-weight: 600; color: ${dimmedColor};">
+          ${String(albumData.losses).padStart(2, '0')}
+        </td>
+        <td style="padding: 12px 10px; text-align: center; color: ${dimmedColor};">
+          ${String(albumData.played).padStart(2, '0')}
+        </td>
+        <td style="padding: 12px 10px; text-align: center; font-weight: 700; color: ${dimmedColor};">
+          ${String(albumData.keys).padStart(2, '0')}
+        </td>
+        <td style="padding: 12px 10px; text-align: center; font-weight: 600; color: ${dimmedColor};">
+          ${String(albumData.challengesCount).padStart(2, '0')}
+        </td>
+      </tr>
+    `;
+  }
 
   return `
     <section class="page-view table-view">
@@ -48,7 +85,7 @@ export function renderTable(state) {
             </tr>
           </thead>
           <tbody>
-            ${sortedPlayers.length === 0 
+            ${sortedPlayers.length === 0 && !albumRowHtml
               ? `<tr><td colspan="8" style="padding: 24px; text-align: center; color: var(--color-ash);">Nenhum jogador cadastrado nesta série.</td></tr>`
               : sortedPlayers.map((p, idx) => {
                   const isCurrentUser = p.username === state.user.id;
@@ -85,7 +122,7 @@ export function renderTable(state) {
                       </td>
                     </tr>
                   `;
-                }).join('')
+                }).join('') + albumRowHtml
             }
           </tbody>
         </table>

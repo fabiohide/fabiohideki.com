@@ -14,6 +14,22 @@ function formatDeadlineDate(isoString) {
   return `${day} ${month}`;
 }
 
+function getSubmitBlockedReason(hasDeckLink, hasThreeHouses, isScoreValid, correctPicks, selectedCount, maxPicks) {
+  if (!hasDeckLink) {
+    return 'Por favor, insira o link do seu deck.';
+  }
+  if (!hasThreeHouses) {
+    return 'Selecione exatamente 3 casas para o seu deck.';
+  }
+  if (!isScoreValid) {
+    return 'O placar inserido é inválido (vencedor deve ter 3 chaves, sem empates).';
+  }
+  if (!correctPicks) {
+    return `Selecione a quantidade correta de figurinhas (${selectedCount}/${maxPicks} selecionadas).`;
+  }
+  return 'Preencha todos os campos obrigatórios.';
+}
+
 export function renderReport(state) {
   if (!state.user.packOpened) {
     return `
@@ -328,33 +344,36 @@ function renderSingleReportForm(state) {
       
       let pool = [];
       let maxPicks = myKeys;
-      let isFallback = false;
       let ruleLabelText = '';
       
-      if (oppEligibleInSelected.length >= myKeys) {
+      if (!state.report.fallbackActive) {
         pool = oppEligibleInSelected.map(s => ({ ...s, source: 'opponent' }));
-        maxPicks = myKeys;
-        ruleLabelText = `O oponente possui pelo menos ${myKeys} figurinha(s) inédita(s) nas casas do seu deck. Você pode escolher até ${maxPicks} delas.`;
+        maxPicks = Math.min(myKeys, pool.length);
+        const figText = maxPicks === 1 ? 'figurinha inédita' : 'figurinhas inéditas';
+        ruleLabelText = `Pick Normal: Você pode escolher até ${maxPicks} ${figText} do oponente para cada casa do seu deck.`;
       } else {
-        const playerMissing = PLAYER_STICKERS.filter(s => 
-          selectedCodes.includes(s.house) && 
-          (!state.collection[s.id] || state.collection[s.id].quantity === 0)
-        );
-        
         const poolMap = new Map();
-        oppEligibleInSelected.forEach(s => {
-          poolMap.set(s.id, { ...s, source: 'opponent' });
-        });
-        playerMissing.forEach(s => {
-          if (!poolMap.has(s.id)) {
-            poolMap.set(s.id, { ...s, source: 'fallback' });
+        selectedCodes.forEach(houseCode => {
+          const oppEligibleInHouse = oppEligibleInSelected.filter(s => s.house === houseCode);
+          if (oppEligibleInHouse.length > 0) {
+            oppEligibleInHouse.forEach(s => {
+              poolMap.set(s.id, { ...s, source: 'opponent' });
+            });
+          } else {
+            const playerMissingInHouse = PLAYER_STICKERS.filter(s => 
+              s.house === houseCode && 
+              (!state.collection[s.id] || state.collection[s.id].quantity === 0)
+            );
+            playerMissingInHouse.forEach(s => {
+              poolMap.set(s.id, { ...s, source: 'fallback' });
+            });
           }
         });
         
         pool = Array.from(poolMap.values());
         maxPicks = Math.min(myKeys, pool.length);
-        isFallback = true;
-        ruleLabelText = `O oponente possui apenas ${oppEligibleInSelected.length} figurinha(s) inédita(s) nas casas do seu deck. Você pode escolher as dele mais figurinhas do seu deck (fallback) até somar ${maxPicks}.`;
+        const figText = maxPicks === 1 ? 'figurinha inédita' : 'figurinhas inéditas';
+        ruleLabelText = `Quebra-Regra Ativo: Você pode escolher até ${maxPicks} ${figText} para cada casa do seu deck, mesmo que seu oponente não tenha ela.`;
       }
 
       picksSectionHtml = `
@@ -363,6 +382,18 @@ function renderSingleReportForm(state) {
             <h4 style="margin: 0;">Figurinhas Solicitadas</h4>
             <span class="selection-counter">${state.selectedPickIds.length}/${maxPicks} selecionadas</span>
           </div>
+
+          <!-- Quebra-Regra Toggle -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin: 8px 0 12px; padding: 8px 12px; background: rgba(255, 152, 0, 0.04); border: 1px solid rgba(255, 152, 0, 0.12); border-radius: var(--radius-md);">
+            <span style="font-size: 0.8rem; font-weight: 700; color: ${state.report.fallbackActive ? '#ff9800' : 'var(--color-ash)'};">
+              ${state.report.fallbackActive ? 'Quebra-Regra Ativo' : 'Quebra-Inativo'}
+            </span>
+            <label class="quebra-regra-switch" style="position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer;">
+              <input type="checkbox" data-action="toggleQuebraRegra" style="opacity: 0; width: 0; height: 0;" ${state.report.fallbackActive ? 'checked' : ''}>
+              <span class="slider" style="position: absolute; cursor: pointer; inset: 0; background-color: var(--color-iron); transition: .3s; border-radius: 24px; border: 1.5px solid rgba(255,255,255,0.08);"></span>
+            </label>
+          </div>
+          
           <p class="picker-instruction" style="margin: 0 0 10px 0; font-size: 0.78rem; color: var(--color-ash);">
             ${ruleLabelText}
           </p>
@@ -378,7 +409,7 @@ function renderSingleReportForm(state) {
                   
                   const sourceBadge = sticker.source === 'opponent'
                     ? `<span style="font-size: 0.65rem; background: rgba(76, 175, 80, 0.15); color: #81c784; padding: 2px 6px; border-radius: var(--radius-sm); font-weight: bold; margin-left: 8px; display: inline-block; border: 1px solid rgba(76, 175, 80, 0.2);">Oponente</span>`
-                    : `<span style="font-size: 0.65rem; background: rgba(255, 152, 0, 0.15); color: #ffb74d; padding: 2px 6px; border-radius: var(--radius-sm); font-weight: bold; margin-left: 8px; display: inline-block; border: 1px solid rgba(255, 152, 0, 0.2);">Fallback/Geral</span>`;
+                    : `<span style="font-size: 0.65rem; background: rgba(255, 152, 0, 0.15); color: #ffb74d; padding: 2px 6px; border-radius: var(--radius-sm); font-weight: bold; margin-left: 8px; display: inline-block; border: 1px solid rgba(255, 152, 0, 0.2);">Quebra-Regra</span>`;
 
                   return `
                     <div class="picker-list-item" style="padding: 10px 12px; min-height: auto; ${isSelected ? 'border-color: var(--color-signal-blue); background: rgba(49, 133, 255, 0.04);' : ''}">
@@ -402,6 +433,22 @@ function renderSingleReportForm(state) {
               </div>
             `
           }
+
+          ${state.report.fallbackActive ? `
+            <div style="margin-top: 14px; margin-bottom: 14px; padding: 12px; background: rgba(255, 152, 0, 0.02); border-radius: var(--radius-md); border: 1px solid rgba(255, 152, 0, 0.08);">
+              <span style="font-size: 0.78rem; font-weight: 800; color: #ff9800; display: block; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.03em;">Motivo:</span>
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 0.78rem; color: ${state.report.quebraRegraMotive === 'qty' ? 'var(--color-paper)' : 'var(--color-ash)'}; cursor: pointer; line-height: 1.3;">
+                  <input type="radio" name="quebra_regra_motivo" data-action="setQuebraRegraMotive" data-value="qty" ${state.report.quebraRegraMotive === 'qty' ? 'checked' : ''} style="margin: 2px 0 0 0; accent-color: #ff9800; width: 14px; height: 14px; flex-shrink: 0;">
+                  <span>Quantidade de Figurinhas Inéditas do oponente menor que 3.</span>
+                </label>
+                <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 0.78rem; color: ${state.report.quebraRegraMotive === 'combo' ? 'var(--color-paper)' : 'var(--color-ash)'}; cursor: pointer; line-height: 1.3;">
+                  <input type="radio" name="quebra_regra_motivo" data-action="setQuebraRegraMotive" data-value="combo" ${state.report.quebraRegraMotive === 'combo' ? 'checked' : ''} style="margin: 2px 0 0 0; accent-color: #ff9800; width: 14px; height: 14px; flex-shrink: 0;">
+                  <span>Combinações de casas impossível pelas coleções não especiais.</span>
+                </label>
+              </div>
+            </div>
+          ` : ''}
         </div>
       `;
     }
@@ -410,6 +457,7 @@ function renderSingleReportForm(state) {
   // 4. Submit button
   const hasDeckLink = Boolean(report.deckUrl);
   let correctPicks = false;
+  let maxPicks = myKeys;
   if (isScoreValid && hasThreeHouses) {
     const selectedCodes = state.selectedHouseCodes || [];
     const oppEligible = PLAYER_STICKERS.filter(s => 
@@ -419,23 +467,25 @@ function renderSingleReportForm(state) {
     const oppEligibleInSelected = oppEligible.filter(s => selectedCodes.includes(s.house));
     
     let pool = [];
-    let maxPicks = myKeys;
-    if (oppEligibleInSelected.length >= myKeys) {
+    if (!state.report.fallbackActive) {
       pool = oppEligibleInSelected;
-      maxPicks = myKeys;
+      maxPicks = Math.min(myKeys, pool.length);
     } else {
-      const playerMissing = PLAYER_STICKERS.filter(s => 
-        selectedCodes.includes(s.house) && 
-        (!state.collection[s.id] || state.collection[s.id].quantity === 0)
-      );
-      
       const poolMap = new Map();
-      oppEligibleInSelected.forEach(s => {
-        poolMap.set(s.id, s);
-      });
-      playerMissing.forEach(s => {
-        if (!poolMap.has(s.id)) {
-          poolMap.set(s.id, s);
+      selectedCodes.forEach(houseCode => {
+        const oppEligibleInHouse = oppEligibleInSelected.filter(s => s.house === houseCode);
+        if (oppEligibleInHouse.length > 0) {
+          oppEligibleInHouse.forEach(s => {
+            poolMap.set(s.id, s);
+          });
+        } else {
+          const playerMissingInHouse = PLAYER_STICKERS.filter(s => 
+            s.house === houseCode && 
+            (!state.collection[s.id] || state.collection[s.id].quantity === 0)
+          );
+          playerMissingInHouse.forEach(s => {
+            poolMap.set(s.id, s);
+          });
         }
       });
       pool = Array.from(poolMap.values());
@@ -455,6 +505,16 @@ function renderSingleReportForm(state) {
       <button class="button button-primary" data-action="submitSingleReport" ${!canSubmit ? 'disabled' : ''} style="width: 100%; margin: 16px 0 0 0; height: 44px; font-size: 0.9rem; text-transform: uppercase; font-weight: 700;">
         Reportar Partida
       </button>
+      ${!canSubmit ? `
+        <div class="submit-tooltip" style="margin-top: 8px; padding: 10px 12px; background: rgba(244, 67, 54, 0.08); border: 1px solid rgba(244, 67, 54, 0.2); border-radius: var(--radius-md); display: flex; align-items: flex-start; gap: 8px;">
+          <svg style="width: 14px; height: 14px; color: #ff5252; flex-shrink: 0; margin-top: 2px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+          <span style="font-size: 0.76rem; color: #ff8a80; line-height: 1.3;">
+            ${getSubmitBlockedReason(hasDeckLink, hasThreeHouses, isScoreValid, correctPicks, state.selectedPickIds.length, maxPicks)}
+          </span>
+        </div>
+      ` : ''}
     </div>
   `;
 }

@@ -252,7 +252,7 @@ function renderCollectionsTab(state) {
                 : '';
               return `
                 <div style="color: var(--color-ash); line-height: 1.4; border-bottom: 1px solid rgba(255,255,255,0.02); padding-bottom: 4px;">
-                  <span style="color: var(--color-steel); font-weight: 600;">[${dateStr}]</span> ${adminBadge}${log.message}
+                  <span style="color: var(--color-smoke); font-weight: 600;">[${dateStr}]</span> ${adminBadge}${log.message}
                 </div>
               `;
             }).join('')
@@ -261,6 +261,37 @@ function renderCollectionsTab(state) {
       </div>
     </div>
   `;
+}
+
+function getLogBadgeHtml(type) {
+  let labelText = type || 'info';
+  let color = 'var(--color-steel)';
+  let bg = 'rgba(255, 255, 255, 0.05)';
+  let border = '1px solid rgba(255, 255, 255, 0.05)';
+  
+  if (type === 'pick') {
+    labelText = 'oponente';
+    color = '#00cc66';
+    bg = 'rgba(0, 204, 102, 0.1)';
+    border = '1px solid rgba(0, 204, 102, 0.2)';
+  } else if (type === 'fallback') {
+    labelText = 'quebra-regra';
+    color = '#ff9800';
+    bg = 'rgba(255, 152, 0, 0.1)';
+    border = '1px solid rgba(255, 152, 0, 0.2)';
+  } else if (type === 'challenge') {
+    labelText = 'desafios';
+    color = '#3185ff';
+    bg = 'rgba(49, 133, 255, 0.1)';
+    border = '1px solid rgba(49, 133, 255, 0.2)';
+  } else if (type === 'pack') {
+    labelText = 'pacotinho';
+    color = '#ff5252';
+    bg = 'rgba(255, 82, 82, 0.1)';
+    border = '1px solid rgba(255, 82, 82, 0.2)';
+  }
+
+  return `<span style="font-size: 0.64rem; padding: 2px 6px; border-radius: var(--radius-full); background: ${bg}; color: ${color}; border: ${border}; margin-left: 6px; font-weight: 700; text-transform: uppercase; display: inline-block; vertical-align: middle;">${labelText}</span>`;
 }
 
 function renderHistoryTab(state) {
@@ -289,10 +320,10 @@ function renderHistoryTab(state) {
                     const dateStr = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                     return `
                       <div style="font-size: 0.8rem; color: var(--color-ash); display: flex; align-items: flex-start; gap: 8px; line-height: 1.4;">
-                        <span style="font-size: 0.72rem; color: var(--color-steel); white-space: nowrap; margin-top: 2px; font-family: monospace;">[${dateStr}]</span>
+                        <span style="font-size: 0.72rem; color: var(--color-smoke); white-space: nowrap; margin-top: 2px; font-family: monospace;">[${dateStr}]</span>
                         <div style="flex: 1;">
                           <span style="color: var(--color-paper); font-weight: 500;">${log.message}</span>
-                          <span style="font-size: 0.64rem; padding: 2px 6px; border-radius: var(--radius-full); background: rgba(255,255,255,0.05); margin-left: 6px; font-weight: 700; text-transform: uppercase; color: var(--color-steel); display: inline-block;">${log.type || 'info'}</span>
+                          ${getLogBadgeHtml(log.type)}
                         </div>
                       </div>
                     `;

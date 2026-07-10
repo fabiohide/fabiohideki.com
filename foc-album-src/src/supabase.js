@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
-import { STICKERS } from './data/stickers.js';
+import { STICKERS, PLAYER_STICKERS } from './data/stickers.js';
 import initialPacks from './data/initial-packs.json';
+import { parsePicksString } from './utils/format.js';
 
 
 const url = import.meta.env.VITE_SUPABASE_URL;
@@ -269,12 +270,11 @@ export async function fetchFullState(username) {
     report.completed = report.reported;
 
     report.matchDeadlinePassed = myMatch.match_deadline_passed;
-    report.fallbackActive = myMatch.fallback_active;
     report.isPlayerA = isPlayerA;
 
     // Puxa as figurinhas escolhidas do campo de picks do jogador
     const myPicksStr = isPlayerA ? myMatch.player_a_picks : myMatch.player_b_picks;
-    report.pickedIds = myPicksStr ? myPicksStr.split(',').filter(Boolean) : [];
+    report.pickedIds = parsePicksString(myPicksStr);
 
     // Busca a coleção do oponente EM MEMÓRIA
     if (opponentUsername && collectionsByPlayer[opponentUsername]) {
@@ -283,6 +283,21 @@ export async function fetchFullState(username) {
           quantity: collectionsByPlayer[opponentUsername][stickerId].quantity
         };
       });
+    }
+
+    // Default fallbackActive logic if player has not reported yet:
+    const hasReported = isPlayerA ? myMatch.player_a_reported : myMatch.player_b_reported;
+    const myKeys = report.playerAKeys;
+    if (!hasReported && selectedHouseCodes.length === 3) {
+      const oppEligible = PLAYER_STICKERS.filter(s => 
+        opponentCollection[s.id] && 
+        (!collection[s.id] || collection[s.id].quantity === 0)
+      );
+      report.fallbackActive = myKeys > 0 && oppEligible.length < myKeys;
+      report.quebraRegraMotive = report.fallbackActive ? 'qty' : 'combo';
+    } else {
+      report.fallbackActive = myMatch.fallback_active || false;
+      report.quebraRegraMotive = report.fallbackActive ? 'qty' : 'combo';
     }
   }
 
@@ -293,12 +308,20 @@ export async function fetchFullState(username) {
     adminUsername: l.admin_username || null
   }));
 
-  const stickersLog = (stickersLogData || []).map(l => ({
-    round: l.round_number,
-    timestamp: l.created_at,
-    message: l.message,
-    type: l.type
-  }));
+  const stickersLog = (stickersLogData || []).map(l => {
+    let resolvedType = l.type;
+    if (l.message && l.message.includes('(QUEBRA-REGRA)')) {
+      resolvedType = 'fallback';
+    } else if (l.message && l.message.includes('(OPONENTE)')) {
+      resolvedType = 'pick';
+    }
+    return {
+      round: l.round_number,
+      timestamp: l.created_at,
+      message: l.message,
+      type: resolvedType
+    };
+  });
 
   const formattedPlayers = (allPlayersData || []).map(p => ({
     id: p.username,
@@ -444,7 +467,7 @@ export async function fetchFullState(username) {
     allRounds: allRoundsData || [],
     allMatches: allMatchesData || [],
     allPicks: allPicksData || [],
-    currentRoute: 'packs',
+    currentRoute: window.location.hash.slice(1) || 'packs',
     albumPage: 0,
     reveal: null,
     selectedHouseCodes,
@@ -528,8 +551,8 @@ export async function dbOpenPendingPack(packId) {
 export async function dbReleaseMatchPacks(matchId, playerA, playerB, roundNumber, aName, bName, aPicks, bPicks, adminUsername) {
   if (!supabase) return;
 
-  const aPicksArr = Array.isArray(aPicks) ? aPicks : (aPicks ? aPicks.split(',').filter(Boolean) : []);
-  const bPicksArr = Array.isArray(bPicks) ? bPicks : (bPicks ? bPicks.split(',').filter(Boolean) : []);
+  const aPicksArr = Array.isArray(aPicks) ? aPicks : parsePicksString(aPicks);
+  const bPicksArr = Array.isArray(bPicks) ? bPicks : parsePicksString(bPicks);
 
   const { error } = await supabase.rpc('foc2026_release_match_packs', {
     p_match_id: matchId,

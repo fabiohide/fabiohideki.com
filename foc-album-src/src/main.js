@@ -38,7 +38,7 @@ import {
   dbReleaseMatchPacks
 } from './supabase.js';
 import { stickerCard } from './components/sticker-card.js';
-import { getAssetUrl } from './utils/format.js';
+import { getAssetUrl, formatPicksForReport, parsePicksString } from './utils/format.js';
 import { parseDokResponse } from './utils/sas.js';
 import { validateScore } from './utils/validation.js';
 import './style/login.css';
@@ -178,6 +178,19 @@ function toggleHouse(houseCode) {
       state.selectedHouseCodes.push(houseCode);
     }
   }
+  // Clear selected picks when houses change
+  state.selectedPickIds = [];
+
+  if (state.selectedHouseCodes.length === 3) {
+    const oppEligible = PLAYER_STICKERS.filter(s => 
+      state.opponentCollection[s.id] && 
+      (!state.collection[s.id] || state.collection[s.id].quantity === 0)
+    );
+    const myKeys = state.report.playerAKeys;
+    state.report.fallbackActive = myKeys > 0 && oppEligible.length < myKeys;
+    state.report.quebraRegraMotive = state.report.fallbackActive ? 'qty' : 'combo';
+  }
+
   render();
 }
 
@@ -204,6 +217,19 @@ function setKeys(side, value) {
     state.report.playerBKeys = next;
     state.selectedPickIds = [];
   }
+
+  // Update fallbackActive dynamically when keys change, if houses are selected
+  const myKeys = state.report.playerAKeys;
+  const selectedCodes = state.selectedHouseCodes || [];
+  if (selectedCodes.length === 3) {
+    const oppEligible = PLAYER_STICKERS.filter(s => 
+      state.opponentCollection[s.id] && 
+      (!state.collection[s.id] || state.collection[s.id].quantity === 0)
+    );
+    state.report.fallbackActive = myKeys > 0 && oppEligible.length < myKeys;
+    state.report.quebraRegraMotive = state.report.fallbackActive ? 'qty' : 'combo';
+  }
+
   render();
 }
 
@@ -297,22 +323,25 @@ function toggleReportPick(stickerId) {
   let pool = [];
   let maxPicks = myKeys;
   
-  if (oppEligibleInSelected.length >= myKeys) {
+  if (!state.report.fallbackActive) {
     pool = oppEligibleInSelected;
-    maxPicks = myKeys;
+    maxPicks = Math.min(myKeys, pool.length);
   } else {
-    const playerMissing = PLAYER_STICKERS.filter(s => 
-      selectedCodes.includes(s.house) && 
-      (!state.collection[s.id] || state.collection[s.id].quantity === 0)
-    );
-    
     const poolMap = new Map();
-    oppEligibleInSelected.forEach(s => {
-      poolMap.set(s.id, s);
-    });
-    playerMissing.forEach(s => {
-      if (!poolMap.has(s.id)) {
-        poolMap.set(s.id, s);
+    selectedCodes.forEach(houseCode => {
+      const oppEligibleInHouse = oppEligibleInSelected.filter(s => s.house === houseCode);
+      if (oppEligibleInHouse.length > 0) {
+        oppEligibleInHouse.forEach(s => {
+          poolMap.set(s.id, s);
+        });
+      } else {
+        const playerMissingInHouse = PLAYER_STICKERS.filter(s => 
+          s.house === houseCode && 
+          (!state.collection[s.id] || state.collection[s.id].quantity === 0)
+        );
+        playerMissingInHouse.forEach(s => {
+          poolMap.set(s.id, s);
+        });
       }
     });
     pool = Array.from(poolMap.values());
@@ -322,6 +351,16 @@ function toggleReportPick(stickerId) {
   if (index > -1) {
     state.selectedPickIds.splice(index, 1);
   } else {
+    const targetSticker = pool.find(s => s.id === stickerId);
+    if (targetSticker) {
+      const sameHouseIndex = state.selectedPickIds.findIndex(id => {
+        const s = pool.find(item => item.id === id);
+        return s && s.house === targetSticker.house;
+      });
+      if (sameHouseIndex > -1) {
+        state.selectedPickIds.splice(sameHouseIndex, 1);
+      }
+    }
     if (state.selectedPickIds.length < maxPicks) {
       state.selectedPickIds.push(stickerId);
     }
@@ -368,7 +407,7 @@ async function submitSingleReport() {
         report.deckHouses.split(','),
         report.playerAKeys,
         report.playerBKeys,
-        pickedIds,
+        formatPicksForReport(pickedIds, state),
         report.deckUrl
       );
 
@@ -400,6 +439,24 @@ async function submitSingleReport() {
     state.report.housesSubmitted = true;
     state.report.reported = true;
     state.report.completed = true;
+
+    const formattedPicks = formatPicksForReport(pickedIds, state);
+    const match = state.matches.find(m => m.id === matchId);
+    if (match) {
+      if (state.report.isPlayerA) {
+        match.player_a_picks = formattedPicks.join(',');
+        match.player_a_reported = true;
+        match.player_a_houses = report.deckHouses;
+        match.player_a_keys = report.playerAKeys;
+        match.player_a_opp_keys = report.playerBKeys;
+      } else {
+        match.player_b_picks = formattedPicks.join(',');
+        match.player_b_reported = true;
+        match.player_b_houses = report.deckHouses;
+        match.player_b_keys = report.playerBKeys;
+        match.player_b_opp_keys = report.playerAKeys;
+      }
+    }
 
     pickedIds.forEach(id => {
       if (state.collection[id]) {
@@ -477,11 +534,15 @@ async function completePicks() {
         state.collection[stickerId] = { quantity: 1, isNew: true, source: 'pick' };
       }
       if (!state.stickersLog) state.stickersLog = [];
+      
+      const isOpponent = state.opponentCollection[stickerId] && (!state.collection[stickerId] || state.collection[stickerId].quantity === 0);
+      const sourceLabel = isOpponent ? '(OPONENTE)' : '(QUEBRA-REGRA)';
+      
       state.stickersLog.push({
         round: state.activeRound.number,
         timestamp: new Date().toISOString(),
-        message: `${state.user.name} obteve a figurinha ${stickerId} via Pick pós-partida`,
-        type: 'pick'
+        message: `${state.user.name} obteve a figurinha ${stickerId} ${sourceLabel} via Pick pós-partida`,
+        type: isOpponent ? 'pick' : 'fallback'
       });
     });
     state.report.completed = true;
@@ -1218,6 +1279,27 @@ function render() {
       if (action === 'reportMatch') reportMatch();
       if (action === 'editReport') editReport();
       if (action === 'toggleReportPick') toggleReportPick(value);
+      if (action === 'toggleQuebraRegra') {
+        state.report.fallbackActive = !state.report.fallbackActive;
+        state.selectedPickIds = [];
+        if (state.report.fallbackActive) {
+          const selectedCodes = state.selectedHouseCodes || [];
+          const oppEligible = PLAYER_STICKERS.filter(s => 
+            state.opponentCollection[s.id] && 
+            (!state.collection[s.id] || state.collection[s.id].quantity === 0)
+          );
+          const oppEligibleInSelected = oppEligible.filter(s => selectedCodes.includes(s.house));
+          const myKeys = state.report.playerAKeys;
+          state.report.quebraRegraMotive = oppEligibleInSelected.length < myKeys ? 'qty' : 'combo';
+        }
+        render();
+        return;
+      }
+      if (action === 'setQuebraRegraMotive') {
+        state.report.quebraRegraMotive = value;
+        render();
+        return;
+      }
       if (action === 'submitSingleReport') submitSingleReport();
       if (action === 'closeReportModal') closeReportModal();
       if (action === 'pasteDeckLink') pasteDeckLink();
