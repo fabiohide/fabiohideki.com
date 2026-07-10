@@ -982,7 +982,7 @@
 }
 
 .pre-match-accordion-content {
-  padding: 8px 12px 10px 38px;
+  padding: 10px 12px 10px 38px;
   border-top: 1px solid rgba(255, 255, 255, 0.04);
   background: rgba(0, 0, 0, 0.12);
 }
@@ -993,12 +993,32 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .pre-match-accordion-content li {
   font-size: 0.74rem;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.015);
+  display: block;
+}
+
+.pre-match-accordion-content li.my-sticker {
+  border: 2.5px solid var(--color-steel);
+  color: var(--color-paper);
+}
+
+.pre-match-accordion-content li.opp-sticker-owned {
+  border: 2.5px solid var(--color-steel);
   color: var(--color-ash);
+  opacity: 0.7;
+}
+
+.pre-match-accordion-content li.opp-sticker-missing {
+  border: 2.5px solid #00cc66; /* verde */
+  background: rgba(0, 204, 102, 0.06);
+  color: var(--color-paper);
 }
 
 .pre-match-accordion-content li strong {

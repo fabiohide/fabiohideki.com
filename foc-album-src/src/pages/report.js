@@ -157,7 +157,7 @@ function renderPreMatch(state) {
                     ${myHouses[code].length === 0
                       ? '<p class="empty-text">Nenhuma obtida</p>'
                       : `<ul>
-                          ${myHouses[code].map(s => `<li><strong>${s.id}</strong> — ${s.name}</li>`).join('')}
+                          ${myHouses[code].map(s => `<li class="my-sticker"><strong>${s.id}</strong> — ${s.name}</li>`).join('')}
                          </ul>`
                     }
                   </div>
@@ -185,7 +185,11 @@ function renderPreMatch(state) {
                     ${opponentHouses[code].length === 0
                       ? '<p class="empty-text">Nenhuma obtida</p>'
                       : `<ul>
-                          ${opponentHouses[code].map(s => `<li><strong>${s.id}</strong> — ${s.name}</li>`).join('')}
+                          ${opponentHouses[code].map(s => {
+                            const isMissing = !state.collection[s.id] || state.collection[s.id].quantity === 0;
+                            const itemClass = isMissing ? 'opp-sticker-missing' : 'opp-sticker-owned';
+                            return `<li class="${itemClass}"><strong>${s.id}</strong> — ${s.name}</li>`;
+                          }).join('')}
                          </ul>`
                     }
                   </div>
