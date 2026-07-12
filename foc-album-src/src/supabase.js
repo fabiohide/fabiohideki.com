@@ -832,6 +832,69 @@ export async function dbCompletePicks(matchId, username, isPlayerA) {
 export async function dbResetMatch(matchId, adminUsername) {
   if (!supabase) return;
 
+  // 1. Obter informações atuais da partida antes de resetar (para remoção de figurinhas e pacotes)
+  const { data: matchData } = await supabase
+    .from('foc2026_matches')
+    .select('player_a_username, player_b_username, round_number, player_a_picks, player_b_picks')
+    .eq('id', matchId)
+    .single();
+
+  if (matchData) {
+    const { player_a_username, player_b_username, round_number, player_a_picks, player_b_picks } = matchData;
+    
+    // Parsear escolhas de figurinhas para IDs limpos
+    const aPicksArr = parsePicksString(player_a_picks);
+    const bPicksArr = parsePicksString(player_b_picks);
+
+    // Deletar pacotes pendentes gerados para essa rodada/partida
+    await supabase
+      .from('foc2026_pending_packs')
+      .delete()
+      .eq('round_number', round_number)
+      .in('player_username', [player_a_username, player_b_username]);
+
+    // Função auxiliar para decrementar/deletar figurinhas da coleção
+    const removePicksFromCollection = async (username, picks) => {
+      if (!picks || picks.length === 0) return;
+      for (const stickerId of picks) {
+        const { data: colData } = await supabase
+          .from('foc2026_collections')
+          .select('quantity')
+          .eq('player_username', username)
+          .eq('sticker_id', stickerId);
+          
+        if (colData && colData.length > 0) {
+          const qty = colData[0].quantity;
+          if (qty > 1) {
+            await supabase
+              .from('foc2026_collections')
+              .update({ quantity: qty - 1 })
+              .eq('player_username', username)
+              .eq('sticker_id', stickerId);
+          } else {
+            await supabase
+              .from('foc2026_collections')
+              .delete()
+              .eq('player_username', username)
+              .eq('sticker_id', stickerId);
+          }
+        }
+      }
+    };
+
+    await removePicksFromCollection(player_a_username, aPicksArr);
+    await removePicksFromCollection(player_b_username, bPicksArr);
+
+    // Remover logs de stickers de tipo 'pick' desta rodada/jogadores
+    await supabase
+      .from('foc2026_stickers_log')
+      .delete()
+      .eq('round_number', round_number)
+      .eq('type', 'pick')
+      .in('player_username', [player_a_username, player_b_username]);
+  }
+
+  // 2. Resetar os campos da partida
   await supabase
     .from('foc2026_matches')
     .update({
@@ -854,7 +917,8 @@ export async function dbResetMatch(matchId, adminUsername) {
       player_a_deck_houses: null,
       player_b_deck_houses: null,
       player_a_reported_at: null,
-      player_b_reported_at: null
+      player_b_reported_at: null,
+      packs_released: false
     })
     .eq('id', matchId);
 

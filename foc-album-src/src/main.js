@@ -704,6 +704,7 @@ async function rejectMatch(matchId) {
         match.completed = false;
         match.player_a_picks_completed = false;
         match.player_b_picks_completed = false;
+        match.packs_released = false;
       }
       if (!state.adminLogs) state.adminLogs = [];
       state.adminLogs.push({
