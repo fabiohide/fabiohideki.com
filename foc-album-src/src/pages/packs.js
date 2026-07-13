@@ -23,8 +23,8 @@ export function renderPacks(state) {
 }
 
 function renderPack(pack, state) {
-  const packClass = pack.type === 'challenge' ? 'is-golden' : 'is-player';
-  const btnClass = pack.type === 'challenge' ? 'button-gold' : 'button-silver';
+  const packClass = pack.type === 'challenge' ? 'is-golden' : (pack.type === 'emblem_round' ? 'is-emblem-round' : 'is-player');
+  const btnClass = pack.type === 'challenge' ? 'button-gold' : (pack.type === 'emblem_round' ? 'button-rainbow' : 'button-silver');
   const disabled = pack.opened || pack.disabled ? 'disabled' : '';
 
   let label = 'Abrir';
@@ -72,7 +72,7 @@ function renderReveal(reveal, collection, state) {
             <img src="${getAssetUrl('/assets/sticker_back.webp')}" alt="Verso" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
           </div>
           <div class="flip-card-front">
-            ${stickerCard(id, collection, { small: true, forceOwned: true, noAction: true })}
+            ${stickerCard(id, collection, { small: true, forceOwned: true })}
           </div>
         </div>
       </div>
@@ -85,12 +85,16 @@ function renderReveal(reveal, collection, state) {
 
   const isPending = reveal.pack.isPendingPack;
   const isCrest = reveal.pack.type === 'challenge';
+  const isEmblemRound = reveal.pack.type === 'emblem_round';
   
-  let eyebrowText = isCrest ? 'Pacotinho dourado' : (isPending ? 'Pacotinho de Match' : 'Pacotinho inicial');
+  let eyebrowText = isCrest ? 'Pacotinho dourado' : (isEmblemRound ? 'Extra Pack' : (isPending ? 'Pacotinho de Match' : 'Pacotinho inicial'));
   let h2Text = `${reveal.newIds.length} novas figurinhas!`;
   
   if (isPending && state) {
-    if (isCrest && reveal.pack.challengeName) {
+    if (isEmblemRound) {
+      eyebrowText = '';
+      h2Text = `Rodada ${reveal.pack.roundNumber || 3}: Extra Pack`;
+    } else if (isCrest && reveal.pack.challengeName) {
       h2Text = reveal.pack.challengeName;
       const oppPart = reveal.pack.subtitle && reveal.pack.subtitle !== 'Desafio' ? ` · vs ${reveal.pack.opponentName || reveal.pack.subtitle.replace('vs ', '')}` : '';
       const roundNum = reveal.pack.roundNumber || 1;

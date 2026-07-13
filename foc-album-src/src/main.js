@@ -83,6 +83,9 @@ async function openPack(packId) {
   if (pack.id === 'extra_pack') {
     localStorage.setItem('foc_extra_pack_opened', 'true');
   }
+  if (pack.id === 'emblem_round_3') {
+    localStorage.setItem(`foc_emblem_round_opened_${state.user.id}`, 'true');
+  }
 
   const newIds = [];
   const duplicateIds = [];
@@ -113,7 +116,7 @@ async function openPack(packId) {
   if (hasSupabaseConfig) {
     // Adiciona localmente na coleção de forma síncrona instantânea para evitar race conditions
     pack.stickerIds.forEach((id) => {
-      state.collection[id] = { quantity: 1, isNew: true, source: 'pack' };
+      state.collection[id] = { quantity: 1, isNew: true, source: pack.type === 'emblem_round' ? 'emblem_round' : 'pack' };
     });
     state.user.packOpened = true;
 
@@ -126,7 +129,7 @@ async function openPack(packId) {
     }
   } else {
     pack.stickerIds.forEach((id) => {
-      state.collection[id] = { quantity: 1, isNew: true, source: 'pack' };
+      state.collection[id] = { quantity: 1, isNew: true, source: pack.type === 'emblem_round' ? 'emblem_round' : 'pack' };
       newIds.push(id);
 
       if (!state.stickersLog) state.stickersLog = [];
@@ -150,7 +153,7 @@ function setAlbumPage(index) {
 }
 
 function getFallbackPackStickerIds(packType) {
-  if (packType === 'challenge') {
+  if (packType === 'challenge' || packType === 'emblem_round') {
     const missingCrests = STICKERS
       .filter((sticker) => sticker.type === 'crest')
       .filter((sticker) => !state.collection[sticker.id] || state.collection[sticker.id].quantity === 0)
@@ -324,8 +327,33 @@ function toggleReportPick(stickerId) {
   let maxPicks = myKeys;
   
   if (!state.report.fallbackActive) {
-    pool = oppEligibleInSelected;
-    maxPicks = Math.min(myKeys, pool.length);
+    // Pick Normal
+    // 1. Add opponent eligible stickers
+    const eligibleInSelected = oppEligibleInSelected.map(s => ({ ...s, source: 'opponent' }));
+    pool = [...eligibleInSelected];
+    
+    // 2. Add emblem fallback stickers for selected houses where opponent has 0 player stickers
+    selectedCodes.forEach(hc => {
+      const oppHasZero = !PLAYER_STICKERS.some(s => s.house === hc && state.opponentCollection[s.id] && state.opponentCollection[s.id].quantity > 0);
+      if (oppHasZero) {
+        const hasEmblem = state.collection[hc + ' 0'] && state.collection[hc + ' 0'].quantity > 0;
+        if (hasEmblem) {
+          const missingInHouse = PLAYER_STICKERS.filter(s => 
+            s.house === hc && 
+            (!state.collection[s.id] || state.collection[s.id].quantity === 0)
+          );
+          missingInHouse.forEach(s => {
+            pool.push({ ...s, source: 'emblem' });
+          });
+        }
+      }
+    });
+
+    const maxPicksPossible = selectedCodes.reduce((sum, hc) => {
+      const hasEligible = pool.some(s => s.house === hc);
+      return sum + (hasEligible ? 1 : 0);
+    }, 0);
+    maxPicks = Math.min(myKeys, maxPicksPossible);
   } else {
     const poolMap = new Map();
     selectedCodes.forEach(houseCode => {
@@ -345,7 +373,11 @@ function toggleReportPick(stickerId) {
       }
     });
     pool = Array.from(poolMap.values());
-    maxPicks = Math.min(myKeys, pool.length);
+    const maxPicksPossible = selectedCodes.reduce((sum, hc) => {
+      const hasEligible = pool.some(s => s.house === hc);
+      return sum + (hasEligible ? 1 : 0);
+    }, 0);
+    maxPicks = Math.min(myKeys, maxPicksPossible);
   }
 
   if (index > -1) {
@@ -536,13 +568,25 @@ async function completePicks() {
       if (!state.stickersLog) state.stickersLog = [];
       
       const isOpponent = state.opponentCollection[stickerId] && (!state.collection[stickerId] || state.collection[stickerId].quantity === 0);
-      const sourceLabel = isOpponent ? '(OPONENTE)' : '(QUEBRA-REGRA)';
+      const houseCode = stickerId.split(' ')[0];
+      const hasEmblem = state.collection[houseCode + ' 0'] && state.collection[houseCode + ' 0'].quantity > 0;
+      const oppHasZero = !PLAYER_STICKERS.some(s => s.house === houseCode && state.opponentCollection[s.id] && state.opponentCollection[s.id].quantity > 0);
+      
+      let sourceLabel = '(QUEBRA-REGRA)';
+      let logType = 'fallback';
+      if (isOpponent) {
+        sourceLabel = '(OPONENTE)';
+        logType = 'pick';
+      } else if (hasEmblem && oppHasZero) {
+        sourceLabel = '(BRASÃO)';
+        logType = 'emblem';
+      }
       
       state.stickersLog.push({
         round: state.activeRound.number,
         timestamp: new Date().toISOString(),
         message: `${state.user.name} obteve a figurinha ${stickerId} ${sourceLabel} via Pick pós-partida`,
-        type: isOpponent ? 'pick' : 'fallback'
+        type: logType
       });
     });
     state.report.completed = true;
@@ -1425,10 +1469,34 @@ function render() {
           const oppEligibleInSelected = oppEligible.filter(s => selectedCodes.includes(s.house));
 
           let pool = [];
-          let maxPicks = myKeys;
-          if (oppEligibleInSelected.length >= myKeys) {
-            pool = oppEligibleInSelected;
-            maxPicks = myKeys;
+          if (!state.report.fallbackActive) {
+            // Pick Normal
+            // 1. Add opponent eligible stickers
+            const eligibleInSelected = oppEligibleInSelected.map(s => ({ ...s, source: 'opponent' }));
+            pool = [...eligibleInSelected];
+            
+            // 2. Add emblem fallback stickers for selected houses where opponent has 0 player stickers
+            selectedCodes.forEach(hc => {
+              const oppHasZero = !PLAYER_STICKERS.some(s => s.house === hc && state.opponentCollection[s.id] && state.opponentCollection[s.id].quantity > 0);
+              if (oppHasZero) {
+                const hasEmblem = state.collection[hc + ' 0'] && state.collection[hc + ' 0'].quantity > 0;
+                if (hasEmblem) {
+                  const missingInHouse = PLAYER_STICKERS.filter(s => 
+                    s.house === hc && 
+                    (!state.collection[s.id] || state.collection[s.id].quantity === 0)
+                  );
+                  missingInHouse.forEach(s => {
+                    pool.push({ ...s, source: 'emblem' });
+                  });
+                }
+              }
+            });
+
+            const maxPicksPossible = selectedCodes.reduce((sum, hc) => {
+              const hasEligible = pool.some(s => s.house === hc);
+              return sum + (hasEligible ? 1 : 0);
+            }, 0);
+            maxPicks = Math.min(myKeys, maxPicksPossible);
           } else {
             const playerMissing = PLAYER_STICKERS.filter(s =>
               selectedCodes.includes(s.house) &&
@@ -1445,7 +1513,11 @@ function render() {
               }
             });
             pool = Array.from(poolMap.values());
-            maxPicks = Math.min(myKeys, pool.length);
+            const maxPicksPossible = selectedCodes.reduce((sum, hc) => {
+              const hasEligible = pool.some(s => s.house === hc);
+              return sum + (hasEligible ? 1 : 0);
+            }, 0);
+            maxPicks = Math.min(myKeys, maxPicksPossible);
           }
           correctPicks = myKeys === 0 || state.selectedPickIds.length === maxPicks;
         }
@@ -1575,7 +1647,11 @@ function renderHighlightOverlay() {
       const round = owned.acquiredRound;
       const opp = owned.acquiredOpponent;
       if (round && opp) {
-        sourceText = `Rodada ${round}: vs ${opp}`;
+        if (opp === 'Extra Pack') {
+          sourceText = `Rodada ${round}: Extra Pack`;
+        } else {
+          sourceText = `Rodada ${round}: vs ${opp}`;
+        }
       } else {
         const match = state.matches.find(m => m.id === state.report.matchId);
         const roundNum = state.activeRound.number;
@@ -1600,6 +1676,8 @@ function renderHighlightOverlay() {
       } else {
         sourceText = challengeTitle;
       }
+    } else if (owned.source === 'emblem_round') {
+      sourceText = 'Rodada 3 - Extra Pack.';
     } else if (owned.source === 'admin') {
       sourceText = 'Ajuste de Administrador.';
     }

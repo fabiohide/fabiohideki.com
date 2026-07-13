@@ -314,6 +314,8 @@ export async function fetchFullState(username) {
       resolvedType = 'fallback';
     } else if (l.message && l.message.includes('(OPONENTE)')) {
       resolvedType = 'pick';
+    } else if (l.message && l.message.includes('(BRASÃO)')) {
+      resolvedType = 'emblem';
     }
     return {
       round: l.round_number,
@@ -401,29 +403,32 @@ export async function fetchFullState(username) {
 
   let openedPendingPlayerCount = 0;
   let openedPendingChallengeCount = 0;
+  let openedPendingEmblemRoundCount = 0;
 
   if (pendingPacksData) {
     pendingPacksData.forEach(p => {
+      const resolvedType = p.pack_type === 'crest' ? 'challenge' : (p.pack_type || 'player');
       if (p.opened) {
-        if (p.pack_type === 'crest') {
+        if (resolvedType === 'challenge') {
           openedPendingChallengeCount++;
+        } else if (resolvedType === 'emblem_round') {
+          openedPendingEmblemRoundCount++;
         } else {
           openedPendingPlayerCount++;
         }
-      } else {
-        packs.push({
-          id: p.id,
-          type: p.pack_type === 'crest' ? 'challenge' : (p.pack_type || 'player'),
-          title: p.pack_type === 'crest' ? 'Pacotinho dourado' : `Pacotinho Rodada ${p.round_number}`,
-          subtitle: p.pack_type === 'crest' ? (p.challenge_name || 'Desafio') : `vs ${p.opponent_name || 'Adversário'}`,
-          image: p.pack_type === 'crest' ? '/assets/pack/golden_pack.webp' : '/assets/pack/player_pack.webp',
-          opened: false,
-          stickerIds: Array.isArray(p.sticker_ids) ? p.sticker_ids : JSON.parse(p.sticker_ids || '[]'),
-          isPendingPack: true,
-          roundNumber: p.round_number,
-          challengeName: p.challenge_name
-        });
       }
+      packs.push({
+        id: p.id,
+        type: resolvedType,
+        title: resolvedType === 'emblem_round' ? `Rodada ${p.round_number}: Extra Pack` : (resolvedType === 'challenge' ? 'Pacotinho dourado' : `Pacotinho Rodada ${p.round_number}`),
+        subtitle: resolvedType === 'emblem_round' ? (p.challenge_name || 'Extra Pack') : (resolvedType === 'challenge' ? (p.challenge_name || 'Desafio') : `vs ${p.opponent_name || 'Adversário'}`),
+        image: resolvedType === 'emblem_round' ? '/assets/pack/holo_pack.webp' : (resolvedType === 'challenge' ? '/assets/pack/golden_pack.webp' : '/assets/pack/player_pack.webp'),
+        opened: p.opened,
+        stickerIds: Array.isArray(p.sticker_ids) ? p.sticker_ids : JSON.parse(p.sticker_ids || '[]'),
+        isPendingPack: true,
+        roundNumber: p.round_number,
+        challengeName: p.challenge_name
+      });
     });
   }
 
@@ -452,11 +457,28 @@ export async function fetchFullState(username) {
     });
   }
 
+  let emblemRoundOpened = false;
+  const hasDbEmblemPack = pendingPacksData && pendingPacksData.some(p => p.pack_type === 'emblem_round');
+  if (activeRound.number >= 3 && !hasDbEmblemPack) {
+    emblemRoundOpened = (typeof window !== 'undefined' && window.localStorage.getItem('foc_emblem_round_opened_' + username) === 'true');
+    packs.push({
+      id: 'emblem_round_3',
+      type: 'emblem_round',
+      title: 'Rodada 3: Extra Pack',
+      subtitle: 'Extra Pack',
+      image: '/assets/pack/holo_pack.webp',
+      opened: emblemRoundOpened,
+      stickerIds: []
+    });
+  }
+
   const totalPlayerOpened = (welcomeOpened ? 1 : 0) + (username === 'teste_1' && extraOpened ? 1 : 0) + openedPendingPlayerCount;
   const totalChallengeOpened = (goldenOpened ? 1 : 0) + openedPendingChallengeCount;
+  const totalEmblemRoundOpened = (emblemRoundOpened ? 1 : 0) + openedPendingEmblemRoundCount;
   const openedPacksCount = {
     player: totalPlayerOpened,
-    challenge: totalChallengeOpened
+    challenge: totalChallengeOpened,
+    emblem_round: totalEmblemRoundOpened
   };
 
   return {

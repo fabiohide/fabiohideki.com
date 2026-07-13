@@ -274,6 +274,11 @@ function getLogBadgeHtml(type) {
     color = '#00cc66';
     bg = 'rgba(0, 204, 102, 0.1)';
     border = '1px solid rgba(0, 204, 102, 0.2)';
+  } else if (type === 'emblem') {
+    labelText = 'brasão';
+    color = '#3185ff';
+    bg = 'rgba(49, 133, 255, 0.1)';
+    border = '1px solid rgba(49, 133, 255, 0.2)';
   } else if (type === 'fallback') {
     labelText = 'quebra-regra';
     color = '#ff9800';

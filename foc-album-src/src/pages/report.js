@@ -166,12 +166,29 @@ function renderPreMatch(state) {
                 ? 'has-all'
                 : (owned > 0 ? 'opp-has-some' : 'has-none');
 
+              let inlineStyle = '';
+              let hexSvg = '';
+              const hasEmblem = state.collection[code + ' 0'] && state.collection[code + ' 0'].quantity > 0;
+              if (owned === 0 && hasEmblem) {
+                const oppHasAll = opponentHouses[code].length === total;
+                const fill = oppHasAll ? 'var(--color-ash)' : 'var(--color-signal-blue)';
+                hexSvg = `
+                  <svg viewBox="0 0 100 100" style="width: 12px; height: 12px; fill: ${fill}; margin-right: 4px; display: inline-block; vertical-align: middle; flex-shrink: 0;">
+                    <polygon points="50,5 95,25 95,75 50,95 5,75 5,25"/>
+                  </svg>
+                `;
+                inlineStyle = `style="border: 2.5px solid ${fill};"`;
+              }
+
               return `
-                <details class="pre-match-accordion-item ${itemClass}">
+                <details class="pre-match-accordion-item ${itemClass}" ${inlineStyle}>
                   <summary class="pre-match-accordion-header">
                     ${house ? `<img src="${getAssetUrl(house.icon)}" alt="" class="house-mini-icon"/>` : ''}
                     <span class="house-mini-name">${code}</span>
-                    <span class="house-mini-count">${owned}/${total}</span>
+                    <div style="display: flex; align-items: center; justify-content: flex-end; gap: 4px;">
+                      ${hexSvg}
+                      <span class="house-mini-count" style="margin: 0;">${owned}/${total}</span>
+                    </div>
                     <span class="chevron-icon">▼</span>
                   </summary>
                   <div class="pre-match-accordion-content">
@@ -199,12 +216,29 @@ function renderPreMatch(state) {
                 ? 'has-missing'
                 : (owned > 0 ? 'opp-has-some' : 'has-none');
 
+              let inlineStyle = '';
+              let hexOppSvg = '';
+              const oppHasEmblem = state.opponentCollection[code + ' 0'] && state.opponentCollection[code + ' 0'].quantity > 0;
+              if (owned === 0 && oppHasEmblem) {
+                const iHaveAll = myHouses[code].length === total;
+                const fill = iHaveAll ? 'var(--color-ash)' : 'var(--color-green)';
+                hexOppSvg = `
+                  <svg viewBox="0 0 100 100" style="width: 12px; height: 12px; fill: ${fill}; margin-right: 4px; display: inline-block; vertical-align: middle; flex-shrink: 0;">
+                    <polygon points="50,5 95,25 95,75 50,95 5,75 5,25"/>
+                  </svg>
+                `;
+                inlineStyle = `style="border: 2.5px solid ${fill};"`;
+              }
+
               return `
-                <details class="pre-match-accordion-item ${itemClass}">
+                <details class="pre-match-accordion-item ${itemClass}" ${inlineStyle}>
                   <summary class="pre-match-accordion-header">
                     ${house ? `<img src="${getAssetUrl(house.icon)}" alt="" class="house-mini-icon"/>` : ''}
                     <span class="house-mini-name">${code}</span>
-                    <span class="house-mini-count">${owned}/${total}</span>
+                    <div style="display: flex; align-items: center; justify-content: flex-end; gap: 4px;">
+                      ${hexOppSvg}
+                      <span class="house-mini-count" style="margin: 0;">${owned}/${total}</span>
+                    </div>
                     <span class="chevron-icon">▼</span>
                   </summary>
                   <div class="pre-match-accordion-content">
@@ -261,7 +295,13 @@ function renderSingleReportForm(state) {
 
             const houseStickers = PLAYER_STICKERS.filter(s => s.house === house.code);
             const hasOpponentUnique = houseStickers.some(s => state.opponentCollection[s.id] && (!state.collection[s.id] || state.collection[s.id].quantity === 0));
-            const showDot = hasOpponentUnique && !isSelected;
+            
+            const oppPlayerStickersCount = houseStickers.filter(s => state.opponentCollection[s.id] && state.opponentCollection[s.id].quantity > 0).length;
+            const hasEmblem = state.collection[house.code + ' 0'] && state.collection[house.code + ' 0'].quantity > 0;
+            const playerIsMissingStickers = houseStickers.some(s => !state.collection[s.id] || state.collection[s.id].quantity === 0);
+            const showHexagon = hasEmblem && oppPlayerStickersCount === 0 && playerIsMissingStickers && !isSelected;
+            
+            const showDot = hasOpponentUnique && !isSelected && !showHexagon;
 
             return `
               <button class="house-selector-chip ${isSelected ? 'is-selected' : ''}" 
@@ -270,6 +310,11 @@ function renderSingleReportForm(state) {
                       type="button"
                       style="position: relative;">
                 ${showDot ? '<span class="house-green-dot"></span>' : ''}
+                ${showHexagon ? `
+                  <svg class="house-green-hexagon" viewBox="0 0 24 24" fill="currentColor" style="position: absolute; top: 4px; right: 4px; width: 12px; height: 12px; color: #00cc66; filter: drop-shadow(0 0 3px rgba(0, 204, 102, 0.6)); pointer-events: none;">
+                    <path d="M12 2L2 7v10l10 5 10-5V7L12 2z"/>
+                  </svg>
+                ` : ''}
                 <img src="${getAssetUrl(house.icon)}" alt="${house.name}" />
                 <span class="house-name">${house.name}</span>
               </button>
@@ -347,10 +392,34 @@ function renderSingleReportForm(state) {
       let ruleLabelText = '';
       
       if (!state.report.fallbackActive) {
-        pool = oppEligibleInSelected.map(s => ({ ...s, source: 'opponent' }));
-        maxPicks = Math.min(myKeys, pool.length);
-        const figText = maxPicks === 1 ? 'figurinha inédita' : 'figurinhas inéditas';
-        ruleLabelText = `Pick Normal: Você pode escolher até ${maxPicks} ${figText} do oponente para cada casa do seu deck.`;
+        // Pick Normal
+        // 1. Add opponent eligible stickers
+        const eligibleInSelected = oppEligibleInSelected.map(s => ({ ...s, source: 'opponent' }));
+        pool = [...eligibleInSelected];
+        
+        // 2. Add emblem fallback stickers for selected houses where opponent has 0 player stickers
+        selectedCodes.forEach(hc => {
+          const oppHasZero = !PLAYER_STICKERS.some(s => s.house === hc && state.opponentCollection[s.id] && state.opponentCollection[s.id].quantity > 0);
+          if (oppHasZero) {
+            const hasEmblem = state.collection[hc + ' 0'] && state.collection[hc + ' 0'].quantity > 0;
+            if (hasEmblem) {
+              const missingInHouse = PLAYER_STICKERS.filter(s => 
+                s.house === hc && 
+                (!state.collection[s.id] || state.collection[s.id].quantity === 0)
+              );
+              missingInHouse.forEach(s => {
+                pool.push({ ...s, source: 'emblem' });
+              });
+            }
+          }
+        });
+
+        const maxPicksPossible = selectedCodes.reduce((sum, hc) => {
+          const hasEligible = pool.some(s => s.house === hc);
+          return sum + (hasEligible ? 1 : 0);
+        }, 0);
+        maxPicks = Math.min(myKeys, maxPicksPossible);
+        ruleLabelText = `Pick Normal: Você pode escolher até 1 figurinha inédita do oponente para cada casa do seu deck. As figurinhas de brasão do oponente permitem você escolher uma figurinha da casa correspondente, contanto que ele não tenha nenhuma figurinha de jogador nela.`;
       } else {
         const poolMap = new Map();
         selectedCodes.forEach(houseCode => {
@@ -371,7 +440,11 @@ function renderSingleReportForm(state) {
         });
         
         pool = Array.from(poolMap.values());
-        maxPicks = Math.min(myKeys, pool.length);
+        const maxPicksPossible = selectedCodes.reduce((sum, hc) => {
+          const hasEligible = pool.some(s => s.house === hc);
+          return sum + (hasEligible ? 1 : 0);
+        }, 0);
+        maxPicks = Math.min(myKeys, maxPicksPossible);
         const figText = maxPicks === 1 ? 'figurinha inédita' : 'figurinhas inéditas';
         ruleLabelText = `Quebra-Regra Ativo: Você pode escolher até ${maxPicks} ${figText} para cada casa do seu deck, mesmo que seu oponente não tenha ela.`;
       }
@@ -407,12 +480,23 @@ function renderSingleReportForm(state) {
                   const isLimitReached = state.selectedPickIds.length >= maxPicks;
                   const btnDisabled = !isSelected && isLimitReached;
                   
+                  const hasEmblem = state.collection[sticker.house + ' 0'] && state.collection[sticker.house + ' 0'].quantity > 0;
+                  let borderStyle = '';
+                  if (isSelected) {
+                    borderStyle = 'border-color: var(--color-signal-blue); background: rgba(49, 133, 255, 0.04);';
+                  } else if (hasEmblem) {
+                    const borderColor = sticker.source === 'emblem' ? 'var(--color-signal-blue)' : 'var(--color-green)';
+                    borderStyle = `border-color: ${borderColor}; background: rgba(255, 255, 255, 0.01);`;
+                  }
+                  
                   const sourceBadge = sticker.source === 'opponent'
                     ? `<span style="font-size: 0.65rem; background: rgba(76, 175, 80, 0.15); color: #81c784; padding: 2px 6px; border-radius: var(--radius-sm); font-weight: bold; margin-left: 8px; display: inline-block; border: 1px solid rgba(76, 175, 80, 0.2);">Oponente</span>`
-                    : `<span style="font-size: 0.65rem; background: rgba(255, 152, 0, 0.15); color: #ffb74d; padding: 2px 6px; border-radius: var(--radius-sm); font-weight: bold; margin-left: 8px; display: inline-block; border: 1px solid rgba(255, 152, 0, 0.2);">Quebra-Regra</span>`;
+                    : (sticker.source === 'emblem'
+                      ? `<span style="font-size: 0.65rem; background: rgba(49, 133, 255, 0.15); color: #8db9ff; padding: 2px 6px; border-radius: var(--radius-sm); font-weight: bold; margin-left: 8px; display: inline-block; border: 1px solid rgba(49, 133, 255, 0.2);">Brasão</span>`
+                      : `<span style="font-size: 0.65rem; background: rgba(255, 152, 0, 0.15); color: #ffb74d; padding: 2px 6px; border-radius: var(--radius-sm); font-weight: bold; margin-left: 8px; display: inline-block; border: 1px solid rgba(255, 152, 0, 0.2);">Quebra-Regra</span>`);
 
                   return `
-                    <div class="picker-list-item" style="padding: 10px 12px; min-height: auto; ${isSelected ? 'border-color: var(--color-signal-blue); background: rgba(49, 133, 255, 0.04);' : ''}">
+                    <div class="picker-list-item" style="padding: 10px 12px; min-height: auto; ${borderStyle}">
                       <div style="display: flex; flex-direction: column;">
                         <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 4px;">
                           <strong style="font-size: 0.9rem;">${sticker.name}</strong>
@@ -469,7 +553,13 @@ function renderSingleReportForm(state) {
     let pool = [];
     if (!state.report.fallbackActive) {
       pool = oppEligibleInSelected;
-      maxPicks = Math.min(myKeys, pool.length);
+      const maxPicksPossible = selectedCodes.reduce((sum, hc) => {
+        const houseEligible = pool.filter(s => s.house === hc);
+        const hasEmblem = state.collection[hc + ' 0'] && state.collection[hc + ' 0'].quantity > 0;
+        const limit = hasEmblem ? houseEligible.length : Math.min(1, houseEligible.length);
+        return sum + limit;
+      }, 0);
+      maxPicks = Math.min(myKeys, maxPicksPossible);
     } else {
       const poolMap = new Map();
       selectedCodes.forEach(houseCode => {
@@ -489,7 +579,13 @@ function renderSingleReportForm(state) {
         }
       });
       pool = Array.from(poolMap.values());
-      maxPicks = Math.min(myKeys, pool.length);
+      const maxPicksPossible = selectedCodes.reduce((sum, hc) => {
+        const houseEligible = pool.filter(s => s.house === hc);
+        const hasEmblem = state.collection[hc + ' 0'] && state.collection[hc + ' 0'].quantity > 0;
+        const limit = hasEmblem ? houseEligible.length : Math.min(1, houseEligible.length);
+        return sum + limit;
+      }, 0);
+      maxPicks = Math.min(myKeys, maxPicksPossible);
     }
     correctPicks = myKeys === 0 || state.selectedPickIds.length === maxPicks;
   }

@@ -28,15 +28,26 @@ export function parsePicksString(picksStr) {
 
 export function formatPicksForReport(pickedIds, state) {
   if (!pickedIds || pickedIds.length === 0) return [];
+  
+  const formattedPicks = pickedIds.map((id) => {
+    const isOpponent = state.opponentCollection[id] && (!state.collection[id] || state.collection[id].quantity === 0);
+    const houseCode = id.split(' ')[0];
+    const hasEmblem = state.collection[houseCode + ' 0'] && state.collection[houseCode + ' 0'].quantity > 0;
+    const oppHasZero = !PLAYER_STICKERS.some(s => s.house === houseCode && state.opponentCollection[s.id] && state.opponentCollection[s.id].quantity > 0);
+    
+    let suffix = '(QUEBRA-REGRA)';
+    if (isOpponent) {
+      suffix = '(OPONENTE)';
+    } else if (hasEmblem && oppHasZero) {
+      suffix = '(BRASÃO)';
+    }
+    return `${id} ${suffix}`;
+  });
+
   if (!state.report.fallbackActive) {
-    return pickedIds.map((id, index) => index === 0 ? `Pick normal: ${id}` : id);
+    return formattedPicks.map((formattedId, index) => index === 0 ? `Pick normal: ${formattedId}` : formattedId);
   } else {
-    return pickedIds.map((id, index) => {
-      const isOpponent = state.opponentCollection[id] && (!state.collection[id] || state.collection[id].quantity === 0);
-      const suffix = isOpponent ? '(OPONENTE)' : '(QUEBRA-REGRA)';
-      const formattedId = `${id} ${suffix}`;
-      return index === 0 ? `Pick Quebra-Regra: ${formattedId}` : formattedId;
-    });
+    return formattedPicks.map((formattedId, index) => index === 0 ? `Pick Quebra-Regra: ${formattedId}` : formattedId);
   }
 }
 

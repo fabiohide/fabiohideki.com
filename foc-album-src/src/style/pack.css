@@ -506,3 +506,41 @@
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 }
+
+/* ─── EMBLEM ROUND PACK PASTEL RAINBOW STYLES ─── */
+.pack-card.is-emblem-round {
+  /* Inherits standard pack-card shadow */
+}
+
+.pack-card.is-emblem-round:hover {
+  background: var(--color-iron);
+}
+
+.button.button-rainbow {
+  background: linear-gradient(135deg, #ffccd5, #ffdfc4, #ffffd0, #d6ffda, #d6efff, #edd6ff);
+  background-size: 200% 200%;
+  color: #333 !important;
+  font-weight: 700;
+  border: 1px solid #ddd;
+  animation: rainbow-shift 8s ease infinite;
+  white-space: nowrap;
+}
+
+.button.button-rainbow:hover:not(:disabled) {
+  transform: scale(1.02);
+  box-shadow: none;
+}
+
+.button.button-rainbow:disabled {
+  background: #444 !important;
+  color: #888 !important;
+  border: 1px solid #555 !important;
+  animation: none;
+  box-shadow: none;
+}
+
+@keyframes rainbow-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}

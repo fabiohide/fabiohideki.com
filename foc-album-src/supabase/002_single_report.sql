@@ -65,13 +65,46 @@ begin
 
   -- Log picks in stickers log so that admin/history can see it
   foreach v_sticker in array p_picks loop
-    insert into public.foc2026_stickers_log(player_username, round_number, message, type)
-    values (
-      v_username,
-      v_match.round_number,
-      coalesce(v_player_name, v_username) || ' solicitou a figurinha ' || v_sticker || ' via Pick pós-partida',
-      'pick'
-    );
+    declare
+      v_house_code text := split_part(trim(v_sticker), ' ', 1);
+      v_has_emblem boolean := false;
+      v_opp_username text;
+      v_opp_stickers_count int := 0;
+      v_log_type text := 'pick';
+    begin
+      select (quantity > 0) into v_has_emblem 
+      from public.foc2026_collections 
+      where player_username = v_username 
+        and sticker_id = v_house_code || ' 0';
+        
+      if coalesce(v_has_emblem, false) then
+        if v_username = v_match.player_a_username then
+          v_opp_username := v_match.player_b_username;
+        else
+          v_opp_username := v_match.player_a_username;
+        end if;
+        
+        select count(*) into v_opp_stickers_count 
+        from public.foc2026_collections c
+        join public.foc2026_stickers s on s.id = c.sticker_id
+        where c.player_username = v_opp_username 
+          and s.house = v_house_code 
+          and s.type = 'player' 
+          and c.quantity > 0;
+          
+        if coalesce(v_opp_stickers_count, 0) = 0 then
+          v_log_type := 'emblem';
+        end if;
+      end if;
+
+      insert into public.foc2026_stickers_log(player_username, round_number, message, type)
+      values (
+        v_username,
+        v_match.round_number,
+        coalesce(v_player_name, v_username) || ' solicitou a figurinha ' || v_sticker || ' via Pick pós-partida',
+        v_log_type
+      );
+    end;
   end loop;
 
   -- Se ambos os jogadores reportaram, a partida está concluída!

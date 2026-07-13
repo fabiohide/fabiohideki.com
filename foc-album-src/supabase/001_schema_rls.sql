@@ -239,13 +239,21 @@ begin
   end if;
 
   foreach v_sticker in array p_sticker_ids loop
-    perform public.foc2026_upsert_collection(v_username, v_sticker, 'pack');
+    perform public.foc2026_upsert_collection(
+      v_username, 
+      v_sticker, 
+      case when p_pack_type = 'emblem_round' then 'emblem_round' else 'pack' end
+    );
     insert into public.foc2026_stickers_log(player_username, round_number, message, type)
     values (
       v_username,
       p_round_number,
       coalesce(v_player_name, v_username) || ' obteve a figurinha ' || v_sticker || ' via ' ||
-        case when p_pack_type = 'crest' then 'Pacotinho dourado' else 'Pacotinho inicial' end,
+        case 
+          when p_pack_type = 'crest' then 'Pacotinho dourado' 
+          when p_pack_type = 'emblem_round' then 'Extra Pack da Rodada 3'
+          else 'Pacotinho inicial' 
+        end,
       'pack'
     );
   end loop;
@@ -538,13 +546,46 @@ begin
   if p_picks is not null and p_picks <> '' then
     v_sticker_arr := string_to_array(p_picks, ',');
     foreach v_sticker in array v_sticker_arr loop
-      insert into public.foc2026_stickers_log(player_username, round_number, message, type)
-      values (
-        v_username,
-        v_match.round_number,
-        coalesce(v_player_name, v_username) || ' solicitou a figurinha ' || trim(v_sticker) || ' via Pick pós-partida',
-        'pick'
-      );
+      declare
+        v_house_code text := split_part(trim(v_sticker), ' ', 1);
+        v_has_emblem boolean := false;
+        v_opp_username text;
+        v_opp_stickers_count int := 0;
+        v_log_type text := 'pick';
+      begin
+        select (quantity > 0) into v_has_emblem 
+        from public.foc2026_collections 
+        where player_username = v_username 
+          and sticker_id = v_house_code || ' 0';
+          
+        if coalesce(v_has_emblem, false) then
+          if v_username = v_match.player_a_username then
+            v_opp_username := v_match.player_b_username;
+          else
+            v_opp_username := v_match.player_a_username;
+          end if;
+          
+          select count(*) into v_opp_stickers_count 
+          from public.foc2026_collections c
+          join public.foc2026_stickers s on s.id = c.sticker_id
+          where c.player_username = v_opp_username 
+            and s.house = v_house_code 
+            and s.type = 'player' 
+            and c.quantity > 0;
+            
+          if coalesce(v_opp_stickers_count, 0) = 0 then
+            v_log_type := 'emblem';
+          end if;
+        end if;
+
+        insert into public.foc2026_stickers_log(player_username, round_number, message, type)
+        values (
+          v_username,
+          v_match.round_number,
+          coalesce(v_player_name, v_username) || ' solicitou a figurinha ' || trim(v_sticker) || ' via Pick pós-partida',
+          v_log_type
+        );
+      end;
     end loop;
   end if;
 end;
