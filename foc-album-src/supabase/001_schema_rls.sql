@@ -553,18 +553,18 @@ begin
         v_opp_stickers_count int := 0;
         v_log_type text := 'pick';
       begin
+        if v_username = v_match.player_a_username then
+          v_opp_username := v_match.player_b_username;
+        else
+          v_opp_username := v_match.player_a_username;
+        end if;
+
         select (quantity > 0) into v_has_emblem 
         from public.foc2026_collections 
-        where player_username = v_username 
+        where player_username = v_opp_username 
           and sticker_id = v_house_code || ' 0';
           
         if coalesce(v_has_emblem, false) then
-          if v_username = v_match.player_a_username then
-            v_opp_username := v_match.player_b_username;
-          else
-            v_opp_username := v_match.player_a_username;
-          end if;
-          
           select count(*) into v_opp_stickers_count 
           from public.foc2026_collections c
           join public.foc2026_stickers s on s.id = c.sticker_id

@@ -34,13 +34,13 @@ export function formatPicksForReport(pickedIds, state) {
   const formattedPicks = pickedIds.map((id) => {
     const isOpponent = state.opponentCollection[id] && (!state.collection[id] || state.collection[id].quantity === 0);
     const houseCode = id.split(' ')[0];
-    const hasEmblem = state.collection[houseCode + ' 0'] && state.collection[houseCode + ' 0'].quantity > 0;
+    const oppHasEmblem = state.opponentCollection[houseCode + ' 0'] && state.opponentCollection[houseCode + ' 0'].quantity > 0;
     const oppHasZero = !PLAYER_STICKERS.some(s => s.house === houseCode && state.opponentCollection[s.id] && state.opponentCollection[s.id].quantity > 0);
     
     let suffix = '(QUEBRA-REGRA)';
     if (isOpponent) {
       suffix = '(OPONENTE)';
-    } else if (hasEmblem && oppHasZero) {
+    } else if (oppHasEmblem && oppHasZero) {
       suffix = '(BRASÃO)';
     }
     return `${id} ${suffix}`;

@@ -336,8 +336,8 @@ function toggleReportPick(stickerId) {
     selectedCodes.forEach(hc => {
       const oppHasZero = !PLAYER_STICKERS.some(s => s.house === hc && state.opponentCollection[s.id] && state.opponentCollection[s.id].quantity > 0);
       if (oppHasZero) {
-        const hasEmblem = state.collection[hc + ' 0'] && state.collection[hc + ' 0'].quantity > 0;
-        if (hasEmblem) {
+        const oppHasEmblem = state.opponentCollection[hc + ' 0'] && state.opponentCollection[hc + ' 0'].quantity > 0;
+        if (oppHasEmblem) {
           const missingInHouse = PLAYER_STICKERS.filter(s => 
             s.house === hc && 
             (!state.collection[s.id] || state.collection[s.id].quantity === 0)
@@ -1479,8 +1479,8 @@ function render() {
             selectedCodes.forEach(hc => {
               const oppHasZero = !PLAYER_STICKERS.some(s => s.house === hc && state.opponentCollection[s.id] && state.opponentCollection[s.id].quantity > 0);
               if (oppHasZero) {
-                const hasEmblem = state.collection[hc + ' 0'] && state.collection[hc + ' 0'].quantity > 0;
-                if (hasEmblem) {
+                const oppHasEmblem = state.opponentCollection[hc + ' 0'] && state.opponentCollection[hc + ' 0'].quantity > 0;
+                if (oppHasEmblem) {
                   const missingInHouse = PLAYER_STICKERS.filter(s => 
                     s.house === hc && 
                     (!state.collection[s.id] || state.collection[s.id].quantity === 0)

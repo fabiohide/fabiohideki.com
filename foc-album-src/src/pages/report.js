@@ -297,9 +297,9 @@ function renderSingleReportForm(state) {
             const hasOpponentUnique = houseStickers.some(s => state.opponentCollection[s.id] && (!state.collection[s.id] || state.collection[s.id].quantity === 0));
             
             const oppPlayerStickersCount = houseStickers.filter(s => state.opponentCollection[s.id] && state.opponentCollection[s.id].quantity > 0).length;
-            const hasEmblem = state.collection[house.code + ' 0'] && state.collection[house.code + ' 0'].quantity > 0;
+            const oppHasEmblem = state.opponentCollection[house.code + ' 0'] && state.opponentCollection[house.code + ' 0'].quantity > 0;
             const playerIsMissingStickers = houseStickers.some(s => !state.collection[s.id] || state.collection[s.id].quantity === 0);
-            const showHexagon = hasEmblem && oppPlayerStickersCount === 0 && playerIsMissingStickers && !isSelected;
+            const showHexagon = oppHasEmblem && oppPlayerStickersCount === 0 && playerIsMissingStickers && !isSelected;
             
             const showDot = hasOpponentUnique && !isSelected && !showHexagon;
 
@@ -401,8 +401,8 @@ function renderSingleReportForm(state) {
         selectedCodes.forEach(hc => {
           const oppHasZero = !PLAYER_STICKERS.some(s => s.house === hc && state.opponentCollection[s.id] && state.opponentCollection[s.id].quantity > 0);
           if (oppHasZero) {
-            const hasEmblem = state.collection[hc + ' 0'] && state.collection[hc + ' 0'].quantity > 0;
-            if (hasEmblem) {
+            const oppHasEmblem = state.opponentCollection[hc + ' 0'] && state.opponentCollection[hc + ' 0'].quantity > 0;
+            if (oppHasEmblem) {
               const missingInHouse = PLAYER_STICKERS.filter(s => 
                 s.house === hc && 
                 (!state.collection[s.id] || state.collection[s.id].quantity === 0)
@@ -480,11 +480,11 @@ function renderSingleReportForm(state) {
                   const isLimitReached = state.selectedPickIds.length >= maxPicks;
                   const btnDisabled = !isSelected && isLimitReached;
                   
-                  const hasEmblem = state.collection[sticker.house + ' 0'] && state.collection[sticker.house + ' 0'].quantity > 0;
+                  const oppHasEmblem = state.opponentCollection[sticker.house + ' 0'] && state.opponentCollection[sticker.house + ' 0'].quantity > 0;
                   let borderStyle = '';
                   if (isSelected) {
                     borderStyle = 'border-color: var(--color-signal-blue); background: rgba(49, 133, 255, 0.04);';
-                  } else if (hasEmblem) {
+                  } else if (oppHasEmblem) {
                     const borderColor = sticker.source === 'emblem' ? 'var(--color-signal-blue)' : 'var(--color-green)';
                     borderStyle = `border-color: ${borderColor}; background: rgba(255, 255, 255, 0.01);`;
                   }
