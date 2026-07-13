@@ -176,60 +176,9 @@
 
 /* ─── CREST CARD: full rainbow holographic foil ──────────────────── */
 /*   Classic TCG rainbow holo — vivid, iridescent, always shining    */
-.sticker-card.is-crest .card-holo-effect {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  border-radius: inherit;
-  pointer-events: none;
-  /* Crest always has a base shimmer even at rest */
-  opacity: max(0.15, var(--card-opacity));
-  mix-blend-mode: color-dodge;
-  background:
-    /* Rainbow foil */
-    repeating-linear-gradient(
-      0deg,
-      hsl(2, 100%, 73%) 0%,
-      hsl(50, 100%, 73%) calc(100% / 7),
-      hsl(120, 100%, 73%) calc(200% / 7),
-      hsl(180, 100%, 73%) calc(300% / 7),
-      hsl(210, 100%, 73%) calc(400% / 7),
-      hsl(270, 100%, 73%) calc(500% / 7),
-      hsl(2, 100%, 73%) 100%
-    ),
-    /* Gold sparkle grain */
-    repeating-linear-gradient(
-      133deg,
-      rgba(255, 193, 78, 0) 0%,
-      rgba(255, 193, 78, 0.18) 3.8%,
-      rgba(255, 193, 78, 0) 7.7%
-    ),
-    /* Glitter dots */
-    radial-gradient(
-      farthest-corner ellipse at var(--pointer-x) var(--pointer-y),
-      rgba(255, 215, 100, 0.6) 5%,
-      rgba(255, 255, 200, 0.35) 20%,
-      transparent 50%
-    );
-  background-size: 200% 700%, 200% 200%, 200% 200%;
-  background-position:
-    calc(var(--pointer-from-left) * -150%) calc(var(--pointer-from-top) * -150%),
-    calc(var(--pointer-from-left) * -100%) calc(var(--pointer-from-top) * -100%),
-    calc(var(--pointer-from-left) * 300% - 100%) calc(var(--pointer-from-top) * 300% - 100%);
-  transition: opacity 0.4s ease, background-position 0s;
-  animation: crest-idle-shine 4s linear infinite;
-}
-
-.sticker-card.is-crest.is-active .card-holo-effect {
-  animation: none;
-  transition: opacity 0.4s ease;
-}
-
-/* Idle animation for crest cards (always a bit alive) */
-@keyframes crest-idle-shine {
-  0%   { background-position: 0% 0%, 0% 0%, 0% 0%; }
-  50%  { background-position: -100% -50%, -100% -50%, 50% 100%; }
-  100% { background-position: 0% 0%, 0% 0%, 0% 0%; }
+.sticker-card.is-crest .card-holo-effect,
+.sticker-card.is-crest .card-holo-glare {
+  display: none !important;
 }
 
 /* Gold border glow for crest cards */
@@ -241,7 +190,7 @@
 
 .sticker-card.is-crest.is-active {
   box-shadow:
-    0 0 30px rgba(242, 193, 78, calc(var(--pointer-from-center) * 0.6)),
+    var(--shadow-subtle),
     0 0 0 1px rgba(242, 193, 78, 0.4) inset;
 }
 
@@ -381,4 +330,79 @@
 .sticker-card.is-crest.is-empty .card-holo-effect,
 .sticker-card.is-crest.is-empty .card-holo-glare {
   display: none !important;
+}
+
+/* ─── CRESTS HOLOGRAPHIC REVERSE HOLO EFFECT (ALL HOUSES) ─── */
+.sticker-card.is-crest {
+  --foil-brightness: 0.65;
+}
+
+.sticker-card.is-crest.is-owned .card-holo-effect,
+.sticker-card.is-crest.is-owned .card-holo-glare {
+  display: block !important;
+}
+
+.sticker-card.is-crest.is-owned .card-holo-effect {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  pointer-events: none;
+  mix-blend-mode: color-dodge;
+  
+  background-image: 
+    radial-gradient( 
+      circle at var(--pointer-x) var(--pointer-y),
+      #fff 5%, 
+      #000 50%, 
+      #fff 80% 
+    ), 
+    linear-gradient( 
+      -45deg, 
+      #000 15%, 
+      #fff, 
+      #000 85% 
+    ), 
+    var(--foil);
+
+  background-blend-mode: soft-light, difference;
+  background-size: 120% 120%, 200% 200%, cover;
+  background-position: 
+    center center, 
+    calc(100% * var(--pointer-from-left)) calc(100% * var(--pointer-from-top)), 
+    center center;
+  
+  filter: brightness(var(--foil-brightness)) contrast(1.5) saturate(1);
+  opacity: calc((1.5 * var(--card-opacity)) - var(--pointer-from-center)) !important;
+  
+  -webkit-mask-image: var(--mask);
+  mask-image: var(--mask);
+  -webkit-mask-size: cover;
+  mask-size: cover;
+  -webkit-mask-position: center center;
+  mask-position: center center;
+  
+  transition: opacity 0.35s ease;
+}
+
+.sticker-card.is-crest.is-owned .card-holo-glare {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+  
+  opacity: var(--card-opacity) !important;
+  
+  background-image: 
+    radial-gradient(
+      farthest-corner circle at var(--pointer-x) var(--pointer-y),
+      hsla(0, 0%, 100%, 0.8) 10%,
+      hsla(0, 0%, 100%, 0.5) 20%,
+      hsla(0, 0%, 0%, 0.75) 90%
+    );
+
+  filter: brightness(0.7) contrast(1.5);
+  transition: opacity 0.35s ease;
 }

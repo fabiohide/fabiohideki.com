@@ -29,7 +29,7 @@ export const STICKERS = houses.flatMap(([house, houseName, icon, names]) =>
     name,
     type: index === 0 ? 'crest' : 'player',
     image: index === 0
-      ? '/assets/stickers/stickers_mock.webp'
+      ? `/assets/stickers/${house === 'STA' ? 'STR' : house}_0.webp`
       : `/assets/stickers/${house === 'STA' ? 'STR' : house}_${index}.webp`,
   })),
 );

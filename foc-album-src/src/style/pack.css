@@ -459,30 +459,13 @@
 
 /* Brasão com brilho holográfico extra e maior intensidade */
 .flip-card.is-crest .sticker-card.is-crest {
-  border-color: rgba(242, 193, 78, 0.8) !important;
-  box-shadow: 0 0 25px rgba(242, 193, 78, 0.6), inset 0 0 15px rgba(242, 193, 78, 0.3) !important;
+  border-color: rgba(242, 193, 78, 0.3) !important;
+  box-shadow: var(--shadow-subtle), inset 0 0 5px rgba(242, 193, 78, 0.1) !important;
 }
 
 /* Efeito de luz reflexiva / holográfica premium para o brasão */
 .flip-card.is-crest .sticker-card.is-crest::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.08) 20%,
-    rgba(242, 193, 78, 0.5) 40%,
-    rgba(255, 255, 255, 0.8) 50%,
-    rgba(242, 193, 78, 0.5) 60%,
-    rgba(255, 255, 255, 0.08) 80%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  background-size: 200% 200%;
-  mix-blend-mode: color-dodge;
-  pointer-events: none;
-  animation: holo-shine 3s ease infinite;
+  display: none !important;
 }
 
 @keyframes holo-shine {
