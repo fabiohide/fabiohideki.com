@@ -34,11 +34,11 @@ function renderPack(pack, state) {
       : (state && state.packs ? state.packs.filter(p => p.type === pack.type && p.opened).length : 0);
 
     if (openedCount === 0) {
-      label = '0 Aberto';
+      label = '0&nbsp;Aberto';
     } else if (openedCount === 1) {
-      label = '1 Aberto';
+      label = '1&nbsp;Aberto';
     } else {
-      label = `${openedCount} Abertos`;
+      label = `${openedCount}&nbsp;Abertos`;
     }
   }
 

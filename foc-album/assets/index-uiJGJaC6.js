@@ -18,7 +18,7 @@
 
       ${e?Us(e,t.collection,t):""}
     </section>
-  `}function Ds(t,e){const r=t.type==="challenge"?"is-golden":"is-player",s=t.type==="challenge"?"button-gold":"button-silver",n=t.opened||t.disabled?"disabled":"";let i="Abrir";if(t.opened||t.disabled){const a=e&&e.openedPacksCount&&e.openedPacksCount[t.type]!==void 0?e.openedPacksCount[t.type]:e&&e.packs?e.packs.filter(o=>o.type===t.type&&o.opened).length:0;a===0?i="0 Aberto":a===1?i="1 Aberto":i=`${a} Abertos`}return`
+  `}function Ds(t,e){const r=t.type==="challenge"?"is-golden":"is-player",s=t.type==="challenge"?"button-gold":"button-silver",n=t.opened||t.disabled?"disabled":"";let i="Abrir";if(t.opened||t.disabled){const a=e&&e.openedPacksCount&&e.openedPacksCount[t.type]!==void 0?e.openedPacksCount[t.type]:e&&e.packs?e.packs.filter(o=>o.type===t.type&&o.opened).length:0;a===0?i="0&nbsp;Aberto":a===1?i="1&nbsp;Aberto":i=`${a}&nbsp;Abertos`}return`
     <article class="pack-card ${r}">
       <div class="pack-art">
         <img src="${K(t.image)}" alt="${t.title}" />
