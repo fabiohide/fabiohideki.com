@@ -42,6 +42,7 @@ import { getAssetUrl, formatPicksForReport, parsePicksString } from './utils/for
 import { parseDokResponse } from './utils/sas.js';
 import { validateScore } from './utils/validation.js';
 import './style/login.css';
+import versionInfo from '../public/version.json';
 
 import { ALBUM_PAGES, GOLDEN_CREST_IDS, INITIAL_PLAYER_IDS, PLAYER_STICKERS, STICKERS, getSticker } from './data/stickers.js';
 
@@ -1805,8 +1806,30 @@ function init3DCard(cardElement) {
 }
 
 
+async function checkAppVersion() {
+  try {
+    const baseUrl = import.meta.env.BASE_URL || '/';
+    const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl : baseUrl + '/';
+    const response = await fetch(`${cleanBaseUrl}version.json?t=${Date.now()}`);
+    if (response.ok) {
+      const onlineVersion = await response.json();
+      if (onlineVersion && onlineVersion.version && onlineVersion.version !== versionInfo.version) {
+        console.log(`[Version Check] New build version detected online: ${onlineVersion.version} (Local: ${versionInfo.version}). Reloading page...`);
+        window.location.reload();
+        return true;
+      }
+    }
+  } catch (err) {
+    console.warn('[Version Check] Failed to check for app version updates:', err);
+  }
+  return false;
+}
+
 // Inicialização Assíncrona
 async function initApp() {
+  const didReload = await checkAppVersion();
+  if (didReload) return;
+
   const hashRoute = window.location.hash.replace('#', '');
   if (['packs', 'album', 'report', 'challenges', 'admin'].includes(hashRoute)) {
     state.currentRoute = hashRoute;
