@@ -75,7 +75,10 @@ async function run() {
 
   players.forEach(player => {
     const username = player.username;
-    if (username === 'admin') return;
+    if (username === 'admin' || username === 'album' || username === 'rodrigo_bunda' || username === 'gian_rumachella') {
+      console.log(`Pulando jogador ${player.name} (${username})...`);
+      return;
+    }
 
     const ownedStickers = playerCollections[username] || new Set();
     const ownedHouses = [];
@@ -139,23 +142,35 @@ async function run() {
     }
   });
 
-  console.log(`\nTotal de pacotes simulados: ${pendingPacksToInsert.length}`);
-  console.log('OBSERVAÇÃO: O script foi executado apenas em modo de simulação.');
-  console.log('Para gravar esses pacotes no banco, edite este script e descomente a inserção do banco.');
+  console.log(`\nTotal de pacotes a serem inseridos: ${pendingPacksToInsert.length}`);
+  
+  if (pendingPacksToInsert.length > 0) {
+    const targetUsernames = pendingPacksToInsert.map(p => p.player_username);
+    
+    console.log('Limpando pacotes antigos de extra pack da Rodada 3 para estes usuários...');
+    const { error: clearErr } = await supabase
+      .from('foc2026_pending_packs')
+      .delete()
+      .eq('round_number', 3)
+      .eq('pack_type', 'emblem_round')
+      .in('player_username', targetUsernames);
+      
+    if (clearErr) {
+      console.error('Erro ao limpar pacotes antigos:', clearErr);
+      process.exit(1);
+    }
+    
+    console.log('Gravando novos pacotes no banco de dados...');
+    const { error: insertErr } = await supabase
+      .from('foc2026_pending_packs')
+      .insert(pendingPacksToInsert);
 
-  /*
-  // Descomente o bloco abaixo quando desejar gerar os pacotes no banco de dados:
-  console.log('\nGravando pacotes no banco de dados...');
-  const { data, error } = await supabase
-    .from('foc2026_pending_packs')
-    .insert(pendingPacksToInsert);
-
-  if (error) {
-    console.error('Erro ao salvar os pacotes no banco:', error);
-  } else {
-    console.log('Sucesso: Todos os pacotes da Rodada 3 foram gerados e salvos no banco de dados!');
+    if (insertErr) {
+      console.error('Erro ao salvar os pacotes no banco:', insertErr);
+    } else {
+      console.log('Sucesso: Todos os pacotes da Rodada 3 foram gerados e salvos no banco de dados!');
+    }
   }
-  */
 }
 
 run();
