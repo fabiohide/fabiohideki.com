@@ -1,3 +1,5 @@
+import { PLAYER_STICKERS } from '../data/stickers.js';
+
 export function formatPlayerNameFromLogin(username) {
   if (!username) return '';
   if (username === 'album') return 'Álbum';
