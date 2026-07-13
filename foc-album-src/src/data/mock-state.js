@@ -32,7 +32,7 @@ export function createInitialState() {
       },
       {
         id: 'golden-1',
-        type: 'crest',
+        type: 'challenge',
         title: 'Pacotinho dourado',
         subtitle: 'Brasões',
         image: '/assets/pack/golden_pack.webp',

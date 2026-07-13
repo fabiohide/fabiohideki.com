@@ -89,7 +89,7 @@ export async function fetchFullState(username) {
     supabase.from('foc2026_challenges').select('*'),
     supabase.from('foc2026_rounds').select('*').order('number'),
     supabase.from('foc2026_stickers_log').select('*').eq('type', 'pick'),
-    supabase.from('foc2026_pending_packs').select('*').eq('player_username', username).eq('opened', false)
+    supabase.from('foc2026_pending_packs').select('*').eq('player_username', username)
   ]);
 
   const collectionData = collectionRes.data;
@@ -389,7 +389,7 @@ export async function fetchFullState(username) {
     },
     {
       id: 'golden-1',
-      type: 'crest',
+      type: 'challenge',
       title: 'Pacotinho dourado',
       subtitle: 'Brasões',
       image: '/assets/pack/golden_pack.webp',
@@ -399,12 +399,21 @@ export async function fetchFullState(username) {
     }
   ];
 
+  let openedPendingPlayerCount = 0;
+  let openedPendingChallengeCount = 0;
+
   if (pendingPacksData) {
     pendingPacksData.forEach(p => {
-      if (!p.opened) {
+      if (p.opened) {
+        if (p.pack_type === 'crest') {
+          openedPendingChallengeCount++;
+        } else {
+          openedPendingPlayerCount++;
+        }
+      } else {
         packs.push({
           id: p.id,
-          type: p.pack_type || 'player',
+          type: p.pack_type === 'crest' ? 'challenge' : (p.pack_type || 'player'),
           title: p.pack_type === 'crest' ? 'Pacotinho dourado' : `Pacotinho Rodada ${p.round_number}`,
           subtitle: p.pack_type === 'crest' ? (p.challenge_name || 'Desafio') : `vs ${p.opponent_name || 'Adversário'}`,
           image: p.pack_type === 'crest' ? '/assets/pack/golden_pack.webp' : '/assets/pack/player_pack.webp',
@@ -418,10 +427,10 @@ export async function fetchFullState(username) {
     });
   }
 
-  if (username === 'teste_1') {
-    const packStickersCount = collectionData ? collectionData.filter(c => c.source === 'pack').length : 0;
-    const extraOpened = packStickersCount > 6 || (typeof window !== 'undefined' && window.localStorage.getItem('foc_extra_pack_opened') === 'true');
+  const packStickersCount = collectionData ? collectionData.filter(c => c.source === 'pack').length : 0;
+  const extraOpened = packStickersCount > 6 || (typeof window !== 'undefined' && window.localStorage.getItem('foc_extra_pack_opened') === 'true');
 
+  if (username === 'teste_1') {
     // Filtra figurinhas do tipo player
     const playerStickers = STICKERS.filter(s => s.type === 'player');
     const randomStickerIds = [];
@@ -443,6 +452,13 @@ export async function fetchFullState(username) {
     });
   }
 
+  const totalPlayerOpened = (welcomeOpened ? 1 : 0) + (username === 'teste_1' && extraOpened ? 1 : 0) + openedPendingPlayerCount;
+  const totalChallengeOpened = (goldenOpened ? 1 : 0) + openedPendingChallengeCount;
+  const openedPacksCount = {
+    player: totalPlayerOpened,
+    challenge: totalChallengeOpened
+  };
+
   return {
     user: {
       id: playerData.username,
@@ -454,6 +470,7 @@ export async function fetchFullState(username) {
     activeRound,
     collection,
     packs,
+    openedPacksCount,
     challenges,
     pendingChallenges,
     matches: formattedMatches,

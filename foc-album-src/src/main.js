@@ -150,7 +150,7 @@ function setAlbumPage(index) {
 }
 
 function getFallbackPackStickerIds(packType) {
-  if (packType === 'crest') {
+  if (packType === 'challenge') {
     const missingCrests = STICKERS
       .filter((sticker) => sticker.type === 'crest')
       .filter((sticker) => !state.collection[sticker.id] || state.collection[sticker.id].quantity === 0)
@@ -1324,7 +1324,7 @@ function render() {
             }
           } else {
             reveal.pack.stickerIds.forEach(id => {
-              state.collection[id] = { quantity: 1, isNew: true, source: reveal.pack.type === 'crest' ? 'challenge' : 'pick' };
+              state.collection[id] = { quantity: 1, isNew: true, source: reveal.pack.type === 'challenge' ? 'challenge' : 'pick' };
             });
           }
         }

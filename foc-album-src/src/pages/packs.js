@@ -13,7 +13,7 @@ export function renderPacks(state) {
 
       <div class="panel packs-panel">
         <div class="pack-grid">
-          ${state.packs.map((pack) => renderPack(pack)).join('')}
+          ${state.packs.map((pack) => renderPack(pack, state)).join('')}
         </div>
       </div>
 
@@ -22,11 +22,26 @@ export function renderPacks(state) {
   `;
 }
 
-function renderPack(pack) {
-  const packClass = pack.type === 'crest' ? 'is-golden' : 'is-player';
-  const btnClass = pack.type === 'crest' ? 'button-gold' : 'button-silver';
+function renderPack(pack, state) {
+  const packClass = pack.type === 'challenge' ? 'is-golden' : 'is-player';
+  const btnClass = pack.type === 'challenge' ? 'button-gold' : 'button-silver';
   const disabled = pack.opened || pack.disabled ? 'disabled' : '';
-  const label = pack.disabled ? 'Em breve' : pack.opened ? 'Aberto' : 'Abrir';
+
+  let label = 'Abrir';
+  if (pack.opened || pack.disabled) {
+    const openedCount = (state && state.openedPacksCount && state.openedPacksCount[pack.type] !== undefined)
+      ? state.openedPacksCount[pack.type]
+      : (state && state.packs ? state.packs.filter(p => p.type === pack.type && p.opened).length : 0);
+
+    if (openedCount === 0) {
+      label = '0 Aberto';
+    } else if (openedCount === 1) {
+      label = '1 Aberto';
+    } else {
+      label = `${openedCount} Abertos`;
+    }
+  }
+
   return `
     <article class="pack-card ${packClass}">
       <div class="pack-art">
@@ -69,7 +84,7 @@ function renderReveal(reveal, collection, state) {
   const actionsStyle = allFlipped ? 'opacity: 1; pointer-events: auto;' : 'opacity: 0; pointer-events: none;';
 
   const isPending = reveal.pack.isPendingPack;
-  const isCrest = reveal.pack.type === 'crest';
+  const isCrest = reveal.pack.type === 'challenge';
   
   let eyebrowText = isCrest ? 'Pacotinho dourado' : (isPending ? 'Pacotinho de Match' : 'Pacotinho inicial');
   let h2Text = `${reveal.newIds.length} novas figurinhas!`;
@@ -165,7 +180,7 @@ export function initPacks(state, actions) {
       overlay.classList.remove('state-unopened');
       overlay.classList.add('state-ripping');
 
-      createRipParticles(packWrapper, reveal.pack.type === 'crest');
+      createRipParticles(packWrapper, reveal.pack.type === 'challenge');
       playRipSound();
 
       setTimeout(() => {
