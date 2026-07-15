@@ -11,12 +11,12 @@ export function renderTable(state) {
   const albumData = filteredPlayers.find(p => p.username === 'album');
   const realPlayers = filteredPlayers.filter(p => p.username !== 'album');
 
-  // Sort real players by: Wins -> Keys -> Challenges -> Stickers -> Name
+  // Sort real players by: Stickers -> Wins -> Keys -> Challenges -> Name
   const sortedPlayers = [...realPlayers].sort((a, b) => {
+    if (b.stickersCount !== a.stickersCount) return b.stickersCount - a.stickersCount;
     if (b.wins !== a.wins) return b.wins - a.wins;
     if (b.keys !== a.keys) return b.keys - a.keys;
     if (b.challengesCount !== a.challengesCount) return b.challengesCount - a.challengesCount;
-    if (b.stickersCount !== a.stickersCount) return b.stickersCount - a.stickersCount;
     return formatPlayerNameFromLogin(a.username).localeCompare(formatPlayerNameFromLogin(b.username));
   });
 
