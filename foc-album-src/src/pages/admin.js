@@ -263,33 +263,44 @@ function renderCollectionsTab(state) {
   `;
 }
 
-function getLogBadgeHtml(type) {
+function getLogBadgeHtml(type, message = '') {
   let labelText = type || 'info';
   let color = 'var(--color-steel)';
   let bg = 'rgba(255, 255, 255, 0.05)';
   let border = '1px solid rgba(255, 255, 255, 0.05)';
   
-  if (type === 'pick') {
+  const isExtraPack = type === 'pick' && message.includes('via Pacote Rodada') && (message.includes(' 0 via') || message.includes(' 0 '));
+  let resolvedType = type;
+  if (isExtraPack) {
+    resolvedType = 'extra';
+  }
+  
+  if (resolvedType === 'pick') {
     labelText = 'oponente';
     color = '#00cc66';
     bg = 'rgba(0, 204, 102, 0.1)';
     border = '1px solid rgba(0, 204, 102, 0.2)';
-  } else if (type === 'emblem') {
+  } else if (resolvedType === 'extra') {
+    labelText = 'extra';
+    color = '#c5a3ff'; // lilac
+    bg = 'rgba(197, 163, 255, 0.1)';
+    border = '1px solid rgba(197, 163, 255, 0.2)';
+  } else if (resolvedType === 'emblem') {
     labelText = 'brasão';
     color = '#3185ff';
     bg = 'rgba(49, 133, 255, 0.1)';
     border = '1px solid rgba(49, 133, 255, 0.2)';
-  } else if (type === 'fallback') {
+  } else if (resolvedType === 'fallback') {
     labelText = 'quebra-regra';
     color = '#ff9800';
     bg = 'rgba(255, 152, 0, 0.1)';
     border = '1px solid rgba(255, 152, 0, 0.2)';
-  } else if (type === 'challenge') {
+  } else if (resolvedType === 'challenge') {
     labelText = 'desafios';
     color = '#3185ff';
     bg = 'rgba(49, 133, 255, 0.1)';
     border = '1px solid rgba(49, 133, 255, 0.2)';
-  } else if (type === 'pack') {
+  } else if (resolvedType === 'pack') {
     labelText = 'pacotinho';
     color = '#ff5252';
     bg = 'rgba(255, 82, 82, 0.1)';
@@ -328,7 +339,7 @@ function renderHistoryTab(state) {
                         <span style="font-size: 0.72rem; color: var(--color-smoke); white-space: nowrap; margin-top: 2px; font-family: monospace;">[${dateStr}]</span>
                         <div style="flex: 1;">
                           <span style="color: var(--color-paper); font-weight: 500;">${log.message}</span>
-                          ${getLogBadgeHtml(log.type)}
+                          ${getLogBadgeHtml(log.type, log.message)}
                         </div>
                       </div>
                     `;
