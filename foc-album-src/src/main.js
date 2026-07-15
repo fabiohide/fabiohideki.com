@@ -40,7 +40,7 @@ import {
 import { stickerCard } from './components/sticker-card.js';
 import { getAssetUrl, formatPicksForReport, parsePicksString } from './utils/format.js';
 import { parseDokResponse } from './utils/sas.js';
-import { validateScore } from './utils/validation.js';
+import { validateScore, calculateMaxPicksAndPool } from './utils/validation.js';
 import './style/login.css';
 import versionInfo from '../public/version.json';
 
@@ -317,69 +317,7 @@ function toggleReportPick(stickerId) {
   const selectedCodes = state.selectedHouseCodes || [];
   const myKeys = state.report.playerAKeys;
 
-  const oppEligible = PLAYER_STICKERS.filter(s => 
-    state.opponentCollection[s.id] && 
-    (!state.collection[s.id] || state.collection[s.id].quantity === 0)
-  );
-  
-  const oppEligibleInSelected = oppEligible.filter(s => selectedCodes.includes(s.house));
-  
-  let pool = [];
-  let maxPicks = myKeys;
-  
-  if (!state.report.fallbackActive) {
-    // Pick Normal
-    // 1. Add opponent eligible stickers
-    const eligibleInSelected = oppEligibleInSelected.map(s => ({ ...s, source: 'opponent' }));
-    pool = [...eligibleInSelected];
-    
-    // 2. Add emblem fallback stickers for selected houses where opponent has 0 player stickers
-    selectedCodes.forEach(hc => {
-      const oppHasZero = !PLAYER_STICKERS.some(s => s.house === hc && state.opponentCollection[s.id] && state.opponentCollection[s.id].quantity > 0);
-      if (oppHasZero) {
-        const oppHasEmblem = state.opponentCollection[hc + ' 0'] && state.opponentCollection[hc + ' 0'].quantity > 0;
-        if (oppHasEmblem) {
-          const missingInHouse = PLAYER_STICKERS.filter(s => 
-            s.house === hc && 
-            (!state.collection[s.id] || state.collection[s.id].quantity === 0)
-          );
-          missingInHouse.forEach(s => {
-            pool.push({ ...s, source: 'emblem' });
-          });
-        }
-      }
-    });
-
-    const maxPicksPossible = selectedCodes.reduce((sum, hc) => {
-      const hasEligible = pool.some(s => s.house === hc);
-      return sum + (hasEligible ? 1 : 0);
-    }, 0);
-    maxPicks = Math.min(myKeys, maxPicksPossible);
-  } else {
-    const poolMap = new Map();
-    selectedCodes.forEach(houseCode => {
-      const oppEligibleInHouse = oppEligibleInSelected.filter(s => s.house === houseCode);
-      if (oppEligibleInHouse.length > 0) {
-        oppEligibleInHouse.forEach(s => {
-          poolMap.set(s.id, s);
-        });
-      } else {
-        const playerMissingInHouse = PLAYER_STICKERS.filter(s => 
-          s.house === houseCode && 
-          (!state.collection[s.id] || state.collection[s.id].quantity === 0)
-        );
-        playerMissingInHouse.forEach(s => {
-          poolMap.set(s.id, s);
-        });
-      }
-    });
-    pool = Array.from(poolMap.values());
-    const maxPicksPossible = selectedCodes.reduce((sum, hc) => {
-      const hasEligible = pool.some(s => s.house === hc);
-      return sum + (hasEligible ? 1 : 0);
-    }, 0);
-    maxPicks = Math.min(myKeys, maxPicksPossible);
-  }
+    const { pool, maxPicks } = calculateMaxPicksAndPool(state);
 
   if (index > -1) {
     state.selectedPickIds.splice(index, 1);
@@ -1459,67 +1397,11 @@ function render() {
         const validation = validateScore(state.report.playerAKeys, state.report.playerBKeys, state.user.isAdmin);
         const isScoreValid = validation.valid;
 
-        let correctPicks = false;
-        const myKeys = state.report.playerAKeys;
+                let correctPicks = false;
+        let maxPicks = myKeys;
         if (isScoreValid && hasThreeHouses) {
-          const selectedCodes = state.selectedHouseCodes || [];
-          const oppEligible = PLAYER_STICKERS.filter(s =>
-            state.opponentCollection[s.id] &&
-            (!state.collection[s.id] || state.collection[s.id].quantity === 0)
-          );
-          const oppEligibleInSelected = oppEligible.filter(s => selectedCodes.includes(s.house));
-
-          let pool = [];
-          if (!state.report.fallbackActive) {
-            // Pick Normal
-            // 1. Add opponent eligible stickers
-            const eligibleInSelected = oppEligibleInSelected.map(s => ({ ...s, source: 'opponent' }));
-            pool = [...eligibleInSelected];
-            
-            // 2. Add emblem fallback stickers for selected houses where opponent has 0 player stickers
-            selectedCodes.forEach(hc => {
-              const oppHasZero = !PLAYER_STICKERS.some(s => s.house === hc && state.opponentCollection[s.id] && state.opponentCollection[s.id].quantity > 0);
-              if (oppHasZero) {
-                const oppHasEmblem = state.opponentCollection[hc + ' 0'] && state.opponentCollection[hc + ' 0'].quantity > 0;
-                if (oppHasEmblem) {
-                  const missingInHouse = PLAYER_STICKERS.filter(s => 
-                    s.house === hc && 
-                    (!state.collection[s.id] || state.collection[s.id].quantity === 0)
-                  );
-                  missingInHouse.forEach(s => {
-                    pool.push({ ...s, source: 'emblem' });
-                  });
-                }
-              }
-            });
-
-            const maxPicksPossible = selectedCodes.reduce((sum, hc) => {
-              const hasEligible = pool.some(s => s.house === hc);
-              return sum + (hasEligible ? 1 : 0);
-            }, 0);
-            maxPicks = Math.min(myKeys, maxPicksPossible);
-          } else {
-            const playerMissing = PLAYER_STICKERS.filter(s =>
-              selectedCodes.includes(s.house) &&
-              (!state.collection[s.id] || state.collection[s.id].quantity === 0)
-            );
-
-            const poolMap = new Map();
-            oppEligibleInSelected.forEach(s => {
-              poolMap.set(s.id, s);
-            });
-            playerMissing.forEach(s => {
-              if (!poolMap.has(s.id)) {
-                poolMap.set(s.id, s);
-              }
-            });
-            pool = Array.from(poolMap.values());
-            const maxPicksPossible = selectedCodes.reduce((sum, hc) => {
-              const hasEligible = pool.some(s => s.house === hc);
-              return sum + (hasEligible ? 1 : 0);
-            }, 0);
-            maxPicks = Math.min(myKeys, maxPicksPossible);
-          }
+          const { maxPicks: calculatedMaxPicks } = calculateMaxPicksAndPool(state);
+          maxPicks = calculatedMaxPicks;
           correctPicks = myKeys === 0 || state.selectedPickIds.length === maxPicks;
         }
 

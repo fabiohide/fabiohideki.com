@@ -2,7 +2,7 @@ import { HOUSE_META, PLAYER_STICKERS, STICKERS } from '../data/stickers.js';
 import { renderChallengesContent } from './challenges.js';
 import { getAssetUrl } from '../utils/format.js';
 import { getSasBadgeData } from '../utils/sas.js';
-import { validateScore } from '../utils/validation.js';
+import { validateScore, calculateMaxPicksAndPool } from '../utils/validation.js';
 
 
 function formatDeadlineDate(isoString) {
@@ -377,74 +377,12 @@ function renderSingleReportForm(state) {
         </div>
       `;
     } else {
-      const selectedCodes = state.selectedHouseCodes || [];
-      
-      // Opponent eligible stickers (opponent has, player is missing)
-      const oppEligible = PLAYER_STICKERS.filter(s => 
-        state.opponentCollection[s.id] && 
-        (!state.collection[s.id] || state.collection[s.id].quantity === 0)
-      );
-      
-      const oppEligibleInSelected = oppEligible.filter(s => selectedCodes.includes(s.house));
-      
-      let pool = [];
-      let maxPicks = myKeys;
+            const { pool, maxPicks } = calculateMaxPicksAndPool(state);
       let ruleLabelText = '';
       
       if (!state.report.fallbackActive) {
-        // Pick Normal
-        // 1. Add opponent eligible stickers
-        const eligibleInSelected = oppEligibleInSelected.map(s => ({ ...s, source: 'opponent' }));
-        pool = [...eligibleInSelected];
-        
-        // 2. Add emblem fallback stickers for selected houses where opponent has 0 player stickers
-        selectedCodes.forEach(hc => {
-          const oppHasZero = !PLAYER_STICKERS.some(s => s.house === hc && state.opponentCollection[s.id] && state.opponentCollection[s.id].quantity > 0);
-          if (oppHasZero) {
-            const oppHasEmblem = state.opponentCollection[hc + ' 0'] && state.opponentCollection[hc + ' 0'].quantity > 0;
-            if (oppHasEmblem) {
-              const missingInHouse = PLAYER_STICKERS.filter(s => 
-                s.house === hc && 
-                (!state.collection[s.id] || state.collection[s.id].quantity === 0)
-              );
-              missingInHouse.forEach(s => {
-                pool.push({ ...s, source: 'emblem' });
-              });
-            }
-          }
-        });
-
-        const maxPicksPossible = selectedCodes.reduce((sum, hc) => {
-          const hasEligible = pool.some(s => s.house === hc);
-          return sum + (hasEligible ? 1 : 0);
-        }, 0);
-        maxPicks = Math.min(myKeys, maxPicksPossible);
         ruleLabelText = `Pick Normal: Você pode escolher até 1 figurinha inédita do oponente para cada casa do seu deck. As figurinhas de brasão do oponente permitem você escolher uma figurinha da casa correspondente, contanto que ele não tenha nenhuma figurinha de jogador nela.`;
       } else {
-        const poolMap = new Map();
-        selectedCodes.forEach(houseCode => {
-          const oppEligibleInHouse = oppEligibleInSelected.filter(s => s.house === houseCode);
-          if (oppEligibleInHouse.length > 0) {
-            oppEligibleInHouse.forEach(s => {
-              poolMap.set(s.id, { ...s, source: 'opponent' });
-            });
-          } else {
-            const playerMissingInHouse = PLAYER_STICKERS.filter(s => 
-              s.house === houseCode && 
-              (!state.collection[s.id] || state.collection[s.id].quantity === 0)
-            );
-            playerMissingInHouse.forEach(s => {
-              poolMap.set(s.id, { ...s, source: 'fallback' });
-            });
-          }
-        });
-        
-        pool = Array.from(poolMap.values());
-        const maxPicksPossible = selectedCodes.reduce((sum, hc) => {
-          const hasEligible = pool.some(s => s.house === hc);
-          return sum + (hasEligible ? 1 : 0);
-        }, 0);
-        maxPicks = Math.min(myKeys, maxPicksPossible);
         const figText = maxPicks === 1 ? 'figurinha inédita' : 'figurinhas inéditas';
         ruleLabelText = `Quebra-Regra Ativo: Você pode escolher até ${maxPicks} ${figText} para cada casa do seu deck, mesmo que seu oponente não tenha ela.`;
       }
@@ -540,53 +478,11 @@ function renderSingleReportForm(state) {
 
   // 4. Submit button
   const hasDeckLink = Boolean(report.deckUrl);
-  let correctPicks = false;
+    let correctPicks = false;
   let maxPicks = myKeys;
   if (isScoreValid && hasThreeHouses) {
-    const selectedCodes = state.selectedHouseCodes || [];
-    const oppEligible = PLAYER_STICKERS.filter(s => 
-      state.opponentCollection[s.id] && 
-      (!state.collection[s.id] || state.collection[s.id].quantity === 0)
-    );
-    const oppEligibleInSelected = oppEligible.filter(s => selectedCodes.includes(s.house));
-    
-    let pool = [];
-    if (!state.report.fallbackActive) {
-      pool = oppEligibleInSelected;
-      const maxPicksPossible = selectedCodes.reduce((sum, hc) => {
-        const houseEligible = pool.filter(s => s.house === hc);
-        const hasEmblem = state.collection[hc + ' 0'] && state.collection[hc + ' 0'].quantity > 0;
-        const limit = hasEmblem ? houseEligible.length : Math.min(1, houseEligible.length);
-        return sum + limit;
-      }, 0);
-      maxPicks = Math.min(myKeys, maxPicksPossible);
-    } else {
-      const poolMap = new Map();
-      selectedCodes.forEach(houseCode => {
-        const oppEligibleInHouse = oppEligibleInSelected.filter(s => s.house === houseCode);
-        if (oppEligibleInHouse.length > 0) {
-          oppEligibleInHouse.forEach(s => {
-            poolMap.set(s.id, s);
-          });
-        } else {
-          const playerMissingInHouse = PLAYER_STICKERS.filter(s => 
-            s.house === houseCode && 
-            (!state.collection[s.id] || state.collection[s.id].quantity === 0)
-          );
-          playerMissingInHouse.forEach(s => {
-            poolMap.set(s.id, s);
-          });
-        }
-      });
-      pool = Array.from(poolMap.values());
-      const maxPicksPossible = selectedCodes.reduce((sum, hc) => {
-        const houseEligible = pool.filter(s => s.house === hc);
-        const hasEmblem = state.collection[hc + ' 0'] && state.collection[hc + ' 0'].quantity > 0;
-        const limit = hasEmblem ? houseEligible.length : Math.min(1, houseEligible.length);
-        return sum + limit;
-      }, 0);
-      maxPicks = Math.min(myKeys, maxPicksPossible);
-    }
+    const { maxPicks: calculatedMaxPicks } = calculateMaxPicksAndPool(state);
+    maxPicks = calculatedMaxPicks;
     correctPicks = myKeys === 0 || state.selectedPickIds.length === maxPicks;
   }
   
