@@ -457,24 +457,9 @@ export async function fetchFullState(username) {
     });
   }
 
-  let emblemRoundOpened = false;
-  const hasDbEmblemPack = pendingPacksData && pendingPacksData.some(p => p.pack_type === 'emblem_round');
-  if (activeRound.number >= 3 && !hasDbEmblemPack) {
-    emblemRoundOpened = (typeof window !== 'undefined' && window.localStorage.getItem('foc_emblem_round_opened_' + username) === 'true');
-    packs.push({
-      id: 'emblem_round_3',
-      type: 'emblem_round',
-      title: 'Rodada 3: Extra Pack',
-      subtitle: 'Extra Pack',
-      image: '/assets/pack/holo_pack.webp',
-      opened: emblemRoundOpened,
-      stickerIds: []
-    });
-  }
-
   const totalPlayerOpened = (welcomeOpened ? 1 : 0) + (username === 'teste_1' && extraOpened ? 1 : 0) + openedPendingPlayerCount;
   const totalChallengeOpened = (goldenOpened ? 1 : 0) + openedPendingChallengeCount;
-  const totalEmblemRoundOpened = (emblemRoundOpened ? 1 : 0) + openedPendingEmblemRoundCount;
+  const totalEmblemRoundOpened = openedPendingEmblemRoundCount;
   const openedPacksCount = {
     player: totalPlayerOpened,
     challenge: totalChallengeOpened,
