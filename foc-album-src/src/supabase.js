@@ -335,7 +335,8 @@ export async function fetchFullState(username) {
   const standings = (allPlayersData || [])
     .filter(p => !['teste_1', 'teste_2'].includes(p.username))
     .map(p => {
-      const stickersCount = Object.keys(collectionsByPlayer[p.username] || {}).length;
+      const stickersCount = Object.keys(collectionsByPlayer[p.username] || {})
+        .filter(id => !id.endsWith(' 0')).length;
 
       let wins = 0;
       let losses = 0;
