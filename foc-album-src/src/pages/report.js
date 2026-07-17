@@ -166,18 +166,23 @@ function renderPreMatch(state) {
                 ? 'has-all'
                 : (owned > 0 ? 'opp-has-some' : 'has-none');
 
-              let inlineStyle = '';
-              let hexSvg = '';
               const hasEmblem = state.collection[code + ' 0'] && state.collection[code + ' 0'].quantity > 0;
-              if (owned === 0 && hasEmblem) {
-                const oppHasAll = opponentHouses[code].length === total;
-                const fill = oppHasAll ? 'var(--color-ash)' : 'var(--color-signal-blue)';
+              const isPickableForOpponent = myHouses[code].length > 0 
+                ? hasDiffForOpponent 
+                : (!state.opponentCollection[code + ' 0'] || state.opponentCollection[code + ' 0'].quantity === 0);
+              
+              let hexSvg = '';
+              let inlineStyle = '';
+              if (hasEmblem) {
+                const fill = isPickableForOpponent ? '#3185ff' : 'rgba(49, 133, 255, 0.45)';
+                if (isPickableForOpponent) {
+                  inlineStyle = `style="border: 2px solid ${fill};"`;
+                }
                 hexSvg = `
                   <svg viewBox="0 0 100 100" style="width: 12px; height: 12px; fill: ${fill}; margin-right: 4px; display: inline-block; vertical-align: middle; flex-shrink: 0;">
                     <polygon points="50,5 95,25 95,75 50,95 5,75 5,25"/>
                   </svg>
                 `;
-                inlineStyle = `style="border: 2.5px solid ${fill};"`;
               }
 
               return `
@@ -216,18 +221,23 @@ function renderPreMatch(state) {
                 ? 'has-missing'
                 : (owned > 0 ? 'opp-has-some' : 'has-none');
 
-              let inlineStyle = '';
-              let hexOppSvg = '';
               const oppHasEmblem = state.opponentCollection[code + ' 0'] && state.opponentCollection[code + ' 0'].quantity > 0;
-              if (owned === 0 && oppHasEmblem) {
-                const iHaveAll = myHouses[code].length === total;
-                const fill = iHaveAll ? 'var(--color-ash)' : 'var(--color-green)';
+              const isPickableForPlayer = opponentHouses[code].length > 0 
+                ? hasDiffForPlayer 
+                : (!state.collection[code + ' 0'] || state.collection[code + ' 0'].quantity === 0);
+              
+              let hexOppSvg = '';
+              let inlineStyle = '';
+              if (oppHasEmblem) {
+                const oppFill = isPickableForPlayer ? '#00cc66' : 'rgba(0, 204, 102, 0.45)';
+                if (isPickableForPlayer) {
+                  inlineStyle = `style="border: 2px solid ${oppFill};"`;
+                }
                 hexOppSvg = `
-                  <svg viewBox="0 0 100 100" style="width: 12px; height: 12px; fill: ${fill}; margin-right: 4px; display: inline-block; vertical-align: middle; flex-shrink: 0;">
+                  <svg viewBox="0 0 100 100" style="width: 12px; height: 12px; fill: ${oppFill}; margin-right: 4px; display: inline-block; vertical-align: middle; flex-shrink: 0;">
                     <polygon points="50,5 95,25 95,75 50,95 5,75 5,25"/>
                   </svg>
                 `;
-                inlineStyle = `style="border: 2.5px solid ${fill};"`;
               }
 
               return `
@@ -299,9 +309,9 @@ function renderSingleReportForm(state) {
             const oppPlayerStickersCount = houseStickers.filter(s => state.opponentCollection[s.id] && state.opponentCollection[s.id].quantity > 0).length;
             const oppHasEmblem = state.opponentCollection[house.code + ' 0'] && state.opponentCollection[house.code + ' 0'].quantity > 0;
             const playerIsMissingStickers = houseStickers.some(s => !state.collection[s.id] || state.collection[s.id].quantity === 0);
-            const showHexagon = oppHasEmblem && oppPlayerStickersCount === 0 && playerIsMissingStickers && !isSelected;
             
-            const showDot = hasOpponentUnique && !isSelected && !showHexagon;
+            const showGreenHexagon = oppHasEmblem && oppPlayerStickersCount === 0 && playerIsMissingStickers && !isSelected;
+            const showDot = hasOpponentUnique && !isSelected && !showGreenHexagon;
 
             return `
               <button class="house-selector-chip ${isSelected ? 'is-selected' : ''}" 
@@ -310,7 +320,7 @@ function renderSingleReportForm(state) {
                       type="button"
                       style="position: relative;">
                 ${showDot ? '<span class="house-green-dot"></span>' : ''}
-                ${showHexagon ? `
+                ${showGreenHexagon ? `
                   <svg class="house-green-hexagon" viewBox="0 0 24 24" fill="currentColor" style="position: absolute; top: 4px; right: 4px; width: 12px; height: 12px; color: #00cc66; filter: drop-shadow(0 0 3px rgba(0, 204, 102, 0.6)); pointer-events: none;">
                     <path d="M12 2L2 7v10l10 5 10-5V7L12 2z"/>
                   </svg>
