@@ -60,49 +60,47 @@ export function calculateMaxPicksAndPool(state) {
   const myKeys = state.report.playerAKeys;
   const isFallback = state.report.fallbackActive;
 
-  // 1. Figurinhas comuns elegíveis do oponente
-  const oppEligible = PLAYER_STICKERS.filter(s => 
-    state.opponentCollection[s.id] && 
-    (!state.collection[s.id] || state.collection[s.id].quantity === 0)
-  );
-  
-  const oppEligibleInSelected = oppEligible.filter(s => selectedCodes.includes(s.house));
-
   let pool = [];
   if (!isFallback) {
     // Modo Normal
-    const eligibleInSelected = oppEligibleInSelected.map(s => ({ ...s, source: 'opponent' }));
-    pool = [...eligibleInSelected];
-    
-    // Brasões do oponente liberam figurinhas da casa se ele tiver 0 figurinhas comuns dela
     selectedCodes.forEach(hc => {
-      const oppHasZero = !PLAYER_STICKERS.some(s => s.house === hc && state.opponentCollection[s.id] && state.opponentCollection[s.id].quantity > 0);
-      if (oppHasZero) {
-        const oppHasEmblem = state.opponentCollection[hc + ' 0'] && state.opponentCollection[hc + ' 0'].quantity > 0;
+      const oppHasEmblem = state.opponentCollection[hc + ' 0'] && state.opponentCollection[hc + ' 0'].quantity > 0;
+      const houseStickers = PLAYER_STICKERS.filter(s => s.house === hc);
+      
+      houseStickers.forEach(s => {
+        const playerMissing = !state.collection[s.id] || state.collection[s.id].quantity === 0;
+        if (!playerMissing) return;
+
+        const oppOwnsSticker = state.opponentCollection[s.id] && state.opponentCollection[s.id].quantity > 0;
         if (oppHasEmblem) {
-          const missingInHouse = PLAYER_STICKERS.filter(s => 
-            s.house === hc && 
-            (!state.collection[s.id] || state.collection[s.id].quantity === 0)
-          );
-          missingInHouse.forEach(s => {
-            pool.push({ ...s, source: 'emblem' });
-          });
+          pool.push({ ...s, source: oppOwnsSticker ? 'opponent' : 'emblem' });
+        } else if (oppOwnsSticker) {
+          pool.push({ ...s, source: 'opponent' });
         }
-      }
+      });
     });
   } else {
     // Modo Quebra-Regra
     const poolMap = new Map();
     selectedCodes.forEach(houseCode => {
-      const oppEligibleInHouse = oppEligibleInSelected.filter(s => s.house === houseCode);
+      const oppHasEmblem = state.opponentCollection[houseCode + ' 0'] && state.opponentCollection[houseCode + ' 0'].quantity > 0;
+      const houseStickers = PLAYER_STICKERS.filter(s => s.house === houseCode);
+      
+      const oppEligibleInHouse = houseStickers.filter(s => {
+        const playerMissing = !state.collection[s.id] || state.collection[s.id].quantity === 0;
+        if (!playerMissing) return false;
+        const oppOwnsSticker = state.opponentCollection[s.id] && state.opponentCollection[s.id].quantity > 0;
+        return oppHasEmblem || oppOwnsSticker;
+      });
+
       if (oppEligibleInHouse.length > 0) {
         oppEligibleInHouse.forEach(s => {
-          poolMap.set(s.id, { ...s, source: 'opponent' });
+          const oppOwnsSticker = state.opponentCollection[s.id] && state.opponentCollection[s.id].quantity > 0;
+          poolMap.set(s.id, { ...s, source: oppOwnsSticker ? 'opponent' : 'emblem' });
         });
       } else {
-        const playerMissingInHouse = PLAYER_STICKERS.filter(s => 
-          s.house === houseCode && 
-          (!state.collection[s.id] || state.collection[s.id].quantity === 0)
+        const playerMissingInHouse = houseStickers.filter(s => 
+          !state.collection[s.id] || state.collection[s.id].quantity === 0
         );
         playerMissingInHouse.forEach(s => {
           poolMap.set(s.id, { ...s, source: 'fallback' });

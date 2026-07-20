@@ -32,15 +32,14 @@ export function formatPicksForReport(pickedIds, state) {
   if (!pickedIds || pickedIds.length === 0) return [];
   
   const formattedPicks = pickedIds.map((id) => {
-    const isOpponent = state.opponentCollection[id] && (!state.collection[id] || state.collection[id].quantity === 0);
+    const isDirectOpponent = state.opponentCollection[id] && state.opponentCollection[id].quantity > 0;
     const houseCode = id.split(' ')[0];
     const oppHasEmblem = state.opponentCollection[houseCode + ' 0'] && state.opponentCollection[houseCode + ' 0'].quantity > 0;
-    const oppHasZero = !PLAYER_STICKERS.some(s => s.house === houseCode && state.opponentCollection[s.id] && state.opponentCollection[s.id].quantity > 0);
     
     let suffix = '(QUEBRA-REGRA)';
-    if (isOpponent) {
+    if (isDirectOpponent) {
       suffix = '(OPONENTE)';
-    } else if (oppHasEmblem && oppHasZero) {
+    } else if (oppHasEmblem) {
       suffix = '(BRASÃO)';
     }
     return `${id} ${suffix}`;

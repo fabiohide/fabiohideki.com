@@ -124,14 +124,23 @@ function renderPreMatch(state) {
     opponentHouses[code] = houseStickers.filter(s => state.opponentCollection[s.id]);
   });
 
-  const iCanGet = PLAYER_STICKERS.filter(s =>
+  const directPlayerStickers = PLAYER_STICKERS.filter(s =>
     state.opponentCollection[s.id] && (!state.collection[s.id] || state.collection[s.id].quantity === 0)
   );
+  const directCount = directPlayerStickers.length;
 
-  const count = iCanGet.length;
-  const label = (count === 2 || count >= 3) ? 'diferentes' : 'diferente';
-  const badgeBg = count >= 3 ? 'rgba(0, 204, 102, 0.15)' : 'rgba(255, 140, 0, 0.15)';
-  const badgeColor = count >= 3 ? '#00cc66' : '#ff8c00';
+  const emblemUnlockedStickers = PLAYER_STICKERS.filter(s => {
+    const oppHasEmblem = state.opponentCollection[s.house + ' 0'] && state.opponentCollection[s.house + ' 0'].quantity > 0;
+    const playerMissing = !state.collection[s.id] || state.collection[s.id].quantity === 0;
+    const oppHasDirect = state.opponentCollection[s.id] && state.opponentCollection[s.id].quantity > 0;
+    return oppHasEmblem && playerMissing && !oppHasDirect;
+  });
+  const emblemCount = emblemUnlockedStickers.length;
+
+  const totalCount = directCount + emblemCount;
+  const label = (totalCount === 2 || totalCount >= 3) ? 'diferentes' : 'diferente';
+  const badgeBg = totalCount >= 3 ? 'rgba(0, 204, 102, 0.15)' : 'rgba(255, 140, 0, 0.15)';
+  const badgeColor = totalCount >= 3 ? '#00cc66' : '#ff8c00';
 
   const opponent = state.matches.find(m => m.id === state.report.matchId);
   const isPlayerA = state.report.isPlayerA;
@@ -145,11 +154,21 @@ function renderPreMatch(state) {
           <h4 style="margin: 0;">Figurinhas disponíveis</h4>
           <p style="margin: 4px 0 0 0; font-size: 0.8rem; color: var(--color-ash);">Veja o que cada jogador tem antes de escolher o deck.</p>
         </div>
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span class="pre-match-badge can-get" style="margin: 0; padding: 2px 8px; background: ${badgeBg}; color: ${badgeColor}; border-radius: var(--radius-sm); font-size: 0.72rem;">
-            ${count} ${label}
-          </span>
-          <span class="chevron-icon" style="font-size: 0.8rem; transition: transform 0.2s;">▼</span>
+        <div style="display: flex; align-items: flex-end; gap: 8px;">
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+            <span class="pre-match-badge can-get" style="margin: 0; padding: 2px 8px; background: ${badgeBg}; color: ${badgeColor}; border-radius: var(--radius-sm); font-size: 0.72rem; font-weight: bold;">
+              ${totalCount} ${label}
+            </span>
+            <div style="display: flex; gap: 4px; font-size: 0.65rem;">
+              <span style="padding: 1px 6px; background: rgba(76, 175, 80, 0.15); color: #81c784; border-radius: var(--radius-sm); border: 1px solid rgba(76, 175, 80, 0.2); font-weight: 600;">
+                ${directCount} de Jogadores
+              </span>
+              <span style="padding: 1px 6px; background: rgba(49, 133, 255, 0.15); color: #8db9ff; border-radius: var(--radius-sm); border: 1px solid rgba(49, 133, 255, 0.2); font-weight: 600;">
+                ${emblemCount} pelos Brasões
+              </span>
+            </div>
+          </div>
+          <span class="chevron-icon" style="font-size: 0.8rem; transition: transform 0.2s; margin-top: 4px;">▼</span>
         </div>
       </summary>
 
@@ -159,17 +178,16 @@ function renderPreMatch(state) {
           <div class="pre-match-houses">
             ${Object.keys(HOUSE_META).map(code => {
               const house = HOUSE_META[code];
-              const total = PLAYER_STICKERS.filter(s => s.house === code).length;
+              const houseStickers = PLAYER_STICKERS.filter(s => s.house === code);
+              const total = houseStickers.length;
               const owned = myHouses[code].length;
-              const hasDiffForOpponent = myHouses[code].some(s => !state.opponentCollection[s.id] || state.opponentCollection[s.id].quantity === 0);
-              const itemClass = hasDiffForOpponent
-                ? 'has-all'
-                : (owned > 0 ? 'opp-has-some' : 'has-none');
-
+              
               const hasEmblem = state.collection[code + ' 0'] && state.collection[code + ' 0'].quantity > 0;
-              const isPickableForOpponent = myHouses[code].length > 0 
-                ? hasDiffForOpponent 
-                : (!state.opponentCollection[code + ' 0'] || state.opponentCollection[code + ' 0'].quantity === 0);
+              const hasMissingInHouse = houseStickers.some(s => !state.opponentCollection[s.id] || state.opponentCollection[s.id].quantity === 0);
+              const hasDirectForOpponent = myHouses[code].some(s => !state.opponentCollection[s.id] || state.opponentCollection[s.id].quantity === 0);
+              
+              const isPickableForOpponent = (hasEmblem && hasMissingInHouse) || hasDirectForOpponent;
+              const itemClass = isPickableForOpponent ? 'has-all' : (owned > 0 ? 'opp-has-some' : 'has-none');
               
               let hexSvg = '';
               let inlineStyle = '';
@@ -214,17 +232,16 @@ function renderPreMatch(state) {
           <div class="pre-match-houses">
             ${Object.keys(HOUSE_META).map(code => {
               const house = HOUSE_META[code];
-              const total = PLAYER_STICKERS.filter(s => s.house === code).length;
+              const houseStickers = PLAYER_STICKERS.filter(s => s.house === code);
+              const total = houseStickers.length;
               const owned = opponentHouses[code].length;
-              const hasDiffForPlayer = opponentHouses[code].some(s => !state.collection[s.id] || state.collection[s.id].quantity === 0);
-              const itemClass = hasDiffForPlayer
-                ? 'has-missing'
-                : (owned > 0 ? 'opp-has-some' : 'has-none');
-
+              
               const oppHasEmblem = state.opponentCollection[code + ' 0'] && state.opponentCollection[code + ' 0'].quantity > 0;
-              const isPickableForPlayer = opponentHouses[code].length > 0 
-                ? hasDiffForPlayer 
-                : (!state.collection[code + ' 0'] || state.collection[code + ' 0'].quantity === 0);
+              const hasMissingInHouse = houseStickers.some(s => !state.collection[s.id] || state.collection[s.id].quantity === 0);
+              const oppHasDirectInHouse = opponentHouses[code].some(s => !state.collection[s.id] || state.collection[s.id].quantity === 0);
+              
+              const isPickableForPlayer = (oppHasEmblem && hasMissingInHouse) || oppHasDirectInHouse;
+              const itemClass = isPickableForPlayer ? 'has-missing' : (owned > 0 ? 'opp-has-some' : 'has-none');
               
               let hexOppSvg = '';
               let inlineStyle = '';
@@ -269,6 +286,7 @@ function renderPreMatch(state) {
   `;
 }
 
+
 function houseChip(code, revealed = false, delayIndex = 0) {
   const house = HOUSE_META[code];
   const revealClass = revealed ? `is-revealed reveal-delay-${delayIndex}` : '';
@@ -306,12 +324,11 @@ function renderSingleReportForm(state) {
             const houseStickers = PLAYER_STICKERS.filter(s => s.house === house.code);
             const hasOpponentUnique = houseStickers.some(s => state.opponentCollection[s.id] && (!state.collection[s.id] || state.collection[s.id].quantity === 0));
             
-            const oppPlayerStickersCount = houseStickers.filter(s => state.opponentCollection[s.id] && state.opponentCollection[s.id].quantity > 0).length;
             const oppHasEmblem = state.opponentCollection[house.code + ' 0'] && state.opponentCollection[house.code + ' 0'].quantity > 0;
             const playerIsMissingStickers = houseStickers.some(s => !state.collection[s.id] || state.collection[s.id].quantity === 0);
             
-            const showGreenHexagon = oppHasEmblem && oppPlayerStickersCount === 0 && playerIsMissingStickers && !isSelected;
-            const showDot = hasOpponentUnique && !isSelected && !showGreenHexagon;
+            const showDot = hasOpponentUnique && !isSelected;
+            const showGreenHexagon = oppHasEmblem && playerIsMissingStickers && !isSelected && !showDot;
 
             return `
               <button class="house-selector-chip ${isSelected ? 'is-selected' : ''}" 
@@ -391,7 +408,7 @@ function renderSingleReportForm(state) {
       let ruleLabelText = '';
       
       if (!state.report.fallbackActive) {
-        ruleLabelText = `Pick Normal: Você pode escolher até 1 figurinha inédita do oponente para cada casa do seu deck. As figurinhas de brasão do oponente permitem você escolher uma figurinha da casa correspondente, contanto que ele não tenha nenhuma figurinha de jogador nela.`;
+        ruleLabelText = `Pick Normal: Você pode escolher até 1 figurinha inédita para cada casa do seu deck. Se o oponente possuir o brasão da casa, todas as figurinhas daquela casa estão liberadas para a sua escolha.`;
       } else {
         const figText = maxPicks === 1 ? 'figurinha inédita' : 'figurinhas inéditas';
         ruleLabelText = `Quebra-Regra Ativo: Você pode escolher até ${maxPicks} ${figText} para cada casa do seu deck, mesmo que seu oponente não tenha ela.`;

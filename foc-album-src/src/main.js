@@ -186,10 +186,15 @@ function toggleHouse(houseCode) {
   state.selectedPickIds = [];
 
   if (state.selectedHouseCodes.length === 3) {
-    const oppEligible = PLAYER_STICKERS.filter(s => 
-      state.opponentCollection[s.id] && 
-      (!state.collection[s.id] || state.collection[s.id].quantity === 0)
-    );
+    const selectedCodes = state.selectedHouseCodes;
+    const oppEligible = PLAYER_STICKERS.filter(s => {
+      if (!selectedCodes.includes(s.house)) return false;
+      const playerMissing = !state.collection[s.id] || state.collection[s.id].quantity === 0;
+      if (!playerMissing) return false;
+      const oppHasEmblem = state.opponentCollection[s.house + ' 0'] && state.opponentCollection[s.house + ' 0'].quantity > 0;
+      const oppHasDirect = state.opponentCollection[s.id] && state.opponentCollection[s.id].quantity > 0;
+      return oppHasEmblem || oppHasDirect;
+    });
     const myKeys = state.report.playerAKeys;
     state.report.fallbackActive = myKeys > 0 && oppEligible.length < myKeys;
     state.report.quebraRegraMotive = state.report.fallbackActive ? 'qty' : 'combo';
@@ -226,10 +231,14 @@ function setKeys(side, value) {
   const myKeys = state.report.playerAKeys;
   const selectedCodes = state.selectedHouseCodes || [];
   if (selectedCodes.length === 3) {
-    const oppEligible = PLAYER_STICKERS.filter(s => 
-      state.opponentCollection[s.id] && 
-      (!state.collection[s.id] || state.collection[s.id].quantity === 0)
-    );
+    const oppEligible = PLAYER_STICKERS.filter(s => {
+      if (!selectedCodes.includes(s.house)) return false;
+      const playerMissing = !state.collection[s.id] || state.collection[s.id].quantity === 0;
+      if (!playerMissing) return false;
+      const oppHasEmblem = state.opponentCollection[s.house + ' 0'] && state.opponentCollection[s.house + ' 0'].quantity > 0;
+      const oppHasDirect = state.opponentCollection[s.id] && state.opponentCollection[s.id].quantity > 0;
+      return oppHasEmblem || oppHasDirect;
+    });
     state.report.fallbackActive = myKeys > 0 && oppEligible.length < myKeys;
     state.report.quebraRegraMotive = state.report.fallbackActive ? 'qty' : 'combo';
   }
