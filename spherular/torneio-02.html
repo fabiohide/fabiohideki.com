@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Torneio da Távola Redonda - Spherular</title>
+    
+    <!-- Google Fonts: Geist & EB Garamond -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        signal: {
+                            blue: '#3c83f6',
+                            hover: '#2563eb',
+                            deep: '#022c70',
+                            light: '#81b6ff'
+                        },
+                        carbon: '#18181b',
+                        steel: '#5e616e',
+                        bone: '#e4e4e7',
+                        frost: '#f3f8ff',
+                        vapor: '#edeef2'
+                    },
+                    fontFamily: {
+                        geist: ['Geist', 'sans-serif'],
+                        garamond: ['EB Garamond', 'serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Brackets Viewer Library -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/brackets-viewer@1.4.7/dist/brackets-viewer.min.css" />
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brackets-viewer@1.4.7/dist/brackets-viewer.min.js"></script>
+
+    <style>
+        body {
+            background-color: #f3f8ff;
+            color: #18181b;
+            font-family: 'Geist', sans-serif;
+            min-height: 100vh;
+        }
+
+        .font-editorial {
+            font-family: 'EB Garamond', serif;
+        }
+
+        .card-surface {
+            background-color: #ffffff;
+            border: 1px solid #e4e4e7;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        .card-surface-hover:hover {
+            border-color: #3c83f6;
+            box-shadow: 0 4px 12px rgba(60, 131, 246, 0.08);
+            transition: all 0.2s ease-in-out;
+        }
+
+        .btn-primary {
+            background-color: #3c83f6;
+            color: #ffffff;
+            font-weight: 500;
+            border-radius: 4px;
+            padding: 8px 16px;
+            transition: all 0.15s ease;
+            box-shadow: 0 0 0 0.5px #0544a5, inset 0 -1px 0 0 #022c70, inset 0 0.5px 0 0 #81b6ff;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .brackets-viewer {
+            --primary-background: transparent !important;
+            --secondary-background: #ffffff !important;
+            --match-background: #ffffff !important;
+            --border-color: #e4e4e7 !important;
+            --border-hover-color: #3c83f6 !important;
+            --border-selected-color: #3c83f6 !important;
+            --connector-color: #3c83f6 !important;
+            --font-color: #18181b !important;
+            --label-color: #5e616e !important;
+            --win-color: #16a34a !important;
+            --loss-color: #9ca3af !important;
+            --match-border-radius: 8px !important;
+            --match-border-width: 1px !important;
+            font-family: 'Geist', sans-serif !important;
+        }
+
+        /* Transition styling for accordion */
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s cubic-bezier(0, 1, 0, 1);
+        }
+        .accordion-content.open {
+            max-height: 2000px;
+            transition: max-height 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="antialiased text-carbon pb-16">
+
+    <!-- Barra Superior -->
+    <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-bone">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="h-16 flex justify-between items-center">
+                <a href="../spherular.html" class="flex items-center gap-2 text-carbon hover:text-signal-blue font-semibold transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-signal-blue" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="text-sm font-medium tracking-tight">Spherular</span>
+                </a>
+                
+                <div class="flex items-center gap-3">
+                    <span id="last-update-text" class="text-xs text-steel font-mono hidden sm:inline-block">
+                        Atualizado em tempo real
+                    </span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        
+        <!-- Header Banner com Logo -->
+        <div class="card-surface p-8 mb-8 text-center bg-[#f3f8ff] border-none flex flex-col items-center justify-center relative overflow-hidden">
+            <div>
+                <img src="./assets/arte/logo_TTR.png" alt="Torneio da Távola Redonda" class="max-h-52 w-auto object-contain mx-auto">
+            </div>
+        </div>
+
+        <!-- Abas de Navegação -->
+        <div class="mb-8 border-b border-bone flex items-center justify-between overflow-x-auto">
+            <nav class="flex gap-2 min-w-max pb-2" id="tabs-nav">
+                <!-- Abas geradas via JS -->
+            </nav>
+            <div class="pl-4 pb-2 hidden md:flex items-center gap-2">
+                <button id="toggle-admin-lock-btn" class="text-xs font-medium px-3 py-1.5 rounded border border-bone text-steel hover:bg-vapor transition-colors flex items-center gap-1.5">
+                    <span id="lock-status-icon">[Bloqueio]</span>
+                    <span id="lock-status-text">Gerenciar Trava de Abas</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- CONTEÚDO DAS ABAS -->
+
+        <!-- ABA 1: LISTA DE DECKS (JOGADORES) -->
+        <section id="tab-decks" class="tab-content">
+            <div class="card-surface p-6">
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left min-w-[750px] border-collapse">
+                        <thead>
+                            <tr class="border-b border-bone text-xs uppercase text-steel font-semibold tracking-wider">
+                                <th class="pb-3 px-3">Seed</th>
+                                <th class="pb-3 px-3">Nome</th>
+                                <th class="pb-3 px-3">Nick TCO</th>
+                                <th class="pb-3 px-3">Deck</th>
+                                <th class="pb-3 px-3">Coleção</th>
+                                <th class="pb-3 px-3">Casas</th>
+                                <th class="pb-3 px-3 text-center">SAS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="players-table-body" class="divide-y divide-bone text-sm text-carbon">
+                            <!-- Preenchido via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 2: RODADA 1 -->
+        <section id="tab-rodada1" class="tab-content hidden">
+            <div class="card-surface p-6">
+                <div id="matches-r1-container" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+            </div>
+        </section>
+
+        <!-- ABA 3: RODADA 2 -->
+        <section id="tab-rodada2" class="tab-content hidden">
+            <div class="card-surface p-6">
+                <div id="matches-r2-container" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+            </div>
+        </section>
+
+        <!-- ABA 4: RODADA 3 -->
+        <section id="tab-rodada3" class="tab-content hidden">
+            <div class="card-surface p-6">
+                <div id="matches-r3-container" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+            </div>
+        </section>
+
+        <!-- ABA 5: REPORTE DE PARTIDAS -->
+        <section id="tab-reporte" class="tab-content hidden">
+            <div class="card-surface p-6 max-w-5xl mx-auto">
+
+                <!-- Filtro de Jogador -->
+                <div class="mb-6 p-4 bg-frost rounded-lg border border-bone flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <label for="report-player-filter" class="text-xs font-semibold text-steel uppercase tracking-wider">Filtrar por jogador:</label>
+                    <select id="report-player-filter" class="w-full sm:w-72 bg-white border border-bone text-carbon text-sm rounded-md px-3 py-2 focus:border-signal-blue focus:outline-none shadow-sm">
+                        <!-- Preenchido via JS -->
+                    </select>
+                </div>
+
+                <div class="space-y-4">
+
+                    <!-- Accordion 1: Rodada 1 -->
+                    <div class="border border-bone rounded-lg overflow-hidden bg-white">
+                        <button class="accordion-header w-full px-5 py-4 flex justify-between items-center bg-frost hover:bg-vapor transition-colors text-left font-medium text-carbon" data-target="acc-r1">
+                            <span class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-signal-blue"></span>
+                                Rodada 1
+                            </span>
+                            <span class="text-xs text-steel font-mono">Expandir ▾</span>
+                        </button>
+                        <div id="acc-r1" class="accordion-content open">
+                            <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-3 border-t border-bone bg-white" id="report-inputs-r1"></div>
+                        </div>
+                    </div>
+
+                    <!-- Accordion 2: Rodada 2 -->
+                    <div class="border border-bone rounded-lg overflow-hidden bg-white">
+                        <button class="accordion-header w-full px-5 py-4 flex justify-between items-center bg-frost hover:bg-vapor transition-colors text-left font-medium text-carbon" data-target="acc-r2">
+                            <span class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-signal-blue"></span>
+                                Rodada 2
+                            </span>
+                            <span class="text-xs text-steel font-mono">Expandir ▾</span>
+                        </button>
+                        <div id="acc-r2" class="accordion-content">
+                            <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-3 border-t border-bone bg-white" id="report-inputs-r2"></div>
+                        </div>
+                    </div>
+
+                    <!-- Accordion 3: Rodada 3 -->
+                    <div class="border border-bone rounded-lg overflow-hidden bg-white">
+                        <button class="accordion-header w-full px-5 py-4 flex justify-between items-center bg-frost hover:bg-vapor transition-colors text-left font-medium text-carbon" data-target="acc-r3">
+                            <span class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-signal-blue"></span>
+                                Rodada 3
+                            </span>
+                            <span class="text-xs text-steel font-mono">Expandir ▾</span>
+                        </button>
+                        <div id="acc-r3" class="accordion-content">
+                            <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-3 border-t border-bone bg-white" id="report-inputs-r3"></div>
+                        </div>
+                    </div>
+
+                    <!-- Accordion 4: Playoffs -->
+                    <div class="border border-bone rounded-lg overflow-hidden bg-white">
+                        <button class="accordion-header w-full px-5 py-4 flex justify-between items-center bg-frost hover:bg-vapor transition-colors text-left font-medium text-carbon" data-target="acc-playoffs">
+                            <span class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                Playoffs Top 8
+                            </span>
+                            <span class="text-xs text-steel font-mono">Expandir ▾</span>
+                        </button>
+                        <div id="acc-playoffs" class="accordion-content">
+                            <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-3 border-t border-bone bg-white" id="report-inputs-playoffs"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 6: TABELA (CLASSIFICAÇÃO GERAL) -->
+        <section id="tab-tabela" class="tab-content hidden">
+            <div class="card-surface p-6">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left min-w-[500px] border-collapse">
+                        <thead>
+                            <tr class="border-b border-bone text-xs uppercase text-steel font-semibold tracking-wider">
+                                <th class="pb-3 px-3">#</th>
+                                <th class="pb-3 px-3">Participante</th>
+                                <th class="pb-3 px-3 text-center">V</th>
+                                <th class="pb-3 px-3 text-center">D</th>
+                                <th class="pb-3 px-3 text-center">J</th>
+                                <th class="pb-3 px-3 text-center">CF</th>
+                            </tr>
+                        </thead>
+                        <tbody id="standings-table-body" class="divide-y divide-bone text-sm text-carbon">
+                            <!-- Preenchido via JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-4 text-xs text-steel text-right font-mono">
+                    Critérios de Desempate: 1º Vitórias &bull; 2º Chaves Forjadas (CF) &bull; 3º Confronto Direto
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 7: PLAYOFFS -->
+        <section id="tab-playoffs" class="tab-content hidden">
+            <div class="card-surface p-6">
+                <div id="top8-bracket-container" class="brackets-viewer overflow-x-auto w-full py-4 min-h-[400px]">
+                    <!-- Brackets Viewer renderiza aqui -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- LÓGICA E INTERATIVIDADE -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // Dados dos 13 Participantes (#01 a #13)
+            const players = [
+                { seed: "#01", name: "Chamon", nick: "dchamon_BR", deck: "Sand in Your Eye", deckUrl: "#", collection: "Draconian Measures", houses: ["Shadows", "Unfathomable", "Geistoid"], sas: 72 },
+                { seed: "#02", name: "David Pereira", nick: "matougolias", deck: "Flash Freeze", deckUrl: "#", collection: "Draconian Measures", houses: ["Shadows", "Unfathomable", "Geistoid"], sas: 69 },
+                { seed: "#03", name: "Estêvão Balsalobre", nick: "EstevaotetoBR", deck: "Emphatic Malice", deckUrl: "#", collection: "Draconian Measures", houses: ["Shadows", "Geistoid", "Mars"], sas: 71 },
+                { seed: "#04", name: "Fábio Hideki", nick: "fabit", deck: "Aviatrix Virtuosa", deckUrl: "#", collection: "Draconian Measures", houses: ["Ekwidon", "Star Alliance", "Mars"], sas: 68 },
+                { seed: "#05", name: "Flávio Ciampone", nick: "Ciampone", deck: "Spherular Gem", deckUrl: "#", collection: "Draconian Measures", houses: ["Dis", "Star Alliance", "Shadows"], sas: 74 },
+                { seed: "#06", name: "Gabriel Guessi", nick: "gguessi", deck: "Star Path", deckUrl: "#", collection: "Draconian Measures", houses: ["Unfathomable", "Geistoid", "Mars"], sas: 70 },
+                { seed: "#07", name: "Gustavo Oliveira", nick: "Dreadsgu", deck: "Jahneerie", deckUrl: "#", collection: "Draconian Measures", houses: ["Geistoid", "Dis", "Ekwidon"], sas: 73 },
+                { seed: "#08", name: "JP Rodriguez", nick: "JPRodriguez", deck: "Plunder", deckUrl: "#", collection: "Draconian Measures", houses: ["Star Alliance", "Unfathomable", "Ekwidon"], sas: 67 },
+                { seed: "#09", name: "Marcos Pereira", nick: "dhrago", deck: "Selwyn the Fence", deckUrl: "#", collection: "Draconian Measures", houses: ["Shadows", "Dis", "Geistoid"], sas: 75 },
+                { seed: "#10", name: "Mateus Barbosa", nick: "mtsbarbosa", deck: "Three Sheets", deckUrl: "#", collection: "Draconian Measures", houses: ["Shadows", "Unfathomable", "Geistoid"], sas: 70 },
+                { seed: "#11", name: "Nicholas", nick: "Sukorski", deck: "Ransom", deckUrl: "#", collection: "Draconian Measures", houses: ["Ekwidon", "Geistoid", "Shadows"], sas: 71 },
+                { seed: "#12", name: "Rigel Duarte", nick: "Tatuira", deck: "Kulsha", deckUrl: "#", collection: "Draconian Measures", houses: ["Ekwidon", "Dis", "Unfathomable"], sas: 76 },
+                { seed: "#13", name: "Vagner Di Gennaro", nick: "Genn21-FDG", deck: "Psyquic Haze", deckUrl: "#", collection: "Draconian Measures", houses: ["Ekwidon", "Mars", "Star Alliance"], sas: 69 }
+            ];
+
+            // Definição das Abas e Trava Inicial (Abas ativas/bloqueadas)
+            const tabs = [
+                { id: "decks", name: "Lista de Decks", locked: false },
+                { id: "rodada1", name: "Rodada 1", locked: false },
+                { id: "rodada2", name: "Rodada 2", locked: false },
+                { id: "rodada3", name: "Rodada 3", locked: false },
+                { id: "reporte", name: "Reporte de Partidas", locked: false },
+                { id: "tabela", name: "Tabela Geral", locked: false },
+                { id: "playoffs", name: "Play Offs", locked: false }
+            ];
+
+            let activeTabId = "decks";
+
+            // Gerador de partidas baseado na fatoração de grafos do Teorema de Petersen
+            // Garante 4 partidas por jogador em cada rodada (26 partidas no total por rodada para 13 jogadores)
+            function generateTournamentMatches(playerList) {
+                const list = [];
+                const n = playerList.length;
+                const getSeed = (idx) => `#${String(((idx % n) + n) % n + 1).padStart(2, '0')}`;
+
+                // Rodada 1: 4 partidas inéditas por jogador (offsets +1 e +2)
+                let mId = 1;
+                for (let i = 0; i < n; i++) {
+                    list.push({ id: `r1-${mId++}`, round: 1, p1Seed: getSeed(i), p2Seed: getSeed(i + 1), p1Score: null, p2Score: null, p1CF: 0, p2CF: 0, completed: false });
+                    list.push({ id: `r1-${mId++}`, round: 1, p1Seed: getSeed(i), p2Seed: getSeed(i + 2), p1Score: null, p2Score: null, p1CF: 0, p2CF: 0, completed: false });
+                }
+
+                // Rodada 2: 4 partidas inéditas por jogador (offsets +3 e +4)
+                mId = 1;
+                for (let i = 0; i < n; i++) {
+                    list.push({ id: `r2-${mId++}`, round: 2, p1Seed: getSeed(i), p2Seed: getSeed(i + 3), p1Score: null, p2Score: null, p1CF: 0, p2CF: 0, completed: false });
+                    list.push({ id: `r2-${mId++}`, round: 2, p1Seed: getSeed(i), p2Seed: getSeed(i + 4), p1Score: null, p2Score: null, p1CF: 0, p2CF: 0, completed: false });
+                }
+
+                // Rodada 3: 4 partidas por jogador (2 repetições da Rodada 1 [offset +1] e 2 da Rodada 2 [offset +3])
+                mId = 1;
+                for (let i = 0; i < n; i++) {
+                    list.push({ id: `r3-${mId++}`, round: 3, p1Seed: getSeed(i), p2Seed: getSeed(i + 1), p1Score: null, p2Score: null, p1CF: 0, p2CF: 0, completed: false });
+                    list.push({ id: `r3-${mId++}`, round: 3, p1Seed: getSeed(i), p2Seed: getSeed(i + 3), p1Score: null, p2Score: null, p1CF: 0, p2CF: 0, completed: false });
+                }
+
+                // Playoffs (Mata-Mata Top 8)
+                const playoffs = [
+                    { id: "po-q1", round: "playoffs", label: "Quartas 1", p1Seed: "#01", p2Seed: "#08", p1Score: null, p2Score: null, completed: false },
+                    { id: "po-q2", round: "playoffs", label: "Quartas 2", p1Seed: "#04", p2Seed: "#05", p1Score: null, p2Score: null, completed: false },
+                    { id: "po-q3", round: "playoffs", label: "Quartas 3", p1Seed: "#02", p2Seed: "#07", p1Score: null, p2Score: null, completed: false },
+                    { id: "po-q4", round: "playoffs", label: "Quartas 4", p1Seed: "#03", p2Seed: "#06", p1Score: null, p2Score: null, completed: false }
+                ];
+
+                return list.concat(playoffs);
+            }
+
+            let tournamentMatches = generateTournamentMatches(players);
+
+            // Renderizar Lista de Decks
+            function renderPlayersTable() {
+                const tbody = document.getElementById('players-table-body');
+                tbody.innerHTML = players.map(p => `
+                    <tr class="hover:bg-frost/60 transition-colors">
+                        <td class="py-3 px-3 font-mono font-bold text-signal-blue">${p.seed}</td>
+                        <td class="py-3 px-3 font-medium text-carbon">${p.name}</td>
+                        <td class="py-3 px-3 font-mono text-steel text-xs">${p.nick}</td>
+                        <td class="py-3 px-3 text-signal-blue font-medium hover:underline">${p.deck}</td>
+                        <td class="py-3 px-3 text-steel text-xs">${p.collection}</td>
+                        <td class="py-3 px-3 text-xs text-steel">${p.houses.join(', ')}</td>
+                        <td class="py-3 px-3 text-center font-mono font-bold text-carbon">${p.sas}</td>
+                    </tr>
+                `).join('');
+            }
+
+            // Renderizar Abas de Navegação
+            function renderTabsNav() {
+                const nav = document.getElementById('tabs-nav');
+                nav.innerHTML = tabs.map(t => {
+                    const isActive = t.id === activeTabId;
+                    const isLocked = t.locked;
+
+                    let btnClass = "px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-1.5 whitespace-nowrap ";
+                    if (isLocked) {
+                        btnClass += "bg-vapor text-steel opacity-60 cursor-not-allowed border border-bone";
+                    } else if (isActive) {
+                        btnClass += "bg-signal-blue text-white shadow-sm border border-signal-blue";
+                    } else {
+                        btnClass += "bg-white text-carbon hover:bg-frost border border-bone";
+                    }
+
+                    return `
+                        <button class="${btnClass}" data-tab-id="${t.id}">
+                            ${t.name} ${isLocked ? '(Bloqueada)' : ''}
+                        </button>
+                    `;
+                }).join('');
+
+                // Adicionar event listeners
+                nav.querySelectorAll('button').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.getAttribute('data-tab-id');
+                        const tabObj = tabs.find(t => t.id === id);
+                        if (tabObj.locked) {
+                            alert("Esta aba está bloqueada no momento.");
+                            return;
+                        }
+                        activeTabId = id;
+                        renderTabsNav();
+                        switchTabContent(id);
+                    });
+                });
+            }
+
+            function switchTabContent(activeId) {
+                document.querySelectorAll('.tab-content').forEach(sec => {
+                    if (sec.id === `tab-${activeId}`) {
+                        sec.classList.remove('hidden');
+                    } else {
+                        sec.classList.add('hidden');
+                    }
+                });
+            }
+
+            // Renderizar Cartões de Confronto por Rodada
+            function renderRoundMatches(roundNum, containerId) {
+                const container = document.getElementById(containerId);
+                const matches = tournamentMatches.filter(m => m.round === roundNum);
+
+                container.innerHTML = matches.map(m => {
+                    const p1 = players.find(p => p.seed === m.p1Seed) || { name: m.p1Seed };
+                    const p2 = players.find(p => p.seed === m.p2Seed) || { name: m.p2Seed };
+
+                    const isP1Win = m.completed && m.p1Score > m.p2Score;
+                    const isP2Win = m.completed && m.p2Score > m.p1Score;
+
+                    return `
+                        <div class="card-surface p-4 flex flex-col sm:flex-row items-center justify-between gap-4 card-surface-hover">
+                            <div class="flex items-center gap-3 w-full sm:w-5/12 justify-start">
+                                <span class="font-mono text-xs font-bold px-2 py-1 bg-frost text-signal-blue rounded">${p1.seed}</span>
+                                <span class="font-medium ${isP1Win ? 'text-signal-blue font-bold' : 'text-carbon'}">${p1.name}</span>
+                            </div>
+
+                            <div class="flex items-center gap-2 font-mono font-bold text-lg bg-vapor px-4 py-1.5 rounded-lg border border-bone">
+                                <span class="${isP1Win ? 'text-signal-blue' : 'text-carbon'}">${m.completed ? m.p1Score : '-'}</span>
+                                <span class="text-steel text-sm font-normal">:</span>
+                                <span class="${isP2Win ? 'text-signal-blue' : 'text-carbon'}">${m.completed ? m.p2Score : '-'}</span>
+                            </div>
+
+                            <div class="flex items-center gap-3 w-full sm:w-5/12 justify-end">
+                                <span class="font-medium ${isP2Win ? 'text-signal-blue font-bold' : 'text-carbon'}">${p2.name}</span>
+                                <span class="font-mono text-xs font-bold px-2 py-1 bg-frost text-signal-blue rounded">${p2.seed}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Grafo SVG para as rodadas
+            function renderSVGGraph(svgId, roundNum) {
+                const svg = document.getElementById(svgId);
+                if (!svg) return;
+
+                const matches = tournamentMatches.filter(m => m.round === roundNum);
+                const totalNodes = 13;
+                const centerX = 150, centerY = 150, radius = 110;
+
+                const nodePositions = {};
+                for (let i = 0; i < totalNodes; i++) {
+                    const angle = (i * 2 * Math.PI / totalNodes) - (Math.PI / 2);
+                    const x = centerX + radius * Math.cos(angle);
+                    const y = centerY + radius * Math.sin(angle);
+                    nodePositions[`#${String(i + 1).padStart(2, '0')}`] = { x, y };
+                }
+
+                let linesHTML = '';
+                matches.forEach(m => {
+                    const pos1 = nodePositions[m.p1Seed];
+                    const pos2 = nodePositions[m.p2Seed];
+                    if (pos1 && pos2) {
+                        linesHTML += `<line x1="${pos1.x}" y1="${pos1.y}" x2="${pos2.x}" y2="${pos2.y}" stroke="#3c83f6" stroke-width="2.5" stroke-dasharray="4 2"/>`;
+                    }
+                });
+
+                let nodesHTML = '';
+                Object.keys(nodePositions).forEach(seed => {
+                    const pos = nodePositions[seed];
+                    nodesHTML += `
+                        <g transform="translate(${pos.x}, ${pos.y})">
+                            <circle r="14" fill="#ffffff" stroke="#3c83f6" stroke-width="2"/>
+                            <text text-anchor="middle" dy="4" font-size="10" font-family="JetBrains Mono" font-weight="bold" fill="#18181b">${seed.replace('#','')}</text>
+                        </g>
+                    `;
+                });
+
+                svg.innerHTML = linesHTML + nodesHTML;
+            }
+
+            // Populador e filtro do Painel de Reporte
+            let selectedReportPlayerSeed = "";
+
+            function populateReportPlayerFilter() {
+                const select = document.getElementById('report-player-filter');
+                if (!select) return;
+
+                select.innerHTML = '<option value="">Todos os Jogadores (13)</option>' + 
+                    players.map(p => `<option value="${p.seed}">${p.seed} - ${p.name}</option>`).join('');
+
+                select.addEventListener('change', (e) => {
+                    selectedReportPlayerSeed = e.target.value;
+                    renderReportInputs();
+                });
+            }
+
+            // Painel de Reporte de Partidas (Inputs em Accordions com Filtro)
+            function renderReportInputs() {
+                const renderRoundSection = (roundVal, targetContainerId) => {
+                    const container = document.getElementById(targetContainerId);
+                    if (!container) return;
+
+                    let matches = tournamentMatches.filter(m => m.round === roundVal);
+                    if (selectedReportPlayerSeed) {
+                        matches = matches.filter(m => m.p1Seed === selectedReportPlayerSeed || m.p2Seed === selectedReportPlayerSeed);
+                    }
+
+                    if (matches.length === 0) {
+                        container.innerHTML = `<div class="col-span-full py-6 text-center text-xs text-steel">Nenhuma partida encontrada para este jogador nesta rodada.</div>`;
+                        return;
+                    }
+
+                    container.innerHTML = matches.map(m => {
+                        const p1 = players.find(p => p.seed === m.p1Seed) || { name: m.p1Seed };
+                        const p2 = players.find(p => p.seed === m.p2Seed) || { name: m.p2Seed };
+
+                        const isP1Selected = m.p1Seed === selectedReportPlayerSeed;
+                        const isP2Selected = m.p2Seed === selectedReportPlayerSeed;
+
+                        return `
+                            <div class="p-4 bg-frost rounded-lg border ${isP1Selected || isP2Selected ? 'border-signal-blue bg-blue-50/30' : 'border-bone'} flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div class="w-full sm:w-1/3 flex items-center gap-2">
+                                    <span class="font-mono text-xs font-bold text-signal-blue">${p1.seed}</span>
+                                    <span class="text-sm font-medium ${isP1Selected ? 'text-signal-blue font-bold' : 'text-carbon'} truncate">${p1.name}</span>
+                                </div>
+
+                                <div class="flex items-center gap-3 shrink-0">
+                                    <input type="number" min="0" max="3" value="${m.p1Score !== null ? m.p1Score : ''}" 
+                                        data-match-id="${m.id}" data-player="1" placeholder="0"
+                                        class="report-score-input w-12 py-1 px-2 text-center font-mono font-bold bg-white border border-bone rounded shadow-sm focus:border-signal-blue focus:outline-none text-sm">
+                                    <span class="text-steel font-bold">:</span>
+                                    <input type="number" min="0" max="3" value="${m.p2Score !== null ? m.p2Score : ''}" 
+                                        data-match-id="${m.id}" data-player="2" placeholder="0"
+                                        class="report-score-input w-12 py-1 px-2 text-center font-mono font-bold bg-white border border-bone rounded shadow-sm focus:border-signal-blue focus:outline-none text-sm">
+                                </div>
+
+                                <div class="w-full sm:w-1/3 flex items-center justify-end gap-2">
+                                    <span class="text-sm font-medium ${isP2Selected ? 'text-signal-blue font-bold' : 'text-carbon'} truncate">${p2.name}</span>
+                                    <span class="font-mono text-xs font-bold text-signal-blue">${p2.seed}</span>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                };
+
+                renderRoundSection(1, 'report-inputs-r1');
+                renderRoundSection(2, 'report-inputs-r2');
+                renderRoundSection(3, 'report-inputs-r3');
+                renderRoundSection('playoffs', 'report-inputs-playoffs');
+
+                // Adicionar listener de atualização nos inputs
+                document.querySelectorAll('.report-score-input').forEach(input => {
+                    input.addEventListener('change', (e) => {
+                        const matchId = e.target.getAttribute('data-match-id');
+                        const playerNum = e.target.getAttribute('data-player');
+                        const val = parseInt(e.target.value, 10);
+
+                        const match = tournamentMatches.find(m => m.id === matchId);
+                        if (match) {
+                            if (playerNum === '1') match.p1Score = isNaN(val) ? null : val;
+                            if (playerNum === '2') match.p2Score = isNaN(val) ? null : val;
+
+                            match.completed = match.p1Score !== null && match.p2Score !== null;
+                            updateAllViews();
+                        }
+                    });
+                });
+            }
+
+            // Accordion Logic
+            function initAccordions() {
+                document.querySelectorAll('.accordion-header').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const targetId = btn.getAttribute('data-target');
+                        const content = document.getElementById(targetId);
+                        const isOpened = content.classList.contains('open');
+
+                        if (isOpened) {
+                            content.classList.remove('open');
+                            btn.querySelector('.font-mono').textContent = 'Expandir ▾';
+                        } else {
+                            content.classList.add('open');
+                            btn.querySelector('.font-mono').textContent = 'Recolher ▴';
+                        }
+                    });
+                });
+            }
+
+            // Tabela de Classificação Geral
+            function renderStandingsTable() {
+                const standingsMap = {};
+                players.forEach(p => {
+                    standingsMap[p.seed] = { player: p, v: 0, d: 0, j: 0, cf: 0 };
+                });
+
+                tournamentMatches.forEach(m => {
+                    if (m.completed && m.round !== 'playoffs') {
+                        const s1 = standingsMap[m.p1Seed];
+                        const s2 = standingsMap[m.p2Seed];
+
+                        if (s1 && s2) {
+                            s1.j += 1;
+                            s2.j += 1;
+                            s1.cf += m.p1CF || 0;
+                            s2.cf += m.p2CF || 0;
+
+                            if (m.p1Score > m.p2Score) {
+                                s1.v += 1;
+                                s2.d += 1;
+                            } else if (m.p2Score > m.p1Score) {
+                                s2.v += 1;
+                                s1.d += 1;
+                            }
+                        }
+                    }
+                });
+
+                const sortedStandings = Object.values(standingsMap).sort((a, b) => {
+                    if (b.v !== a.v) return b.v - a.v;
+                    if (b.cf !== a.cf) return b.cf - a.cf;
+                    return a.player.seed.localeCompare(b.player.seed);
+                });
+
+                const tbody = document.getElementById('standings-table-body');
+                tbody.innerHTML = sortedStandings.map((st, idx) => {
+                    const isTop8 = idx < 8;
+                    return `
+                        <tr class="${isTop8 ? 'bg-blue-50/40' : ''} hover:bg-frost transition-colors">
+                            <td class="py-3 px-3 font-mono font-bold ${isTop8 ? 'text-signal-blue' : 'text-steel'}">${idx + 1}</td>
+                            <td class="py-3 px-3 font-medium text-carbon">${st.player.name}</td>
+                            <td class="py-3 px-3 text-center font-mono font-bold text-emerald-600">${st.v}</td>
+                            <td class="py-3 px-3 text-center font-mono text-rose-500">${st.d}</td>
+                            <td class="py-3 px-3 text-center font-mono text-carbon">${st.j}</td>
+                            <td class="py-3 px-3 text-center font-mono text-steel">${st.cf}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            // Play Offs (Brackets Viewer)
+            function renderPlayoffsBracket() {
+                const container = document.getElementById('top8-bracket-container');
+                if (!container || typeof bracketsViewer === 'undefined') return;
+
+                const bracketData = {
+                    stages: [{
+                        id: 0,
+                        name: "Playoffs Top 8",
+                        type: "single_elimination",
+                        number: 1,
+                        settings: { size: 8 }
+                    }],
+                    matches: [
+                        { id: 0, stage_id: 0, group_id: 0, round_id: 0, number: 1, opponent1: { id: 0, name: "#01 Chamon", score: 2, result: "win" }, opponent2: { id: 7, name: "#08 JP Rodriguez", score: 1 } },
+                        { id: 1, stage_id: 0, group_id: 0, round_id: 0, number: 2, opponent1: { id: 3, name: "#04 Fábio Hideki", score: 0 }, opponent2: { id: 4, name: "#05 Flávio Ciampone", score: 2, result: "win" } },
+                        { id: 2, stage_id: 0, group_id: 0, round_id: 0, number: 3, opponent1: { id: 1, name: "#02 David Pereira", score: 2, result: "win" }, opponent2: { id: 6, name: "#07 Gustavo Oliveira", score: 1 } },
+                        { id: 3, stage_id: 0, group_id: 0, round_id: 0, number: 4, opponent1: { id: 2, name: "#03 Estêvão", score: 1 }, opponent2: { id: 5, name: "#06 Gabriel Guessi", score: 2, result: "win" } },
+                        
+                        // Semifinais
+                        { id: 4, stage_id: 0, group_id: 0, round_id: 1, number: 1, opponent1: { id: 0, name: "#01 Chamon" }, opponent2: { id: 4, name: "#05 Flávio Ciampone" } },
+                        { id: 5, stage_id: 0, group_id: 0, round_id: 1, number: 2, opponent1: { id: 1, name: "#02 David Pereira" }, opponent2: { id: 5, name: "#06 Gabriel Guessi" } },
+
+                        // Final
+                        { id: 6, stage_id: 0, group_id: 0, round_id: 2, number: 1, opponent1: null, opponent2: null }
+                    ],
+                    participants: players.map((p, idx) => ({ id: idx, name: `${p.seed} ${p.name}` }))
+                };
+
+                container.innerHTML = '';
+                try {
+                    bracketsViewer.render({
+                        stages: bracketData.stages,
+                        matches: bracketData.matches,
+                        participants: bracketData.participants
+                    }, {
+                        selector: '#top8-bracket-container',
+                        clear: true
+                    });
+                } catch (e) {
+                    console.error("Brackets viewer error:", e);
+                }
+            }
+
+            // Atualização Geral de Views
+            function updateAllViews() {
+                renderRoundMatches(1, 'matches-r1-container');
+                renderRoundMatches(2, 'matches-r2-container');
+                renderRoundMatches(3, 'matches-r3-container');
+
+                renderSVGGraph('svg-graph-r1', 1);
+                renderSVGGraph('svg-graph-r2', 2);
+                renderSVGGraph('svg-graph-r3', 3);
+
+                renderStandingsTable();
+            }
+
+            // Gerenciar Trava de Abas (Admin simulated toggle)
+            document.getElementById('toggle-admin-lock-btn')?.addEventListener('click', () => {
+                const round3Tab = tabs.find(t => t.id === 'rodada3');
+                const playoffsTab = tabs.find(t => t.id === 'playoffs');
+
+                if (round3Tab) round3Tab.locked = !round3Tab.locked;
+                if (playoffsTab) playoffsTab.locked = !playoffsTab.locked;
+
+                const isAnyLocked = round3Tab?.locked || playoffsTab?.locked;
+                document.getElementById('lock-status-icon').textContent = isAnyLocked ? '[Bloqueado]' : '[Liberado]';
+                document.getElementById('lock-status-text').textContent = isAnyLocked ? 'Abas Rodada 3 e Playoffs Travadas' : 'Todas as Abas Liberadas';
+
+                renderTabsNav();
+            });
+
+            // Inicialização
+            renderPlayersTable();
+            renderTabsNav();
+            populateReportPlayerFilter();
+            renderReportInputs();
+            initAccordions();
+            updateAllViews();
+            renderPlayoffsBracket();
+        });
+    </script>
+</body>
+</html>

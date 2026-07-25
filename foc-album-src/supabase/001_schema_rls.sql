@@ -129,63 +129,58 @@ begin
 end $$;
 
 drop policy if exists "players read all" on public.foc2026_players;
-create policy "players read all" on public.foc2026_players
-for select using (true);
+create policy "players read all" on public.foc2026_players for select using (true);
 
-drop policy if exists "players update self" on public.foc2026_players;
-create policy "players update self" on public.foc2026_players
-for update using (username = public.foc2026_current_username())
-with check (username = public.foc2026_current_username());
+drop policy if exists "players update self or admin" on public.foc2026_players;
+create policy "players update self or admin" on public.foc2026_players for update using (
+  username = public.foc2026_current_username() or public.foc2026_is_admin()
+);
 
 drop policy if exists "rounds read all" on public.foc2026_rounds;
-create policy "rounds read all" on public.foc2026_rounds
-for select using (true);
+create policy "rounds read all" on public.foc2026_rounds for select using (true);
 
 drop policy if exists "rounds admin write" on public.foc2026_rounds;
-create policy "rounds admin write" on public.foc2026_rounds
-for all using (public.foc2026_is_admin())
-with check (public.foc2026_is_admin());
+create policy "rounds admin write" on public.foc2026_rounds for all using (public.foc2026_is_admin()) with check (public.foc2026_is_admin());
 
-drop policy if exists "matches read participants" on public.foc2026_matches;
-create policy "matches read participants" on public.foc2026_matches
-for select using (
-  public.foc2026_is_admin()
-  or public.foc2026_current_username() in (player_a_username, player_b_username)
+drop policy if exists "matches read all" on public.foc2026_matches;
+create policy "matches read all" on public.foc2026_matches for select using (true);
+
+drop policy if exists "matches update participant or admin" on public.foc2026_matches;
+create policy "matches update participant or admin" on public.foc2026_matches for update using (
+  public.foc2026_is_admin() or public.foc2026_current_username() in (player_a_username, player_b_username)
 );
 
 drop policy if exists "matches admin write" on public.foc2026_matches;
-create policy "matches admin write" on public.foc2026_matches
-for all using (public.foc2026_is_admin())
-with check (public.foc2026_is_admin());
+create policy "matches admin write" on public.foc2026_matches for all using (public.foc2026_is_admin()) with check (public.foc2026_is_admin());
 
 drop policy if exists "collections read all" on public.foc2026_collections;
-create policy "collections read all" on public.foc2026_collections
-for select using (true);
+create policy "collections read all" on public.foc2026_collections for select using (true);
 
 drop policy if exists "collections admin write" on public.foc2026_collections;
-create policy "collections admin write" on public.foc2026_collections
-for all using (public.foc2026_is_admin())
-with check (public.foc2026_is_admin());
+create policy "collections admin write" on public.foc2026_collections for all using (public.foc2026_is_admin()) with check (public.foc2026_is_admin());
 
-drop policy if exists "challenges read self or admin" on public.foc2026_challenges;
-create policy "challenges read self or admin" on public.foc2026_challenges
-for select using (
-  public.foc2026_is_admin()
-  or player_username = public.foc2026_current_username()
+drop policy if exists "challenges read all" on public.foc2026_challenges;
+create policy "challenges read all" on public.foc2026_challenges for select using (true);
+
+drop policy if exists "challenges update self or admin" on public.foc2026_challenges;
+create policy "challenges update self or admin" on public.foc2026_challenges for update using (
+  player_username = public.foc2026_current_username() or public.foc2026_is_admin()
 );
 
 drop policy if exists "challenges admin write" on public.foc2026_challenges;
-create policy "challenges admin write" on public.foc2026_challenges
-for all using (public.foc2026_is_admin())
-with check (public.foc2026_is_admin());
-
-drop policy if exists "admin logs read admin" on public.foc2026_admin_logs;
-create policy "admin logs read admin" on public.foc2026_admin_logs
-for select using (public.foc2026_is_admin());
+create policy "challenges admin write" on public.foc2026_challenges for all using (public.foc2026_is_admin()) with check (public.foc2026_is_admin());
 
 drop policy if exists "stickers log read all" on public.foc2026_stickers_log;
-create policy "stickers log read all" on public.foc2026_stickers_log
-for select using (true);
+create policy "stickers log read all" on public.foc2026_stickers_log for select using (true);
+
+drop policy if exists "stickers log admin write" on public.foc2026_stickers_log;
+create policy "stickers log admin write" on public.foc2026_stickers_log for all using (public.foc2026_is_admin()) with check (public.foc2026_is_admin());
+
+drop policy if exists "admin logs read admin" on public.foc2026_admin_logs;
+create policy "admin logs read admin" on public.foc2026_admin_logs for select using (public.foc2026_is_admin());
+
+drop policy if exists "admin logs write admin" on public.foc2026_admin_logs;
+create policy "admin logs write admin" on public.foc2026_admin_logs for all using (public.foc2026_is_admin()) with check (public.foc2026_is_admin());
 
 create or replace function public.foc2026_upsert_collection(
   p_username text,

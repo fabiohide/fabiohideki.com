@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customizador de Poligono SVG com Anime.js</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Anime.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-content">
+            <span class="app-badge">Customizador GUI</span>
+            <h1>Gerador de Componente Poligonal SVG</h1>
+            <p>Construa, estilize e teste interativamente poligonos dinamicos de Seeds e Partidas com Motion Path.</p>
+        </div>
+    </header>
+
+    <main class="app-main">
+        <!-- Area Principal de Visualizacao SVG -->
+        <section class="viewport-section">
+            <!-- Barra de Filtro Colapsavel no Topo do Canvas -->
+            <div class="collapsible-filter-bar">
+                <button class="filter-toggle-btn" id="filter-toggle-btn" aria-expanded="false">
+                    <span class="toggle-title">Filtro de Jogadores (<span id="filter-count">6</span>)</span>
+                    <span class="toggle-indicator" id="toggle-indicator">+</span>
+                </button>
+                <div class="filter-chips-container" id="filter-chips-container" style="display: none;">
+                    <!-- Chips de Jogadores gerados dinamicamente via JS -->
+                </div>
+            </div>
+
+            <div class="svg-stage" id="svg-stage">
+                <svg id="polygon-svg" viewBox="0 0 600 600" width="100%" height="100%">
+                    <defs>
+                        <!-- Filtro para efeito de brilho nos pontos selecionados -->
+                        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="3" result="blur" />
+                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                        </filter>
+                    </defs>
+                    
+                    <!-- Grupo de Linhas/Vértices (Renderizado no fundo) -->
+                    <g id="edges-group"></g>
+
+                    <!-- Particula do Motion Path Animado -->
+                    <circle id="motion-particle" r="7" fill="#60a5fa" filter="url(#glow)" style="opacity: 0; pointer-events: none;"></circle>
+
+                    <!-- Grupo de Pontos/Seeds (Renderizado na frente) -->
+                    <g id="nodes-group"></g>
+                </svg>
+            </div>
+
+            <!-- Card de Info do Jogador Selecionado -->
+            <div class="info-card" id="info-card">
+                <div class="info-header">
+                    <span class="seed-tag" id="info-seed">#--</span>
+                    <h3 id="info-name">Selecione um Jogador</h3>
+                </div>
+                <p class="info-desc" id="info-desc">Clique em qualquer ponto (seed) do poligono ou use o filtro no topo para visualizar a simulacao de partidas via Motion Path em loop.</p>
+                <div class="info-stats" id="info-stats" style="display: none;">
+                    <div class="stat-badge">
+                        <span class="stat-num" id="stat-matches">0</span>
+                        <span class="stat-lbl">Partidas</span>
+                    </div>
+                    <div class="stat-badge">
+                        <span class="stat-num" id="stat-opponents">0</span>
+                        <span class="stat-lbl">Oponentes</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Painel Lateral de Customizacao GUI -->
+        <aside class="gui-panel">
+            <div class="panel-header">
+                <h2>Parametros do Componente</h2>
+            </div>
+
+            <div class="panel-sections">
+                <!-- Secao 1: Estrutura Geometrica -->
+                <div class="control-section">
+                    <h3>Estrutura do Poligono</h3>
+                    
+                    <div class="control-field">
+                        <label for="num-points">Quantidade de Seeds (Pontos): <span id="num-points-val">6</span></label>
+                        <input type="range" id="num-points" min="5" max="24" value="6">
+                    </div>
+
+                    <div class="control-field">
+                        <label for="polygon-radius">Raio do Poligono: <span id="polygon-radius-val">200</span>px</label>
+                        <input type="range" id="polygon-radius" min="100" max="250" value="200">
+                    </div>
+
+                    <div class="control-field">
+                        <label for="connect-mode">Modo de Conexao dos Vértices:</label>
+                        <select id="connect-mode">
+                            <option value="all-matches">Rede Completa de Partidas (Todos contra Todos)</option>
+                            <option value="perimeter">Apenas Perímetro Regular (Arestas Externas)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Secao 2: Motion Path e Animacao de Partidas -->
+                <div class="control-section">
+                    <h3>Simulacao Motion Path em Loop</h3>
+
+                    <div class="control-field checkbox-field">
+                        <input type="checkbox" id="enable-motion-loop" checked>
+                        <label for="enable-motion-loop">Ativar Animacao Motion Path em Loop</label>
+                    </div>
+
+                    <div class="control-field">
+                        <label for="motion-speed">Duracao por Partida: <span id="motion-speed-val">1000</span>ms</label>
+                        <input type="range" id="motion-speed" min="300" max="3000" step="100" value="1000">
+                    </div>
+
+                    <div class="control-field">
+                        <label for="color-particle">Cor da Particula</label>
+                        <input type="color" id="color-particle" value="#60a5fa">
+                    </div>
+                </div>
+
+                <!-- Secao 3: Estilos dos Pontos e Rotulos -->
+                <div class="control-section">
+                    <h3>Estilo dos Pontos e Rotulos</h3>
+                    
+                    <div class="control-field">
+                        <label for="point-size">Tamanho do Ponto: <span id="point-size-val">12</span>px</label>
+                        <input type="range" id="point-size" min="6" max="24" value="12">
+                    </div>
+
+                    <div class="color-grid">
+                        <div class="control-field">
+                            <label for="color-point-base">Cor Padrao</label>
+                            <input type="color" id="color-point-base" value="#ffffff">
+                        </div>
+
+                        <div class="control-field">
+                            <label for="color-point-hover">Cor Hover</label>
+                            <input type="color" id="color-point-hover" value="#60a5fa">
+                        </div>
+
+                        <div class="control-field">
+                            <label for="color-point-selected">Cor Selecionado</label>
+                            <input type="color" id="color-point-selected" value="#3b82f6">
+                        </div>
+                    </div>
+
+                    <div class="control-field">
+                        <label for="seed-pos-select">Posicao da Seed (#01):</label>
+                        <select id="seed-pos-select">
+                            <option value="inside">Dentro do Ponto (Centralizado)</option>
+                            <option value="right">Lado Direito do Ponto</option>
+                            <option value="hidden">Ocultar Numeracao</option>
+                        </select>
+                    </div>
+
+                    <div class="control-field checkbox-field">
+                        <input type="checkbox" id="show-player-name" checked>
+                        <label for="show-player-name">Exibir Nome do Jogador (Lado Direito)</label>
+                    </div>
+
+                    <div class="control-field">
+                        <label for="font-size-labels">Tamanho da Fonte: <span id="font-size-val">12</span>px</label>
+                        <input type="range" id="font-size-labels" min="8" max="20" value="12">
+                    </div>
+
+                    <div class="control-field">
+                        <label for="label-border-radius">Arredondamento dos Cantos (Badge): <span id="radius-val">6</span>px</label>
+                        <input type="range" id="label-border-radius" min="0" max="16" value="6">
+                    </div>
+
+                    <div class="control-field">
+                        <label for="label-stroke-width">Espessura da Borda do Badge: <span id="label-stroke-val">1</span>px</label>
+                        <input type="range" id="label-stroke-width" min="0" max="4" value="1">
+                    </div>
+
+                    <div class="color-grid">
+                        <div class="control-field">
+                            <label for="color-text-external">Cor Texto</label>
+                            <input type="color" id="color-text-external" value="#f8fafc">
+                        </div>
+
+                        <div class="control-field">
+                            <label for="color-label-bg">Fundo Badge</label>
+                            <input type="color" id="color-label-bg" value="#1e293b">
+                        </div>
+
+                        <div class="control-field">
+                            <label for="color-label-stroke">Borda Badge</label>
+                            <input type="color" id="color-label-stroke" value="#334155">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Secao 4: Estilos dos Vértices (Linhas) -->
+                <div class="control-section">
+                    <h3>Estilo dos Vértices (Linhas)</h3>
+                    
+                    <div class="control-field">
+                        <label for="edge-width">Espessura das Linhas: <span id="edge-width-val">2</span>px</label>
+                        <input type="range" id="edge-width" min="1" max="8" value="2">
+                    </div>
+
+                    <div class="color-grid">
+                        <div class="control-field">
+                            <label for="color-edge-neutral">Cor Neutra (Cinza)</label>
+                            <input type="color" id="color-edge-neutral" value="#d1d5db">
+                        </div>
+
+                        <div class="control-field">
+                            <label for="color-edge-active">Cor Partida (Ativa)</label>
+                            <input type="color" id="color-edge-active" value="#3b82f6">
+                        </div>
+                    </div>
+
+                    <div class="control-field">
+                        <label for="edge-opacity-neutral">Opacidade Neutra: <span id="edge-opacity-val">0.5</span></label>
+                        <input type="range" id="edge-opacity-neutral" min="0.1" max="1.0" step="0.1" value="0.5">
+                    </div>
+                </div>
+
+                <!-- Secao 5: Acoes de Exportacao -->
+                <div class="control-section">
+                    <h3>Exportacao</h3>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" id="btn-export-svg">Exportar SVG Limpo</button>
+                        <button class="btn btn-secondary" id="btn-export-json">Exportar Config JSON</button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Modal de Exportacao de Codigo -->
+    <div class="modal-backdrop" id="code-modal" style="display: none;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modal-title">Codigo Exportado</h3>
+                <button class="btn-close" id="btn-modal-close">X</button>
+            </div>
+            <div class="modal-body">
+                <textarea id="modal-code" readonly rows="12"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="btn-copy-code">Copiar Codigo</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
